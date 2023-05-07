@@ -22,9 +22,13 @@
 #include "dispWaveshareLcd.h"
 #include <string.h>
 #include "pinout.h"
-#include "printf.h"
+#include "pico/printf.h"
+#include "hardware/structs/sio.h"
+#include "hardware/dma.h"
+#include "hardware/pio.h"
+#include "hardware/resets.h"
+#include "hardware/irq.h"
 #include "rp2040.h"
-
 
 #define SIDE_SET_HAS_ENABLE_BIT				1
 #define SIDE_SET_NUM_BITS					2
@@ -323,7 +327,8 @@ static void dispPrvPioSm2touchDmaConfigure(void)
 	
 	dma_hw->ints0 = 1 << 5;
 	dma_hw->inte0 |= 1 << 5;
-	NVIC_EnableIRQ(DMA0_IRQn);
+	// NVIC_EnableIRQ(DMA0_IRQn);
+	irq_set_enabled(DMA_IRQ_0, true);
 }
 
 static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
@@ -377,8 +382,8 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
 	pc = dispPrvPioSm2touchProgram(pc);
 	sm2EndPC = pc - 1;	//that was the last instr
 
-	pr("LCD: PIO programs created. %u instrs\n", pc);
-	pr("LCD: PIO prog 0 is %u..%u, 1 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC);
+	printf("LCD: PIO programs created. %u instrs\n", pc);
+	printf("LCD: PIO prog 0 is %u..%u, 1 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC);
 	
 	
 	//configure sm0
@@ -401,7 +406,7 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
 	pio0_hw->ctrl |= (7 << PIO_CTRL_SM_ENABLE_LSB);
 
 	
-	pr("LCD: sm0..2 up\n");
+	printf("LCD: sm0..2 up\n");
 	
 	//set up dma from sm0 to sm1 uding DMA ch0 to do the work and DMA ch1 to restart it. ch1 is used simply as a chain link, we do not care what it transfers and where from
 	//we start ch1, which should trigger ch0
@@ -417,7 +422,7 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
 	
 	//prime irq 4
 	pio0_hw->irq_force = 1 << 4;
-	pr("LCD: irq primed\n");
+	printf("LCD: irq primed\n");
 	
 	//set up dma to send data to SM0. ch 2 to do it, ch1 to restart it
 	dma_hw->ch[2].write_addr = (uintptr_t)&pio0_hw->txf[0];
@@ -473,8 +478,8 @@ static void dispPrvPioProgram8bpp(void)
 	pc = dispPrvPioSm2touchProgram(pc);
 	sm2EndPC = pc - 1;	//that was the last instr
 
-	pr("LCD: PIO programs created. %u instrs\n", pc);
-	pr("LCD: PIO prog 0 is %u..%u, 1 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC);
+	printf("LCD: PIO programs created. %u instrs\n", pc);
+	printf("LCD: PIO prog 0 is %u..%u, 1 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC);
 	
 	
 	//configure sm0
@@ -503,7 +508,7 @@ static void dispPrvPioProgram8bpp(void)
 
 	//prime irq 4
 	pio0_hw->irq_force = 1 << 4;
-	pr("LCD: irq primed\n");
+	printf("LCD: irq primed\n");
 	
 	//ch1 (first) RXes a word from SM0s output and writes to ch0's source reg. then triggers ch0. ch0 then DMAs a single 16 bit CLUT value to SM1's input, triggers ch1 again
 	dma_hw->ch[0].write_addr = (uintptr_t)&pio0_hw->txf[1];
@@ -560,8 +565,8 @@ static void dispPrvPioProgram16bpp(void)
 	pc = dispPrvPioSm2touchProgram(pc);
 	sm2EndPC = pc - 1;	//that was the last instr
 
-	pr("LCD: PIO programs created. %u instrs\n", pc);
-	pr("LCD: PIO prog 0 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm2StartPC, sm2EndPC);
+	printf("LCD: PIO programs created. %u instrs\n", pc);
+	printf("LCD: PIO prog 0 is %u..%u, 2 is %u..%u\n", sm0StartPC, sm0EndPC, sm2StartPC, sm2EndPC);
 	
 	
 	//configure sm0
@@ -579,7 +584,7 @@ static void dispPrvPioProgram16bpp(void)
 
 	//prime irq 4
 	pio0_hw->irq_force = 1 << 4;
-	pr("LCD: irq primed\n");
+	printf("LCD: irq primed\n");
 	
 
 	//set up dma to send data to SM0
@@ -668,28 +673,28 @@ static bool dispPrvLcdInit(uint_fast8_t depth)
 	
 	//reset
 	sio_hw->gpio_clr = 1 << PIN_LCD_RESET;
-	pr("display in reset\n");
+	printf("display in reset\n");
 	sio_hw->gpio_set = 1 << PIN_LCD_RESET;
-	pr("display out of reset\n");
+	printf("display out of reset\n");
 	
 	sio_hw->gpio_clr = 1 << PIN_LCD_CS;
 	sio_hw->gpio_clr = 1 << PIN_LCD_DnC;
 	spiByte(0x04);
 	sio_hw->gpio_set = 1 << PIN_LCD_DnC;
 	if ((i = spiByte(0)) != 0x42) {
-		pr("LCD: %s ID byte is unexpected: %02xh!\n", "first", i);
+		printf("LCD: %s ID byte is unexpected: %02xh!\n", "first", i);
 		//we could bail out here, but some displays do have different IDs and docs do not list all the valid values
 		//sio_hw->gpio_set = 1 << PIN_LCD_CS;
 		//return false;
 	}
 	if ((i = spiByte(0)) != 0xc2) {
-		pr("LCD: %s ID byte is unexpected: %02xh!\n", "second", i);
+		printf("LCD: %s ID byte is unexpected: %02xh!\n", "second", i);
 		//we could bail out here, but some displays do have different IDs and docs do not list all the valid values
 		//sio_hw->gpio_set = 1 << PIN_LCD_CS;
 		//return false;
 	}
 	if ((i = spiByte(0)) != 0xa9) {
-		pr("LCD: %s ID byte is unexpected: %02xh!\n", "third", i);
+		printf("LCD: %s ID byte is unexpected: %02xh!\n", "third", i);
 		//we could bail out here, but some displays do have different IDs and docs do not list all the valid values
 		//sio_hw->gpio_set = 1 << PIN_LCD_CS;
 		//return false;
@@ -697,7 +702,7 @@ static bool dispPrvLcdInit(uint_fast8_t depth)
 	sio_hw->gpio_set = 1 << PIN_LCD_CS;
 	
 	lcdPrvWriteCmd(0x11);
-	pr("display coming up\n");
+	printf("display coming up\n");
 	
 	//set data format
 	lcdPrvWriteCmd(0x36);
@@ -819,7 +824,7 @@ static bool dispPrvTurnOff(void)
 		return true;
 	mDispOn = false;
 	
-	pr("DISP: display off start\n");
+	printf("DISP: display off start\n");
 	
 	dma_hw->inte0 &=~ (1 << 5);
 	for (i = 0; i < numDmaChannels; i++)
@@ -837,7 +842,7 @@ static bool dispPrvTurnOff(void)
 	sio_hw->gpio_set = (1 << PIN_LCD_CS) | (1 << PIN_TOUCH_CS);
 	sio_hw->gpio_clr = (1 << PIN_SPI_CLK) | (1 << PIN_SPI_MOSI);
 	
-	pr("DISP: display off end\n");
+	printf("DISP: display off end\n");
 	return true;
 }
 
@@ -850,15 +855,15 @@ static bool dispPrvTurnOn(uint_fast8_t depth, bool firstTime)
 		
 	else if (mDispOn) {
 		
-		pr("depth change with no off\n");
+		printf("depth change with no off\n");
 		return false;
 	}
 	
-	pr("DISP: depth %u\n", depth);
+	printf("DISP: depth %u\n", depth);
 	
 	if (!dispPrvLcdInit(depth)) {
 		
-		pr("DISP INIT FAIL\n");
+		printf("DISP INIT FAIL\n");
 		return false;
 	}
 	
@@ -928,7 +933,7 @@ bool dispInit(void* framebuffer, uint8_t bitDepth)
 {
 	uint32_t vramSz;
 	
-	pr("DISP is %u x %u\n", DISP_WIDTH, DISP_HEIGHT);
+	printf("DISP is %u x %u\n", DISP_WIDTH, DISP_HEIGHT);
 	
 	mFb = framebuffer;
 	
