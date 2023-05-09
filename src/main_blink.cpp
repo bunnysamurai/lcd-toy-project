@@ -1,21 +1,29 @@
+extern "C" {
+#include "../driver/dispWaveshareLcd.h"
+}
 #include "pico/stdlib.h"
+
+static uint8_t buffer[DISP_WIDTH * DISP_HEIGHT]{};
+
+void clear(uint8_t *buf, size_t len) {
+  for (size_t ii = 0; ii < len; ++ii) {
+    buf[ii] = 0;
+  }
+}
 
 int main() {
 
-  // #ifndef PICO_DEFAULT_LED_PIN
-  // #warning "No default pin for the LED on this board type"
-  // #else
   static constexpr auto LED_PIN{PICO_DEFAULT_LED_PIN};
   gpio_init(LED_PIN);
   gpio_set_dir(LED_PIN, GPIO_OUT);
-  while(true)
-  {
-    gpio_put(LED_PIN, 1);
-    sleep_ms(1000);
 
-    gpio_put(LED_PIN, 0);
-    sleep_ms(1000);
+  clear(buffer, DISP_WIDTH * DISP_HEIGHT);
 
+  const auto okay{dispInit(buffer, 1)};
+  const auto okayoff{dispOff()};
+
+  gpio_put(LED_PIN, okayoff ? 1 : 0);
+
+  while (true) {
   }
-  // #endif
 }

@@ -34,6 +34,9 @@
 #define LCD_REAL_WIDTH							240		//actual size of the LCD display
 #define LCD_REAL_HEIGHT							320
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //externally defined
 void dispExtTouchReport(int16_t x, int16_t y);	//negative on pen up
@@ -51,4 +54,7 @@ bool dispInit(void* framebuffer, uint8_t depth);
 bool dispOn(void);
 bool dispOff(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
