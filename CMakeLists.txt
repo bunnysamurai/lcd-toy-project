@@ -11,12 +11,20 @@ project(lcd-toy-project)
 pico_sdk_init()
 
 #app
-add_executable(${PROJECT_NAME} src/main_blink.cpp)
+add_executable(${PROJECT_NAME} 
+    src/main_blink.cpp
+    src/status_utilities.cpp
+)
+
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pico_stdlib waveshare_driver)
+
+# so printf works?
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)
 
 pico_add_extra_outputs(${PROJECT_NAME})
 
