@@ -329,11 +329,14 @@ static void dispPrvPioSm2touchDmaConfigure(void)
 	dma_hw->ints0 = 1 << 5;
 	dma_hw->inte0 |= 1 << 5;
 	// NVIC_EnableIRQ(DMA0_IRQn);
-	irq_set_enabled(DMA_IRQ_0, true);
+	// irq_set_enabled(DMA_IRQ_0, true);
+
 }
 
 static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
 {
+	printf("LCD: Running in %dbpp mode\n", bpp);
+
 	uint_fast8_t pc = 0, lblAgain, lblMore, lblPullNgo, lblMoreBits, sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC;
 	static volatile uint32_t mDmaVal;
 	
@@ -439,6 +442,8 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
 static void dispPrvPioProgram8bpp(void)
 {
 #if MAX_SUPPORTED_BPP >= 8
+	printf("LCD: Running in 8bpp mode");
+
 	uint_fast8_t pc = 0, lblMore, lblPullNgo, lblMoreBits, sm0StartPC, sm0EndPC, sm1StartPC, sm1EndPC, sm2StartPC, sm2EndPC;
 	
 	//SM0 expand and request palette entry. basically input byte ??, output CLUT_BASE + (?? * 2), where CLUT_BASE is preset in register X
@@ -537,6 +542,8 @@ static void dispPrvPioProgram8bpp(void)
 static void dispPrvPioProgram16bpp(void)
 {
 #if MAX_SUPPORTED_BPP >= 8
+	printf("LCD: Running in 16bpp mode (native)");
+
 	uint_fast8_t pc = 0, lblMore, lblPullNgo, lblMoreBits, sm0StartPC, sm0EndPC, sm2StartPC, sm2EndPC;
 
 	//SM0 program: SPI the data out. input 16 bit words
