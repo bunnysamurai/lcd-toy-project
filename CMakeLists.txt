@@ -29,3 +29,4 @@ pico_enable_stdio_uart(${PROJECT_NAME} 0)
 pico_add_extra_outputs(${PROJECT_NAME})
 
 add_subdirectory(driver)
+add_subdirectory(testing)
