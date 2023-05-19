@@ -3,9 +3,11 @@
 #include <array>
 #include <limits>
 #include "pico/stdlib.h"
+#include "pico/rand.h"
 #include "pico/printf.h"
 #include "status_utilities.hpp"
 #include "../driver/pinout.h"
+#include "../glyphs/letters.hpp"
 
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
@@ -25,134 +27,74 @@ void init_to_all_black(auto &buf)
   std::fill(std::begin(buffer), std::end(buffer), std::numeric_limits<uint8_t>::max());
 }
 
-using LetterType = std::array<uint8_t, 8>;
-
 /**
  * @param x Column, in characters
  * @param y Row, in characters
  */
-void write_letter(auto &video_buf, uint x, uint y, const LetterType &letter)
+void write_letter(auto &video_buf, uint x, uint y, const glyphs::LetterType &letter)
 {
   // characters are 8x8 pixels in size
   // and we need to index by character
   // x positions are byte indexes in the video buffer
   // y positions are 8row increments
   static constexpr auto LCD_EFFECTIVE_WIDTH{DISP_WIDTH / 8};
-  for (uint idx = y * LCD_EFFECTIVE_WIDTH + x, ii = 0; ii < letter.size(); idx += LCD_EFFECTIVE_WIDTH, ++ii)
+  for (uint idx = y * LCD_EFFECTIVE_WIDTH + x, ii = 0; ii < size(letter); idx += LCD_EFFECTIVE_WIDTH, ++ii)
   {
     video_buf[idx] = letter[ii];
   }
 }
 
-inline constexpr uint8_t reverse_bits(uint8_t val)
+void erase_steven(auto &video_buf, uint x, uint y)
 {
-  uint8_t out{};
-  for (uint ii = 0; ii < 7; ++ii)
-  {
-    out = (out + ((val >> ii) & 0x01)) << 1;
-  }
-  out = (out + ((val >> 7) & 0x01));
-  return out;
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
 }
-inline constexpr LetterType reverse(LetterType letter)
+void erase_my(auto &video_buf, uint x, uint y)
 {
-  for (auto &c : letter)
-  {
-    c = reverse_bits(c);
-  }
-  return letter;
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
 }
-inline constexpr LetterType invert(LetterType letter)
+void erase_meven(auto &video_buf, uint x, uint y)
 {
-  for (auto &c : letter)
-  {
-    c = ~c;
-  }
-  return letter;
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
+  write_letter(video_buf, x++, y, glyphs::SPACE);
 }
 
-// Let's do 8x8 row, cols
-inline constexpr LetterType letter_N()
+void spell_2040(auto &video_buf, uint x, uint y)
 {
-  return {
-      0b100001'00,
-      0b110001'00,
-      0b101001'00,
-      0b101001'00,
-      0b100101'00,
-      0b100011'00,
-      0b100001'00};
+  write_letter(video_buf, x++, y, glyphs::NUM_2);
+  write_letter(video_buf, x++, y, glyphs::NUM_0);
+  write_letter(video_buf, x++, y, glyphs::NUM_4);
+  write_letter(video_buf, x++, y, glyphs::NUM_0);
 }
-inline constexpr LetterType letter_V()
+void spell_my(auto &video_buf, uint x, uint y)
 {
-  return {
-      0b100001'00,
-      0b100001'00,
-      0b100001'00,
-      0b010010'00,
-      0b010010'00,
-      0b010010'00,
-      0b001100'00};
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_M);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_Y);
 }
-inline constexpr LetterType letter_E()
-{
-  return {
-      0b111111'00,
-      0b100000'00,
-      0b100000'00,
-      0b111110'00,
-      0b100000'00,
-      0b100000'00,
-      0b111111'00};
-}
-inline constexpr LetterType letter_T()
-{
-  return {
-      0b011111'00,
-      0b000100'00,
-      0b000100'00,
-      0b000100'00,
-      0b000100'00,
-      0b000100'00,
-      0b000100'00};
-}
-inline constexpr LetterType letter_S()
-{
-  return {
-      0b001110'00,
-      0b010001'00,
-      0b100000'00,
-      0b011110'00,
-      0b000001'00,
-      0b100001'00,
-      0b011110'00};
-}
-inline constexpr LetterType letter_A()
-{
-  return {
-      0b001100'00,
-      0b010010'00,
-      0b010010'00,
-      0b011110'00,
-      0b100001'00,
-      0b100001'00,
-      0b100001'00};
-}
-
-static constexpr LetterType CAPITAL_S{reverse(invert(letter_S()))};
-static constexpr LetterType CAPITAL_T{reverse(invert(letter_T()))};
-static constexpr LetterType CAPITAL_E{reverse(invert(letter_E()))};
-static constexpr LetterType CAPITAL_V{reverse(invert(letter_V()))};
-static constexpr LetterType CAPITAL_N{reverse(invert(letter_N()))};
-
 void spell_steven(auto &video_buf, uint x, uint y)
 {
-  write_letter(video_buf, x++, y, CAPITAL_S);
-  write_letter(video_buf, x++, y, CAPITAL_T);
-  write_letter(video_buf, x++, y, CAPITAL_E);
-  write_letter(video_buf, x++, y, CAPITAL_V);
-  write_letter(video_buf, x++, y, CAPITAL_E);
-  write_letter(video_buf, x++, y, CAPITAL_N);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_S);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_T);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_V);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_N);
+}
+void spell_meven(auto &video_buf, uint x, uint y)
+{
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_M);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_V);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
+  write_letter(video_buf, x++, y, glyphs::CAPITAL_N);
 }
 
 void setup_for_input(uint id)
@@ -166,10 +108,9 @@ void setup_for_output(uint id)
   gpio_set_dir(id, true);
 }
 
-int main()
+bool lcd_init(auto &video_buf)
 {
-  stdio_init_all();
-
+  bool status{true};
   setup_for_output(PIN_TOUCH_CS);
   setup_for_output(PIN_LCD_RESET);
   setup_for_output(PIN_LCD_DnC);
@@ -179,20 +120,40 @@ int main()
   setup_for_input(PIN_SPI_MISO);
   setup_for_output(PIN_LCD_BL);
 
+  status &= dispInit(std::data(video_buf), 1);
+  dispSetDepth(BPP);
+
+  printf("INFO: Turning on backlight\n");
+
+  gpio_put(PIN_LCD_BL, true);
+
+  return status;
+}
+int main()
+{
+  stdio_init_all();
+
   init_to_all_black(buffer);
-  spell_steven(buffer, 0, 0);
+  const uint x{get_rand_32() % DISP_WIDTH / 8};
+  const uint y{get_rand_32() * 8 % DISP_HEIGHT};
+  spell_meven(buffer, x, y + 0 * 8);
+  spell_2040(buffer, x, y + 1 * 8);
 
   printf("INFO: First element in buffer is %d\n", buffer[0]);
 
-  if (!dispInit(std::data(buffer), 1))
+  if (!lcd_init(buffer))
   {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
 
-  dispSetDepth(BPP);
-
-  printf("INFO: Turning on backlight\n");
-  gpio_put(PIN_LCD_BL, true);
-
+  // TODO: kick this off on the other core.  That's right, this will be its only job.
   BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever();
+
+  // static constexpr std::array<LetterType, 26 * 2> dictionary{};
+  // TextOut text_display(buffer, dictionary, DISP_WIDTH / 8, DISP_HEIGHT);
+
+  // print(text_display, "This is a string\n");
+  // draw(text_display, "This is another string!", 0, 10);
+
+  // AbstractOut abstract_display(buffer, dictionary, DISP_WIDTH / 8, DISP_HEIGHT);
 }
