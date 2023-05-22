@@ -8,6 +8,7 @@
 #include "status_utilities.hpp"
 #include "../driver/pinout.h"
 #include "../glyphs/letters.hpp"
+#include "../glyphs/print.hpp"
 
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
@@ -25,76 +26,6 @@ void init_to_all_white(auto &buf)
 void init_to_all_black(auto &buf)
 {
   std::fill(std::begin(buffer), std::end(buffer), std::numeric_limits<uint8_t>::max());
-}
-
-/**
- * @param x Column, in characters
- * @param y Row, in characters
- */
-void write_letter(auto &video_buf, uint x, uint y, const glyphs::LetterType &letter)
-{
-  // characters are 8x8 pixels in size
-  // and we need to index by character
-  // x positions are byte indexes in the video buffer
-  // y positions are 8row increments
-  static constexpr auto LCD_EFFECTIVE_WIDTH{DISP_WIDTH / 8};
-  for (uint idx = y * LCD_EFFECTIVE_WIDTH + x, ii = 0; ii < size(letter); idx += LCD_EFFECTIVE_WIDTH, ++ii)
-  {
-    video_buf[idx] = letter[ii];
-  }
-}
-
-void erase_steven(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-}
-void erase_my(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-}
-void erase_meven(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-  write_letter(video_buf, x++, y, glyphs::SPACE);
-}
-
-void spell_2040(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::NUM_2);
-  write_letter(video_buf, x++, y, glyphs::NUM_0);
-  write_letter(video_buf, x++, y, glyphs::NUM_4);
-  write_letter(video_buf, x++, y, glyphs::NUM_0);
-}
-void spell_my(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_M);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_Y);
-}
-void spell_steven(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_S);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_T);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_V);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_N);
-}
-void spell_meven(auto &video_buf, uint x, uint y)
-{
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_M);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_V);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_E);
-  write_letter(video_buf, x++, y, glyphs::CAPITAL_N);
 }
 
 void setup_for_input(uint id)
@@ -134,12 +65,13 @@ int main()
   stdio_init_all();
 
   init_to_all_black(buffer);
-  const uint x{get_rand_32() % DISP_WIDTH / 8};
-  const uint y{get_rand_32() * 8 % DISP_HEIGHT};
-  spell_meven(buffer, x, y + 0 * 8);
-  spell_2040(buffer, x, y + 1 * 8);
+  glyphs::raw_print(buffer, "STEVEN\n\tMY\nMEVEN 2040", 0, 0);
 
-  printf("INFO: First element in buffer is %d\n", buffer[0]);
+  glyphs::raw_print(buffer, "abcdefghijklmnopqrstuvwxyz", 0, 4 * 8);
+  glyphs::raw_print(buffer, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 0, 5 * 8);
+  glyphs::raw_print(buffer, "0123456789", 0, 6 * 8);
+  glyphs::raw_print(buffer, "!@#$%^&*()-_=+{}[]|", 0, 7 * 8);
+  glyphs::raw_print(buffer, "\\/~`:;'\"<>,.?", 0, 8 * 8);
 
   if (!lcd_init(buffer))
   {
