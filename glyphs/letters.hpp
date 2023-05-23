@@ -64,6 +64,39 @@ namespace glyphs
                  0b100001'00,
                  0b100001'00}};
         }
+        inline constexpr LetterType B()
+        {
+            return {
+                {0b111110'00,
+                 0b100011'00,
+                 0b100010'00,
+                 0b111110'00,
+                 0b100010'00,
+                 0b100011'00,
+                 0b111110'00}};
+        }
+        inline constexpr LetterType C()
+        {
+            return {
+                {0b001111'00,
+                 0b110000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b110000'00,
+                 0b001111'00}};
+        }
+        inline constexpr LetterType D()
+        {
+            return {
+                {0b111100'00,
+                 0b100011'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100011'00,
+                 0b111100'00}};
+        }
         inline constexpr LetterType E()
         {
             return {
@@ -71,6 +104,83 @@ namespace glyphs
                  0b100000'00,
                  0b100000'00,
                  0b111110'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b111111'00}};
+        }
+        inline constexpr LetterType F()
+        {
+            return {
+                {0b111111'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b111100'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00}};
+        }
+        inline constexpr LetterType G()
+        {
+            return {
+                {0b001111'00,
+                 0b110000'00,
+                 0b100000'00,
+                 0b100110'00,
+                 0b100001'00,
+                 0b110001'00,
+                 0b001111'00}};
+        }
+        inline constexpr LetterType H()
+        {
+            return {
+                {0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b111111'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00}};
+        }
+        inline constexpr LetterType I()
+        {
+            return {
+                {0b111111'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b111111'00}};
+        }
+        inline constexpr LetterType J()
+        {
+            return {
+                {0b000011'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b000110'00,
+                 0b111000'00}};
+        }
+        inline constexpr LetterType K()
+        {
+            return {
+                {0b100110'00,
+                 0b101100'00,
+                 0b110000'00,
+                 0b101000'00,
+                 0b100100'00,
+                 0b100010'00,
+                 0b100001'00}};
+        }
+        inline constexpr LetterType L()
+        {
+            return {
+                {0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
                  0b100000'00,
                  0b100000'00,
                  0b111111'00}};
@@ -108,6 +218,39 @@ namespace glyphs
                  0b100001'00,
                  0b011110'00}};
         }
+        inline constexpr LetterType P()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b111110'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00}};
+        }
+        inline constexpr LetterType Q()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100101'00,
+                 0b111111'00,
+                 0b000001'00}};
+        }
+        inline constexpr LetterType R()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b111110'00,
+                 0b100110'00,
+                 0b100010'00,
+                 0b100001'00}};
+        }
         inline constexpr LetterType S()
         {
             return {
@@ -130,6 +273,17 @@ namespace glyphs
                  0b000100'00,
                  0b000100'00}};
         }
+        inline constexpr LetterType U()
+        {
+            return {
+                {0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011110'00}};
+        }
         inline constexpr LetterType V()
         {
             return {
@@ -141,6 +295,28 @@ namespace glyphs
                  0b010010'00,
                  0b001100'00}};
         }
+        inline constexpr LetterType W()
+        {
+            return {
+                {0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b101101'00,
+                 0b101101'00,
+                 0b011110'00,
+                 0b010010'00}};
+        }
+        inline constexpr LetterType X()
+        {
+            return {
+                {0b100001'00,
+                 0b100001'00,
+                 0b010010'00,
+                 0b001100'00,
+                 0b010010'00,
+                 0b100001'00,
+                 0b100001'00}};
+        }
         inline constexpr LetterType Y()
         {
             return {
@@ -151,6 +327,17 @@ namespace glyphs
                  0b001000'00,
                  0b001000'00,
                  0b001000'00}};
+        }
+        inline constexpr LetterType Z()
+        {
+            return {
+                {0b111111'00,
+                 0b000011'00,
+                 0b000010'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b010000'00,
+                 0b111111'00}};
         }
 
         // non alpha-numeric
@@ -237,46 +424,40 @@ namespace glyphs
                  0b100001'00,
                  0b011110'00}};
         }
+        inline constexpr LetterType Number_Seven()
+        {
+            return {
+                {0b111111'00,
+                 0b000011'00,
+                 0b000010'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b010000'00,
+                 0b100000'00}};
+        }
+        inline constexpr LetterType Number_Eight()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType Number_Nine()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011111'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b000001'00}};
+        }
     }
-
-    inline constexpr LetterType CAPITAL_A{reverse(invert(details::A()))};
-    // inline constexpr LetterType CAPITAL_B{reverse(invert(details::B()))};
-    // inline constexpr LetterType CAPITAL_C{reverse(invert(details::C()))};
-    // inline constexpr LetterType CAPITAL_D{reverse(invert(details::D()))};
-    inline constexpr LetterType CAPITAL_E{reverse(invert(details::E()))};
-    // inline constexpr LetterType CAPITAL_F{reverse(invert(details::F()))};
-    // inline constexpr LetterType CAPITAL_G{reverse(invert(details::G()))};
-    // inline constexpr LetterType CAPITAL_H{reverse(invert(details::H()))};
-    // inline constexpr LetterType CAPITAL_I{reverse(invert(details::I()))};
-    // inline constexpr LetterType CAPITAL_J{reverse(invert(details::J()))};
-    // inline constexpr LetterType CAPITAL_K{reverse(invert(details::K()))};
-    // inline constexpr LetterType CAPITAL_L{reverse(invert(details::L()))};
-    inline constexpr LetterType CAPITAL_M{reverse(invert(details::M()))};
-    inline constexpr LetterType CAPITAL_N{reverse(invert(details::N()))};
-    // inline constexpr LetterType CAPITAL_O{reverse(invert(details::O()))};
-    // inline constexpr LetterType CAPITAL_P{reverse(invert(details::P()))};
-    // inline constexpr LetterType CAPITAL_Q{reverse(invert(details::Q()))};
-    // inline constexpr LetterType CAPITAL_R{reverse(invert(details::R()))};
-    inline constexpr LetterType CAPITAL_S{reverse(invert(details::S()))};
-    inline constexpr LetterType CAPITAL_T{reverse(invert(details::T()))};
-    // inline constexpr LetterType CAPITAL_U{reverse(invert(details::U()))};
-    inline constexpr LetterType CAPITAL_V{reverse(invert(details::V()))};
-    // inline constexpr LetterType CAPITAL_W{reverse(invert(details::W()))};
-    // inline constexpr LetterType CAPITAL_X{reverse(invert(details::X()))};
-    inline constexpr LetterType CAPITAL_Y{reverse(invert(details::Y()))};
-    // inline constexpr LetterType CAPITAL_Z{reverse(invert(details::Z()))};
-
-    inline constexpr LetterType SPACE{reverse(invert(details::Space()))};
-
-    inline constexpr LetterType STUB{reverse(invert(details::Stub()))};
-
-    inline constexpr LetterType NUM_0{reverse(invert(details::Number_Zero()))};
-    inline constexpr LetterType NUM_1{reverse(invert(details::Number_One()))};
-    inline constexpr LetterType NUM_2{reverse(invert(details::Number_Two()))};
-    inline constexpr LetterType NUM_3{reverse(invert(details::Number_Three()))};
-    inline constexpr LetterType NUM_4{reverse(invert(details::Number_Four()))};
-    inline constexpr LetterType NUM_5{reverse(invert(details::Number_Five()))};
-    inline constexpr LetterType NUM_6{reverse(invert(details::Number_Six()))};
 
     /** I'll think about this more, but this type will probably be abandonded. */
     struct AsciiType
@@ -316,26 +497,49 @@ namespace glyphs
         std::array<LetterType, 6 * 16 - 1> rv{};
         for (auto &c : rv)
         {
-            c = glyphs::STUB;
+            c = reverse(invert(details::Stub()));
         }
-        rv[num(' ')] = glyphs::SPACE;
 
-        rv[num('0')] = glyphs::NUM_0;
-        rv[num('1')] = glyphs::NUM_1;
-        rv[num('2')] = glyphs::NUM_2;
-        rv[num('3')] = glyphs::NUM_3;
-        rv[num('4')] = glyphs::NUM_4;
-        rv[num('5')] = glyphs::NUM_5;
-        rv[num('6')] = glyphs::NUM_6;
+        rv[num(' ')] = reverse(invert(details::Space()));
 
-        rv[num('A')] = glyphs::CAPITAL_A;
-        rv[num('S')] = glyphs::CAPITAL_S;
-        rv[num('T')] = glyphs::CAPITAL_T;
-        rv[num('E')] = glyphs::CAPITAL_E;
-        rv[num('V')] = glyphs::CAPITAL_V;
-        rv[num('N')] = glyphs::CAPITAL_N;
-        rv[num('M')] = glyphs::CAPITAL_M;
-        rv[num('Y')] = glyphs::CAPITAL_Y;
+        rv[num('0')] = reverse(invert(details::Number_Zero()));
+        rv[num('1')] = reverse(invert(details::Number_One()));
+        rv[num('2')] = reverse(invert(details::Number_Two()));
+        rv[num('3')] = reverse(invert(details::Number_Three()));
+        rv[num('4')] = reverse(invert(details::Number_Four()));
+        rv[num('5')] = reverse(invert(details::Number_Five()));
+        rv[num('6')] = reverse(invert(details::Number_Six()));
+        rv[num('7')] = reverse(invert(details::Number_Seven()));
+        rv[num('8')] = reverse(invert(details::Number_Eight()));
+        rv[num('9')] = reverse(invert(details::Number_Nine()));
+
+        rv[num('A')] = reverse(invert(details::A()));
+        rv[num('B')] = reverse(invert(details::B()));
+        rv[num('C')] = reverse(invert(details::C()));
+        rv[num('D')] = reverse(invert(details::D()));
+        rv[num('E')] = reverse(invert(details::E()));
+        rv[num('F')] = reverse(invert(details::F()));
+        rv[num('G')] = reverse(invert(details::G()));
+        rv[num('H')] = reverse(invert(details::H()));
+        rv[num('I')] = reverse(invert(details::I()));
+        rv[num('J')] = reverse(invert(details::J()));
+        rv[num('K')] = reverse(invert(details::K()));
+        rv[num('L')] = reverse(invert(details::L()));
+        rv[num('M')] = reverse(invert(details::M()));
+        rv[num('N')] = reverse(invert(details::N()));
+        rv[num('O')] = reverse(invert(details::O()));
+        rv[num('P')] = reverse(invert(details::P()));
+        rv[num('Q')] = reverse(invert(details::Q()));
+        rv[num('R')] = reverse(invert(details::R()));
+        rv[num('S')] = reverse(invert(details::S()));
+        rv[num('T')] = reverse(invert(details::T()));
+        rv[num('U')] = reverse(invert(details::U()));
+        rv[num('V')] = reverse(invert(details::V()));
+        rv[num('W')] = reverse(invert(details::W()));
+        rv[num('X')] = reverse(invert(details::X()));
+        rv[num('Y')] = reverse(invert(details::Y()));
+        rv[num('Z')] = reverse(invert(details::Z()));
+
         return rv;
     }
     /**

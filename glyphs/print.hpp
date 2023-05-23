@@ -39,7 +39,7 @@ namespace glyphs
         constexpr size_t TAB_SPACE_LENGTH{2}; // TODO this needs to be configurable, maybe even at runtime?
         for (size_t ii = 0; ii < TAB_SPACE_LENGTH; ++ii)
         {
-            write_letter(video_buf, glyphs::SPACE, x++, y);
+            write_letter(video_buf, glyphs::decode_ascii(' '), x++, y);
         }
     }
 
@@ -50,8 +50,8 @@ namespace glyphs
                                           {
                                               // defintely not printable if bits 6 and 5 are unset, if all bit are set, or if only bit 5 is set
                                               //  ASCII is not arbitrarily layed out, it would seem (https://en.wikipedia.org/wiki/ASCII).
-                                              // or, if c > 32 and c < 127
-                                              return c > 32 && c < 127;
+                                              // or, if c > 31 and c < 127
+                                              return c > 31 && c < 127;
                                           }};
         constexpr auto check_if_newline{[](const char c)
                                         {
@@ -78,15 +78,15 @@ namespace glyphs
             }
             if (check_if_tab(c))
             {
-                write_letter(buffer, glyphs::SPACE, x++, y);
-                write_letter(buffer, glyphs::SPACE, x++, y);
+                write_letter(buffer, glyphs::decode_ascii(' '), x++, y);
+                write_letter(buffer, glyphs::decode_ascii(' '), x++, y);
                 continue;
             }
             if (check_if_null(c))
             {
                 break;
             }
-            write_letter(buffer, glyphs::STUB, x++, y);
+            write_letter(buffer, glyphs::decode_ascii(static_cast<char>(1)), x++, y);
         }
     }
 }
