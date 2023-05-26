@@ -76,6 +76,7 @@ private:
     }
     void increment_row()
     {
+        // TODO When reaching the bottom, we just jump to the top of the screen.  Really?
         line = line + 1 == MAX_ROW_COUNT ? 0 : line + 1;
     }
     void jump_to_new_row()
