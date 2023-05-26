@@ -39,18 +39,6 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer()
   std::array<uint8_t, BUFLEN> rv{};
   init_to_all_black(rv);
 
-  TextOut<DISP_WIDTH, DISP_HEIGHT, BPP, glyphs::LetterType> wrt{rv};
-  print(wrt, "      \n\tMy\nMeven 2040\n");
-  print(wrt, "\n");
-  print(wrt, "abcdefghijklmnopqrstuvwxyz\n");
-  print(wrt, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n");
-  print(wrt, "0123456789\n");
-  print(wrt, "\n");
-  print(wrt, "!@#$%^&*()-_=+{}[]|\n");
-  print(wrt, "\\/~`:;'\"<>,.?\n");
-  print(wrt, "\n");
-  print(wrt, "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\n");
-
   return rv;
 }
 
@@ -96,6 +84,26 @@ int main()
   {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
+
+  TextOut<DISP_WIDTH, DISP_HEIGHT, BPP, glyphs::LetterType> wrt{buffer};
+
+  sleep_ms(1000);
+  print(wrt, "      \n\tMy\nMeven 2040\n");
+  sleep_ms(1000);
+  print(wrt, "\n");
+  print(wrt, "abcdefghijklmnopqrstuvwxyz\n");
+  sleep_ms(1000);
+  print(wrt, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n");
+  sleep_ms(1000);
+  print(wrt, "0123456789\n");
+  sleep_ms(1000);
+  print(wrt, "\n");
+  print(wrt, "!@#$%^&*()-_=+{}[]|\n");
+  sleep_ms(1000);
+  print(wrt, "\\/~`:;'\"<>,.?\n");
+  sleep_ms(1000);
+  print(wrt, "\n");
+  print(wrt, "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\n");
 
   // TODO: kick this off on the other core.  That's right, this will be its only job.
   BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever();
