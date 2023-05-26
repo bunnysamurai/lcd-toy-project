@@ -44,7 +44,7 @@ namespace glyphs
     }
 
     template <size_t N>
-    constexpr void raw_print(auto &buffer, const char (&str)[N], uint32_t x, uint32_t y)
+    constexpr void raw_print(auto &buffer, const char (&str)[N], uint32_t column, uint32_t line)
     {
         constexpr auto check_if_printable{[](const char c)
                                           {
@@ -61,32 +61,32 @@ namespace glyphs
                                     { return c == '\t'; }};
         constexpr auto check_if_null{[](const char ch)
                                      { return ch == '\0'; }};
-        const auto x_start{x};
-        for (size_t ii = 0; ii < N; ++ii)
+        const auto column_start{column};
+        for (size_t ii = 0;; ++ii)
         {
             const auto c{str[ii]};
             if (check_if_printable(c))
             {
-                write_letter(buffer, glyphs::decode_ascii(str[ii]), x++, y);
+                write_letter(buffer, glyphs::decode_ascii(str[ii]), column++, line);
                 continue;
             }
             if (check_if_newline(c))
             {
-                y += 8; // TODO this is very fragile...
-                x = x_start;
+                line += 8; // TODO this is very fragile...
+                column = column_start;
                 continue;
             }
             if (check_if_tab(c))
             {
-                write_letter(buffer, glyphs::decode_ascii(' '), x++, y);
-                write_letter(buffer, glyphs::decode_ascii(' '), x++, y);
+                write_letter(buffer, glyphs::decode_ascii(' '), column++, line);
+                write_letter(buffer, glyphs::decode_ascii(' '), column++, line);
                 continue;
             }
             if (check_if_null(c))
             {
                 break;
             }
-            write_letter(buffer, glyphs::decode_ascii(static_cast<char>(1)), x++, y);
+            write_letter(buffer, glyphs::decode_ascii(static_cast<char>(1)), column++, line);
         }
     }
 }

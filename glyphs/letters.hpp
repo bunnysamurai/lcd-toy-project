@@ -12,7 +12,9 @@ namespace glyphs
     // using LetterType = std::array<uint8_t, 8>;
     struct LetterType
     {
-        std::array<uint8_t, 8> m_data;
+        static constexpr size_t elem_width{8};  // TODO in bits?
+        static constexpr size_t elem_height{8}; // in bits?
+        std::array<uint8_t, elem_height> m_data;
 
         [[nodiscard]] constexpr uint8_t &operator[](size_t ii) { return m_data[ii]; }
         [[nodiscard]] constexpr const uint8_t &operator[](size_t ii) const { return m_data[ii]; }
@@ -41,6 +43,8 @@ namespace glyphs
 
     namespace details
     {
+        // Let's do 8x8 row, cols
+
         inline constexpr LetterType Stub()
         {
             return {
@@ -52,7 +56,304 @@ namespace glyphs
                  0b010010'00,
                  0b000000'00}};
         }
-        // Let's do 8x8 row, cols
+
+        /* ========================================================================= */
+        /* ========================================================================= */
+        /* ========================================================================= */
+        inline constexpr LetterType a()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011110'00,
+                 0b000001'00,
+                 0b111111'00,
+                 0b100001'00,
+                 0b011111'00}};
+        }
+        inline constexpr LetterType b()
+        {
+            return {
+                {0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b111110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b111110'00}};
+        }
+        inline constexpr LetterType c()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011111'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b011111'00}};
+        }
+        inline constexpr LetterType d()
+        {
+            return {
+                {0b000001'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b011111'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011111'00}};
+        }
+        inline constexpr LetterType e()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011110'00,
+                 0b100001'00,
+                 0b111111'00,
+                 0b100000'00,
+                 0b011111'00}};
+        }
+        inline constexpr LetterType f()
+        {
+            return {
+                {0b000110'00,
+                 0b001001'00,
+                 0b001000'00,
+                 0b111110'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00}};
+        }
+        inline constexpr LetterType g()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011110'00,
+                 0b100001'00,
+                 0b011110'00,
+                 0b000001'00,
+                 0b000001'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType h()
+        {
+            return {
+                {0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b111110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00}};
+        }
+        inline constexpr LetterType i()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000100'00}};
+        }
+        inline constexpr LetterType j()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b110000'00}};
+        }
+        inline constexpr LetterType k()
+        {
+            return {
+                {0b100000'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b101100'00,
+                 0b110000'00,
+                 0b101100'00,
+                 0b100010'00}};
+        }
+        inline constexpr LetterType l()
+        {
+            return {
+                {0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00}};
+        }
+        inline constexpr LetterType m()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b111110'00,
+                 0b100101'00,
+                 0b100101'00,
+                 0b100101'00,
+                 0b100101'00}};
+        }
+        inline constexpr LetterType n()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b111110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00}};
+        }
+        inline constexpr LetterType o()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011110'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b100001'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType p()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b001110'00,
+                 0b010001'00,
+                 0b011110'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b010000'00}};
+        }
+        inline constexpr LetterType q()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011100'00,
+                 0b100010'00,
+                 0b011110'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b000011'00}};
+        }
+        inline constexpr LetterType r()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011100'00,
+                 0b100010'00,
+                 0b100000'00,
+                 0b100000'00,
+                 0b100000'00}};
+        }
+        inline constexpr LetterType s()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b001110'00,
+                 0b010000'00,
+                 0b001100'00,
+                 0b000010'00,
+                 0b011100'00}};
+        }
+        inline constexpr LetterType t()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b011110'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000100'00}};
+        }
+        inline constexpr LetterType u()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b010001'00,
+                 0b010001'00,
+                 0b010001'00,
+                 0b001111'00}};
+        }
+        inline constexpr LetterType v()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b010001'00,
+                 0b010001'00,
+                 0b011011'00,
+                 0b001110'00}};
+        }
+        inline constexpr LetterType w()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b100001'00,
+                 0b101101'00,
+                 0b011110'00,
+                 0b010010'00}};
+        }
+        inline constexpr LetterType x()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b100001'00,
+                 0b010010'00,
+                 0b001100'00,
+                 0b010010'00,
+                 0b100001'00}};
+        }
+        inline constexpr LetterType y()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b010001'00,
+                 0b010001'00,
+                 0b001111'00,
+                 0b000100'00,
+                 0b011000'00}};
+        }
+        inline constexpr LetterType z()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b011110'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b011110'00}};
+        }
+
+        /* ========================================================================= */
+        /* ========================================================================= */
+        /* ========================================================================= */
         inline constexpr LetterType A()
         {
             return {
@@ -68,11 +369,11 @@ namespace glyphs
         {
             return {
                 {0b111110'00,
-                 0b100011'00,
-                 0b100010'00,
+                 0b100001'00,
+                 0b100001'00,
                  0b111110'00,
-                 0b100010'00,
-                 0b100011'00,
+                 0b100001'00,
+                 0b100001'00,
                  0b111110'00}};
         }
         inline constexpr LetterType C()
@@ -90,11 +391,11 @@ namespace glyphs
         {
             return {
                 {0b111100'00,
-                 0b100011'00,
+                 0b100010'00,
                  0b100001'00,
                  0b100001'00,
                  0b100001'00,
-                 0b100011'00,
+                 0b100010'00,
                  0b111100'00}};
         }
         inline constexpr LetterType E()
@@ -237,7 +538,7 @@ namespace glyphs
                  0b100001'00,
                  0b100001'00,
                  0b100101'00,
-                 0b111111'00,
+                 0b011110'00,
                  0b000001'00}};
         }
         inline constexpr LetterType R()
@@ -340,12 +641,18 @@ namespace glyphs
                  0b111111'00}};
         }
 
+        /* ========================================================================= */
+        /* ========================================================================= */
+        /* ========================================================================= */
         // non alpha-numeric
         inline constexpr LetterType Space()
         {
             return {};
         }
 
+        /* ========================================================================= */
+        /* ========================================================================= */
+        /* ========================================================================= */
         // numbers
         inline constexpr LetterType Number_Zero()
         {
@@ -488,7 +795,10 @@ namespace glyphs
 
     constexpr auto init_letter_list()
     {
-        // TODO STUB
+        constexpr auto one_bpp_transfer{[](auto lt) -> LetterType
+                                        {
+                                            return reverse(invert(std::move(lt)));
+                                        }};
         constexpr auto num{[](const char ch)
                            {
                                return static_cast<size_t>(ch) - 32;
@@ -497,48 +807,75 @@ namespace glyphs
         std::array<LetterType, 6 * 16 - 1> rv{};
         for (auto &c : rv)
         {
-            c = reverse(invert(details::Stub()));
+            c = one_bpp_transfer(details::Stub());
         }
 
-        rv[num(' ')] = reverse(invert(details::Space()));
+        rv[num(' ')] = one_bpp_transfer(details::Space());
 
-        rv[num('0')] = reverse(invert(details::Number_Zero()));
-        rv[num('1')] = reverse(invert(details::Number_One()));
-        rv[num('2')] = reverse(invert(details::Number_Two()));
-        rv[num('3')] = reverse(invert(details::Number_Three()));
-        rv[num('4')] = reverse(invert(details::Number_Four()));
-        rv[num('5')] = reverse(invert(details::Number_Five()));
-        rv[num('6')] = reverse(invert(details::Number_Six()));
-        rv[num('7')] = reverse(invert(details::Number_Seven()));
-        rv[num('8')] = reverse(invert(details::Number_Eight()));
-        rv[num('9')] = reverse(invert(details::Number_Nine()));
+        rv[num('0')] = one_bpp_transfer(details::Number_Zero());
+        rv[num('1')] = one_bpp_transfer(details::Number_One());
+        rv[num('2')] = one_bpp_transfer(details::Number_Two());
+        rv[num('3')] = one_bpp_transfer(details::Number_Three());
+        rv[num('4')] = one_bpp_transfer(details::Number_Four());
+        rv[num('5')] = one_bpp_transfer(details::Number_Five());
+        rv[num('6')] = one_bpp_transfer(details::Number_Six());
+        rv[num('7')] = one_bpp_transfer(details::Number_Seven());
+        rv[num('8')] = one_bpp_transfer(details::Number_Eight());
+        rv[num('9')] = one_bpp_transfer(details::Number_Nine());
 
-        rv[num('A')] = reverse(invert(details::A()));
-        rv[num('B')] = reverse(invert(details::B()));
-        rv[num('C')] = reverse(invert(details::C()));
-        rv[num('D')] = reverse(invert(details::D()));
-        rv[num('E')] = reverse(invert(details::E()));
-        rv[num('F')] = reverse(invert(details::F()));
-        rv[num('G')] = reverse(invert(details::G()));
-        rv[num('H')] = reverse(invert(details::H()));
-        rv[num('I')] = reverse(invert(details::I()));
-        rv[num('J')] = reverse(invert(details::J()));
-        rv[num('K')] = reverse(invert(details::K()));
-        rv[num('L')] = reverse(invert(details::L()));
-        rv[num('M')] = reverse(invert(details::M()));
-        rv[num('N')] = reverse(invert(details::N()));
-        rv[num('O')] = reverse(invert(details::O()));
-        rv[num('P')] = reverse(invert(details::P()));
-        rv[num('Q')] = reverse(invert(details::Q()));
-        rv[num('R')] = reverse(invert(details::R()));
-        rv[num('S')] = reverse(invert(details::S()));
-        rv[num('T')] = reverse(invert(details::T()));
-        rv[num('U')] = reverse(invert(details::U()));
-        rv[num('V')] = reverse(invert(details::V()));
-        rv[num('W')] = reverse(invert(details::W()));
-        rv[num('X')] = reverse(invert(details::X()));
-        rv[num('Y')] = reverse(invert(details::Y()));
-        rv[num('Z')] = reverse(invert(details::Z()));
+        rv[num('A')] = one_bpp_transfer(details::A());
+        rv[num('B')] = one_bpp_transfer(details::B());
+        rv[num('C')] = one_bpp_transfer(details::C());
+        rv[num('D')] = one_bpp_transfer(details::D());
+        rv[num('E')] = one_bpp_transfer(details::E());
+        rv[num('F')] = one_bpp_transfer(details::F());
+        rv[num('G')] = one_bpp_transfer(details::G());
+        rv[num('H')] = one_bpp_transfer(details::H());
+        rv[num('I')] = one_bpp_transfer(details::I());
+        rv[num('J')] = one_bpp_transfer(details::J());
+        rv[num('K')] = one_bpp_transfer(details::K());
+        rv[num('L')] = one_bpp_transfer(details::L());
+        rv[num('M')] = one_bpp_transfer(details::M());
+        rv[num('N')] = one_bpp_transfer(details::N());
+        rv[num('O')] = one_bpp_transfer(details::O());
+        rv[num('P')] = one_bpp_transfer(details::P());
+        rv[num('Q')] = one_bpp_transfer(details::Q());
+        rv[num('R')] = one_bpp_transfer(details::R());
+        rv[num('S')] = one_bpp_transfer(details::S());
+        rv[num('T')] = one_bpp_transfer(details::T());
+        rv[num('U')] = one_bpp_transfer(details::U());
+        rv[num('V')] = one_bpp_transfer(details::V());
+        rv[num('W')] = one_bpp_transfer(details::W());
+        rv[num('X')] = one_bpp_transfer(details::X());
+        rv[num('Y')] = one_bpp_transfer(details::Y());
+        rv[num('Z')] = one_bpp_transfer(details::Z());
+
+        rv[num('a')] = one_bpp_transfer(details::a());
+        rv[num('b')] = one_bpp_transfer(details::b());
+        rv[num('c')] = one_bpp_transfer(details::c());
+        rv[num('d')] = one_bpp_transfer(details::d());
+        rv[num('e')] = one_bpp_transfer(details::e());
+        rv[num('f')] = one_bpp_transfer(details::f());
+        rv[num('g')] = one_bpp_transfer(details::g());
+        rv[num('h')] = one_bpp_transfer(details::h());
+        rv[num('i')] = one_bpp_transfer(details::i());
+        rv[num('j')] = one_bpp_transfer(details::j());
+        rv[num('k')] = one_bpp_transfer(details::k());
+        rv[num('l')] = one_bpp_transfer(details::l());
+        rv[num('m')] = one_bpp_transfer(details::m());
+        rv[num('n')] = one_bpp_transfer(details::n());
+        rv[num('o')] = one_bpp_transfer(details::o());
+        rv[num('p')] = one_bpp_transfer(details::p());
+        rv[num('q')] = one_bpp_transfer(details::q());
+        rv[num('r')] = one_bpp_transfer(details::r());
+        rv[num('s')] = one_bpp_transfer(details::s());
+        rv[num('t')] = one_bpp_transfer(details::t());
+        rv[num('u')] = one_bpp_transfer(details::u());
+        rv[num('v')] = one_bpp_transfer(details::v());
+        rv[num('w')] = one_bpp_transfer(details::w());
+        rv[num('x')] = one_bpp_transfer(details::x());
+        rv[num('y')] = one_bpp_transfer(details::y());
+        rv[num('z')] = one_bpp_transfer(details::z());
 
         return rv;
     }

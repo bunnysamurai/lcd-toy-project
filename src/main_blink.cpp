@@ -8,7 +8,8 @@
 #include "status_utilities.hpp"
 #include "../driver/pinout.h"
 #include "../glyphs/letters.hpp"
-#include "../glyphs/print.hpp"
+// #include "../glyphs/print.hpp"
+#include "TextOut.hpp"
 
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
@@ -17,16 +18,43 @@ static constexpr size_t BUFLEN{[]
                                  // need to convert from number of pixels to number of bits, then to number of bytes.
                                  return DISP_WIDTH * DISP_HEIGHT * BPP / 8;
                                }()};
-static std::array<uint8_t, BUFLEN> buffer;
 
-void init_to_all_white(auto &buf)
+constexpr void init_to_all_white(auto &buf)
 {
-  std::fill(std::begin(buffer), std::end(buffer), std::numeric_limits<uint8_t>::min());
+  for (auto &el : buf)
+  {
+    el = std::numeric_limits<uint8_t>::min();
+  }
 }
-void init_to_all_black(auto &buf)
+constexpr void init_to_all_black(auto &buf)
 {
-  std::fill(std::begin(buffer), std::end(buffer), std::numeric_limits<uint8_t>::max());
+  for (auto &el : buf)
+  {
+    el = std::numeric_limits<uint8_t>::max();
+  }
 }
+
+constexpr std::array<uint8_t, BUFLEN> init_the_buffer()
+{
+  std::array<uint8_t, BUFLEN> rv{};
+  init_to_all_black(rv);
+
+  TextOut<DISP_WIDTH, DISP_HEIGHT, BPP, glyphs::LetterType> wrt{rv};
+  print(wrt, "      \n\tMy\nMeven 2040\n");
+  print(wrt, "\n");
+  print(wrt, "abcdefghijklmnopqrstuvwxyz\n");
+  print(wrt, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n");
+  print(wrt, "0123456789\n");
+  print(wrt, "\n");
+  print(wrt, "!@#$%^&*()-_=+{}[]|\n");
+  print(wrt, "\\/~`:;'\"<>,.?\n");
+  print(wrt, "\n");
+  print(wrt, "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\n");
+
+  return rv;
+}
+
+static auto buffer{init_the_buffer()};
 
 void setup_for_input(uint id)
 {
@@ -63,15 +91,6 @@ bool lcd_init(auto &video_buf)
 int main()
 {
   stdio_init_all();
-
-  init_to_all_black(buffer);
-  glyphs::raw_print(buffer, "STEVEN\n\tMY\nMEVEN 2040", 0, 0);
-
-  glyphs::raw_print(buffer, "abcdefghijklmnopqrstuvwxyz", 0, 4 * 8);
-  glyphs::raw_print(buffer, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 0, 5 * 8);
-  glyphs::raw_print(buffer, "0123456789", 0, 6 * 8);
-  glyphs::raw_print(buffer, "!@#$%^&*()-_=+{}[]|", 0, 7 * 8);
-  glyphs::raw_print(buffer, "\\/~`:;'\"<>,.?", 0, 8 * 8);
 
   if (!lcd_init(buffer))
   {
