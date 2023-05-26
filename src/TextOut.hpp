@@ -54,7 +54,7 @@ public:
     using buffer_type = std::array<uint8_t, compute_video_buffer_length(SCREEN_WIDTH, SCREEN_HEIGHT, BPP)>;
 
 private:
-    static constexpr auto MAX_CHARACTER_WIDTH{to_character_width<LetterT>(SCREEN_WIDTH, BPP)};
+    static constexpr auto MAX_CHARACTER_COLUMN_COUNT{to_character_width<LetterT>(SCREEN_WIDTH, BPP)};
     static constexpr auto MAX_ROW_COUNT{to_character_height<LetterT>(SCREEN_HEIGHT, BPP)};
     static constexpr auto LETTER_WIDTH{LetterT::elem_width};
     static constexpr auto LETTER_HEIGHT{LetterT::elem_height};
@@ -65,7 +65,7 @@ private:
     void increment_column()
     {
         const auto rv{column + 1};
-        if (rv == MAX_CHARACTER_WIDTH)
+        if (rv == MAX_CHARACTER_COLUMN_COUNT)
         {
             jump_to_new_row();
         }
@@ -98,8 +98,7 @@ private:
         // x positions are byte indexes in the video buffer
         // y positions are 8row increments
         // FIXME Global macros are the worst.  Let's abstract with a type somehow.
-        constexpr auto LCD_EFFECTIVE_WIDTH{to_character_width<LetterT>(DISP_WIDTH, BPP)};
-        for (uint idx = y * LETTER_HEIGHT * LCD_EFFECTIVE_WIDTH + x, ii = 0; ii < size(letter); idx += LCD_EFFECTIVE_WIDTH, ++ii)
+        for (uint idx = y * LETTER_HEIGHT * MAX_CHARACTER_COLUMN_COUNT + x, ii = 0; ii < size(letter); idx += MAX_CHARACTER_COLUMN_COUNT, ++ii)
         {
             video_buf[idx] = letter[ii];
         }
