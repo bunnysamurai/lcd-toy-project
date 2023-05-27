@@ -87,23 +87,21 @@ int main()
 
   TextOut<DISP_WIDTH, DISP_HEIGHT, BPP, glyphs::LetterType> wrt{buffer};
 
-  sleep_ms(1000);
-  print(wrt, "      \n\tMy\nMeven 2040\n");
-  sleep_ms(1000);
-  print(wrt, "\n");
-  print(wrt, "abcdefghijklmnopqrstuvwxyz\n");
-  sleep_ms(1000);
-  print(wrt, "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n");
-  sleep_ms(1000);
-  print(wrt, "0123456789\n");
-  sleep_ms(1000);
-  print(wrt, "\n");
-  print(wrt, "!@#$%^&*()-_=+{}[]|\n");
-  sleep_ms(1000);
-  print(wrt, "\\/~`:;'\"<>,.?\n");
-  sleep_ms(1000);
-  print(wrt, "\n");
-  print(wrt, "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\n");
+  print(wrt, "+------------+\n");
+  print(wrt, "| Meven 2040 |\n");
+  print(wrt, "+------------+\n");
+  // clang-format off
+  print(wrt, R"(
+#include <iostream>
+#include <array>
+int main()
+{
+  std::cout<<
+    "Hello, Steven!\n";
+  std::array<int,3> array
+    {1,2,3};
+})");
+  // clang-format on
 
   // TODO: kick this off on the other core.  That's right, this will be its only job.
   BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever();

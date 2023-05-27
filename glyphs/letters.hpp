@@ -277,9 +277,9 @@ namespace glyphs
         {
             return {
                 {0b000000'00,
-                 0b000000'00,
                  0b001000'00,
                  0b011110'00,
+                 0b001000'00,
                  0b001000'00,
                  0b001000'00,
                  0b000100'00}};
@@ -289,7 +289,7 @@ namespace glyphs
             return {
                 {0b000000'00,
                  0b000000'00,
-                 0b000000'00,
+                 0b010001'00,
                  0b010001'00,
                  0b010001'00,
                  0b010001'00,
@@ -300,7 +300,7 @@ namespace glyphs
             return {
                 {0b000000'00,
                  0b000000'00,
-                 0b000000'00,
+                 0b010001'00,
                  0b010001'00,
                  0b010001'00,
                  0b011011'00,
@@ -311,7 +311,7 @@ namespace glyphs
             return {
                 {0b000000'00,
                  0b000000'00,
-                 0b000000'00,
+                 0b100001'00,
                  0b100001'00,
                  0b101101'00,
                  0b011110'00,
@@ -344,8 +344,8 @@ namespace glyphs
             return {
                 {0b000000'00,
                  0b000000'00,
-                 0b000000'00,
                  0b011110'00,
+                 0b000010'00,
                  0b000100'00,
                  0b001000'00,
                  0b011110'00}};
@@ -649,6 +649,359 @@ namespace glyphs
         {
             return {};
         }
+        inline constexpr LetterType At_Symbol()
+        {
+            return {
+                {0b011110'00,
+                 0b100001'00,
+                 0b101101'00,
+                 0b110011'00,
+                 0b110001'00,
+                 0b101111'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType Exclamation_Point()
+        {
+            return {
+                {0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00}};
+        }
+        inline constexpr LetterType Sharp()
+        {
+            return {
+                {0b001001'00,
+                 0b010010'00,
+                 0b111111'00,
+                 0b010010'00,
+                 0b111111'00,
+                 0b010010'00,
+                 0b100100'00}};
+        }
+        inline constexpr LetterType Dollar()
+        {
+            return {
+                {0b000100'00,
+                 0b011111'00,
+                 0b100100'00,
+                 0b011110'00,
+                 0b000101'00,
+                 0b111111'00,
+                 0b000100'00}};
+        }
+        inline constexpr LetterType PercentSign()
+        {
+            return {
+                {0b111000'00,
+                 0b101001'00,
+                 0b111010'00,
+                 0b001100'00,
+                 0b010111'00,
+                 0b100101'00,
+                 0b000111'00}};
+        }
+        inline constexpr LetterType Carrot()
+        {
+            return {
+                {0b001100'00,
+                 0b010010'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Ampersand()
+        {
+            return {
+                {0b011000'00,
+                 0b100100'00,
+                 0b101000'00,
+                 0b010000'00,
+                 0b101010'00,
+                 0b100100'00,
+                 0b011010'00}};
+        }
+        inline constexpr LetterType Star()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b011110'00,
+                 0b001100'00,
+                 0b010010'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType OpenParen()
+        {
+            return {
+                {0b000010'00,
+                 0b001100'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b001100'00,
+                 0b000010'00}};
+        }
+        inline constexpr LetterType CloseParen()
+        {
+            return {
+                {0b010000'00,
+                 0b001100'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b001100'00,
+                 0b010000'00}};
+        }
+        inline constexpr LetterType Hyphen()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b111111'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Underscore()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b111111'00}};
+        }
+        inline constexpr LetterType Equals()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b111111'00,
+                 0b000000'00,
+                 0b111111'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Plus()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b111110'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType OpenCurl()
+        {
+            return {
+                {0b000110'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b011000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000110'00}};
+        }
+        inline constexpr LetterType CloseCurl()
+        {
+            return {
+                {0b011000'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000110'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b011000'00}};
+        }
+        inline constexpr LetterType OpenSquare()
+        {
+            return {
+                {0b011110'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b010000'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType CloseSquare()
+        {
+            return {
+                {0b011110'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b000010'00,
+                 0b011110'00}};
+        }
+        inline constexpr LetterType Pipe()
+        {
+            return {
+                {0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b000100'00}};
+        }
+
+        inline constexpr LetterType Backslash()
+        {
+            return {
+                {0b100000'00,
+                 0b010000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000100'00,
+                 0b000010'00,
+                 0b000001'00}};
+        }
+        inline constexpr LetterType Frontslash()
+        {
+            return {
+                {0b000001'00,
+                 0b000010'00,
+                 0b000100'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b010000'00,
+                 0b100000'00}};
+        }
+        inline constexpr LetterType Tilde()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b011000'00,
+                 0b101101'00,
+                 0b000110'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Tick()
+        {
+            return {
+                {0b100000'00,
+                 0b010000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Colon()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType Semicolon()
+        {
+            return {
+                {0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b010000'00}};
+        }
+        inline constexpr LetterType SingleQuote()
+        {
+            return {
+                {0b001000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType DoubleQuote()
+        {
+            return {
+                {0b010010'00,
+                 0b010010'00,
+                 0b010010'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00}};
+        }
+        inline constexpr LetterType OpenCarrot()
+        {
+            return {
+                {0b000010'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b010000'00,
+                 0b001000'00,
+                 0b000100'00,
+                 0b000010'00}};
+        }
+        inline constexpr LetterType ClosedCarrot()
+        {
+            return {
+                {0b010000'00,
+                 0b001000'00,
+                 0b000100'00,
+                 0b000010'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b010000'00}};
+        }
+        inline constexpr LetterType Comma()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b001000'00,
+                 0b001000'00,
+                 0b010000'00}};
+        }
+        inline constexpr LetterType Period()
+        {
+            return {
+                {0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b000000'00,
+                 0b001100'00,
+                 0b001100'00}};
+        }
+        inline constexpr LetterType QuestionMark()
+        {
+            return {
+                {0b011100'00,
+                 0b100010'00,
+                 0b000010'00,
+                 0b000100'00,
+                 0b001000'00,
+                 0b000000'00,
+                 0b001000'00}};
+        }
 
         /* ========================================================================= */
         /* ========================================================================= */
@@ -690,13 +1043,13 @@ namespace glyphs
         inline constexpr LetterType Number_Three()
         {
             return {
-                {0b011100'00,
-                 0b100010'00,
+                {0b011110'00,
+                 0b100001'00,
                  0b000001'00,
-                 0b001111'00,
+                 0b001110'00,
                  0b000001'00,
-                 0b100010'00,
-                 0b011100'00}};
+                 0b100001'00,
+                 0b011110'00}};
         }
         inline constexpr LetterType Number_Four()
         {
@@ -811,6 +1164,38 @@ namespace glyphs
         }
 
         rv[num(' ')] = one_bpp_transfer(details::Space());
+        rv[num('!')] = one_bpp_transfer(details::Exclamation_Point());
+        rv[num('@')] = one_bpp_transfer(details::At_Symbol());
+        rv[num('#')] = one_bpp_transfer(details::Sharp());
+        rv[num('$')] = one_bpp_transfer(details::Dollar());
+        rv[num('%')] = one_bpp_transfer(details::PercentSign());
+        rv[num('^')] = one_bpp_transfer(details::Carrot());
+        rv[num('&')] = one_bpp_transfer(details::Ampersand());
+        rv[num('*')] = one_bpp_transfer(details::Star());
+        rv[num('(')] = one_bpp_transfer(details::OpenParen());
+        rv[num(')')] = one_bpp_transfer(details::CloseParen());
+        rv[num('-')] = one_bpp_transfer(details::Hyphen());
+        rv[num('_')] = one_bpp_transfer(details::Underscore());
+        rv[num('=')] = one_bpp_transfer(details::Equals());
+        rv[num('+')] = one_bpp_transfer(details::Plus());
+        rv[num('{')] = one_bpp_transfer(details::OpenCurl());
+        rv[num('}')] = one_bpp_transfer(details::CloseCurl());
+        rv[num('[')] = one_bpp_transfer(details::OpenSquare());
+        rv[num(']')] = one_bpp_transfer(details::CloseSquare());
+        rv[num('|')] = one_bpp_transfer(details::Pipe());
+        rv[num('\\')] = one_bpp_transfer(details::Backslash());
+        rv[num('/')] = one_bpp_transfer(details::Frontslash());
+        rv[num('~')] = one_bpp_transfer(details::Tilde());
+        rv[num('`')] = one_bpp_transfer(details::Tick());
+        rv[num(':')] = one_bpp_transfer(details::Colon());
+        rv[num(';')] = one_bpp_transfer(details::Semicolon());
+        rv[num('\'')] = one_bpp_transfer(details::SingleQuote());
+        rv[num('\"')] = one_bpp_transfer(details::DoubleQuote());
+        rv[num('<')] = one_bpp_transfer(details::OpenCarrot());
+        rv[num('>')] = one_bpp_transfer(details::ClosedCarrot());
+        rv[num(',')] = one_bpp_transfer(details::Comma());
+        rv[num('.')] = one_bpp_transfer(details::Period());
+        rv[num('?')] = one_bpp_transfer(details::QuestionMark());
 
         rv[num('0')] = one_bpp_transfer(details::Number_Zero());
         rv[num('1')] = one_bpp_transfer(details::Number_One());

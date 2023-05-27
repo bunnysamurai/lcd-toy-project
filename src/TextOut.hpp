@@ -106,13 +106,13 @@ private:
     }
 
 public:
-    constexpr explicit TextOut(buffer_type &buf) : buffer{buf} {}
+    constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
 
     template <size_t N>
     friend constexpr void
     print(TextOut &dev, const char (&str)[N])
     {
-        for (size_t ii = 0;; ++ii)
+        for (size_t ii = 0; ii < N; ++ii)
         {
             if (check_if_null(str[ii]))
             {
