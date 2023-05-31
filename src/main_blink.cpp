@@ -96,13 +96,11 @@ int main()
   // clang-format off
   print(wrt, R"(
 #include <iostream>
-#include <array>
+
 int main()
 {
   std::cout<<
     "Hello, Steven!\n";
-  std::array<int,3> array
-    {1,2,3};
 })");
   // clang-format on
 
