@@ -79,6 +79,7 @@ bool lcd_init(auto &video_buf)
 }
 int main()
 {
+  static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
   stdio_init_all();
 
   if (!lcd_init(buffer))

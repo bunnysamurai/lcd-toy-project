@@ -56,9 +56,9 @@ public:
     // start with our customization point method of choice, plain ol' ADL!
     /**
      * @param video_buf Whatever the video buffer data structure is.  This will be the default implementation?
+     * @param tile The tile to print
      * @param x Column, in characters, in native screen display orientation
      * @param y Row, in characters, in native screen display orientation
-     * @param tile The tile to print
      */
     template <class TileT>
     friend constexpr void write_tile(TileBuffer &video_buf, const TileT &tile, uint32_t x, uint32_t y)

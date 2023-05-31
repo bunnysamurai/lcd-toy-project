@@ -39,6 +39,23 @@ namespace glyphs
             }
             return letter;
         }
+        [[nodiscard]] friend constexpr LetterType flip(LetterType letter)
+        {
+            letter = reverse(letter);
+            for (size_t ii = 0; ii < size(letter) / 2; ++ii)
+            {
+                auto tmp{letter[ii]};
+                letter[ii] = letter[size(letter) - ii - 1];
+                letter[size(letter) - ii - 1] = tmp;
+            }
+            return letter;
+        }
+        [[nodiscard]] friend constexpr LetterType rotate_cw(LetterType letter)
+        {
+        }
+        [[nodiscard]] friend constexpr LetterType rotate_ccw(LetterType letter)
+        {
+        }
     };
 
     namespace details
@@ -1130,7 +1147,7 @@ namespace glyphs
                                return static_cast<size_t>(ch) - 32;
                            }};
         static_assert(num(' ') == 0, "charcter SP is not at 32?");
-        std::array<LetterType, 6 * 16 - 1> rv{};
+        std::array<LetterType, 6 * 16 - 1> rv{}; // TODO magic number
         for (auto &c : rv)
         {
             c = one_bpp_transfer(details::Stub());
