@@ -12,9 +12,9 @@ namespace glyphs
     // using LetterType = std::array<uint8_t, 8>;
     struct LetterType
     {
-        static constexpr size_t elem_width{8};  // TODO in bits?
-        static constexpr size_t elem_height{8}; // in bits?
-        std::array<uint8_t, elem_height> m_data;
+        static constexpr size_t pixel_width{8};  // in elements, aka pixels
+        static constexpr size_t pixel_height{8}; // in elements, aka pixels
+        std::array<uint8_t, pixel_height> m_data;
 
         [[nodiscard]] constexpr uint8_t &operator[](size_t ii) { return m_data[ii]; }
         [[nodiscard]] constexpr const uint8_t &operator[](size_t ii) const { return m_data[ii]; }
@@ -1118,33 +1118,6 @@ namespace glyphs
                  0b000001'00}};
         }
     }
-
-    /** I'll think about this more, but this type will probably be abandonded. */
-    struct AsciiType
-    {
-        enum struct Flag_t : uint8_t
-        {
-            PRINTABLE,
-            NEWLINE,
-            TAB,
-            OTHER
-        } m_flags;
-        std::optional<LetterType> m_letter;
-
-        friend constexpr void write_letter(auto &buf, const AsciiType &type, uint32_t x, uint32_t y)
-        {
-            switch (type.m_flags)
-            {
-            case AsciiType::Flag_t::PRINTABLE:
-                write_letter(buf, type.m_letter, x, y);
-                break;
-            case AsciiType::Flag_t::NEWLINE:
-            case AsciiType::Flag_t::TAB:
-            case AsciiType::Flag_t::OTHER:
-                break;
-            }
-        }
-    };
 
     constexpr auto init_letter_list()
     {

@@ -10,6 +10,7 @@
 #include "../glyphs/letters.hpp"
 // #include "../glyphs/print.hpp"
 #include "TextOut.hpp"
+#include "VideoBuf.hpp"
 
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
@@ -85,7 +86,8 @@ int main()
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
 
-  TextOut<DISP_WIDTH, DISP_HEIGHT, BPP, glyphs::LetterType> wrt{buffer};
+  TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
+  TextOut wrt{tile_buf};
 
   print(wrt, "+------------+\n");
   print(wrt, "| Meven 2040 |\n");
