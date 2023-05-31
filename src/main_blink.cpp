@@ -98,7 +98,7 @@ int main()
 
   for (;;)
   {
-    flush(wrt);
+    clear(wrt);
     print(wrt, "+------------+\n");
     print(wrt, "| Meven 2040 |\n");
     print(wrt, "+------------+\n");

@@ -66,7 +66,7 @@ private:
 public:
     constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
 
-    friend constexpr void flush(TextOut &dev)
+    friend constexpr void clear(TextOut &dev)
     {
         clear(dev.buffer);
         dev.column = 0;
