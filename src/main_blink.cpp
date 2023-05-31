@@ -4,13 +4,11 @@
 #include <limits>
 
 #include "pico/stdlib.h"
-#include "pico/rand.h"
 #include "pico/printf.h"
 #include "pico/multicore.h"
 
 #include "status_utilities.hpp"
 #include "../driver/pinout.h"
-#include "../glyphs/letters.hpp"
 #include "TextOut.hpp"
 #include "VideoBuf.hpp"
 
@@ -46,6 +44,8 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer()
 }
 
 static auto buffer{init_the_buffer()};
+static TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
+static TextOut wrt{tile_buf};
 
 void setup_for_input(uint id)
 {
@@ -89,9 +89,6 @@ int main()
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
 
-  TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
-  TextOut wrt{tile_buf};
-
   // That's right, this is its only job.
   multicore_launch_core1([]()
                          { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
@@ -104,7 +101,7 @@ int main()
     print(wrt, "+------------+\n");
     sleep_ms(1000);
     // clang-format off
-  print(wrt, R"(
+    print(wrt, R"(
 #include <iostream>
 
 int main()

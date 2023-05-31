@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <array>
+#include "../glyphs/letters.hpp"
 
 // helpers?
 
@@ -40,7 +41,7 @@ private:
     uint line;
     buffer_type &buffer;
 
-    void increment_column()
+    constexpr void increment_column()
     {
         const auto rv{column + 1};
         if (rv == MAX_CHARACTER_COLUMN_COUNT)
@@ -52,12 +53,12 @@ private:
             column = rv;
         }
     }
-    void increment_row()
+    constexpr void increment_row()
     {
         // TODO When reaching the bottom, we just jump to the top of the screen.  Really?
         line = line + 1 == MAX_ROW_COUNT ? 0 : line + 1;
     }
-    void jump_to_new_row()
+    constexpr void jump_to_new_row()
     {
         increment_row();
         column = 0;
