@@ -66,6 +66,13 @@ private:
 public:
     constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
 
+    friend constexpr void flush(TextOut &dev)
+    {
+        clear(dev.buffer);
+        dev.column = 0;
+        dev.line = 0;
+    }
+
     template <size_t N>
     friend constexpr void
     print(TextOut &dev, const char (&str)[N])

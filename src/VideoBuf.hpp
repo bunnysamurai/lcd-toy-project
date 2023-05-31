@@ -73,6 +73,14 @@ public:
         }
     }
 
+    friend constexpr void clear(TileBuffer &video_buf)
+    {
+        for (uint idx = 0; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx] = uint8_t{255};
+        }
+    }
+
 private:
     buffer_type &video_buf;
 };

@@ -95,9 +95,10 @@ int main()
   // That's right, this is its only job.
   multicore_launch_core1([]()
                          { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
+
   for (;;)
   {
-    init_to_all_black(buffer);
+    flush(wrt);
     print(wrt, "+------------+\n");
     print(wrt, "| Meven 2040 |\n");
     print(wrt, "+------------+\n");
