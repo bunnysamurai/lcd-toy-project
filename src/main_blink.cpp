@@ -2,13 +2,15 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+
 #include "pico/stdlib.h"
 #include "pico/rand.h"
 #include "pico/printf.h"
+#include "pico/multicore.h"
+
 #include "status_utilities.hpp"
 #include "../driver/pinout.h"
 #include "../glyphs/letters.hpp"
-// #include "../glyphs/print.hpp"
 #include "TextOut.hpp"
 #include "VideoBuf.hpp"
 
@@ -90,10 +92,17 @@ int main()
   TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
   TextOut wrt{tile_buf};
 
-  print(wrt, "+------------+\n");
-  print(wrt, "| Meven 2040 |\n");
-  print(wrt, "+------------+\n");
-  // clang-format off
+  // That's right, this is its only job.
+  multicore_launch_core1([]()
+                         { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
+  for (;;)
+  {
+    init_to_all_black(buffer);
+    print(wrt, "+------------+\n");
+    print(wrt, "| Meven 2040 |\n");
+    print(wrt, "+------------+\n");
+    sleep_ms(1000);
+    // clang-format off
   print(wrt, R"(
 #include <iostream>
 
@@ -101,17 +110,9 @@ int main()
 {
   std::cout<<
     "Hello, Steven!\n";
-})");
-  // clang-format on
-
-  // TODO: kick this off on the other core.  That's right, this will be its only job.
-  BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever();
-
-  // static constexpr std::array<LetterType, 26 * 2> dictionary{};
-  // TextOut text_display(buffer, dictionary, DISP_WIDTH / 8, DISP_HEIGHT);
-
-  // print(text_display, "This is a string\n");
-  // draw(text_display, "This is another string!", 0, 10);
-
-  // AbstractOut abstract_display(buffer, dictionary, DISP_WIDTH / 8, DISP_HEIGHT);
+}
+)");
+    // clang-format on
+    sleep_ms(1000);
+  }
 }

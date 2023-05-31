@@ -50,12 +50,12 @@ namespace glyphs
             }
             return letter;
         }
-        [[nodiscard]] friend constexpr LetterType rotate_cw(LetterType letter)
-        {
-        }
-        [[nodiscard]] friend constexpr LetterType rotate_ccw(LetterType letter)
-        {
-        }
+        // [[nodiscard]] friend constexpr LetterType rotate_cw(LetterType letter)
+        // {
+        // }
+        // [[nodiscard]] friend constexpr LetterType rotate_ccw(LetterType letter)
+        // {
+        // }
     };
 
     namespace details

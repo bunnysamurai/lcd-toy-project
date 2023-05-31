@@ -18,7 +18,10 @@ add_executable(${PROJECT_NAME}
 
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE pico_stdlib waveshare_driver pico_rand)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    pico_stdlib 
+    pico_multicore
+    waveshare_driver pico_rand)
 
 # so printf works?
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
