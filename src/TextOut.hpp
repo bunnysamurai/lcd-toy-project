@@ -33,45 +33,143 @@ constexpr bool check_if_null(const char ch)
 template <class buffer_type>
 class TextOut
 {
-
 private:
+    // TODO make build-time configurable, also, letters' init method cares about this, so we need to make changes in two places manually right now.
+    static constexpr auto use_native_ordering{false};
+    static constexpr auto use_rotated_ordering{!use_native_ordering};
+
     static constexpr auto MAX_CHARACTER_COLUMN_COUNT{buffer_type::template max_tiles_per_row<glyphs::LetterType>()};
     static constexpr auto MAX_ROW_COUNT{buffer_type::template max_tiles_per_column<glyphs::LetterType>()};
+    static constexpr uint START_COLUMN{0};
+    static constexpr uint START_LINE{[]()
+                                     {
+                                         if constexpr (use_native_ordering)
+                                         {
+                                             return 0;
+                                         }
+                                         else if (use_rotated_ordering)
+                                         {
+                                             return MAX_ROW_COUNT - 1;
+                                         }
+                                     }()};
     uint column;
     uint line;
     buffer_type &buffer;
 
-    constexpr void increment_column()
+    // these methods are for "native" image buffer ordering
+    constexpr void increment_column_native()
     {
-        const auto rv{column + 1};
-        if (rv == MAX_CHARACTER_COLUMN_COUNT)
+        if (column == MAX_CHARACTER_COLUMN_COUNT - 1)
         {
             jump_to_new_row();
         }
         else
         {
-            column = rv;
+            ++column;
         }
     }
-    constexpr void increment_row()
+    constexpr void increment_row_native()
     {
         // TODO When reaching the bottom, we just jump to the top of the screen.  Really?
-        line = line + 1 == MAX_ROW_COUNT ? 0 : line + 1;
+        line = line == MAX_ROW_COUNT - 1 ? 0 : line + 1;
     }
-    constexpr void jump_to_new_row()
+    constexpr void jump_to_new_row_native()
     {
         increment_row();
         column = 0;
     }
 
+    // these methods are for "rotated" image buffer ordering
+    constexpr void increment_column_rotated()
+    {
+        // "column" in the title actually means line
+        // when we increment a "column" position, we actually decrement the line position
+        // if the current line position is zero, we "jump_to_new_row_rotated"
+        if (line == 0)
+        {
+            jump_to_new_row_rotated();
+        }
+        else
+        {
+            --line;
+        }
+    }
+    constexpr void increment_row_rotated()
+    {
+        // "row" in title actually means column
+        // column ordering is in ascending order, so we simple add one
+        // if current column is one-less-the-max, reset to zero.  This effectively increments the "row"
+        column = column == MAX_CHARACTER_COLUMN_COUNT - 1 ? 0 : column + 1;
+    }
+    constexpr void jump_to_new_row_rotated()
+    {
+        // "row" in title actually means column
+        // when we perform a jump, the "column" location needs to be reset
+        // whcih, in our case, means back to max row value
+        increment_row();
+        line = MAX_ROW_COUNT - 1;
+    }
+
+    // FIXME SWITCHED ON MACRO.  BOO.
+    constexpr void increment_column()
+    {
+        if constexpr (use_native_ordering)
+        {
+            increment_column_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            increment_column_rotated();
+        }
+    }
+    constexpr void increment_row()
+    {
+        if constexpr (use_native_ordering)
+        {
+            increment_row_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            increment_row_rotated();
+        }
+    }
+    constexpr void jump_to_new_row()
+    {
+        if constexpr (use_native_ordering)
+        {
+            jump_to_new_row_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            jump_to_new_row_rotated();
+        }
+    }
+
+    template <class Tile>
+    constexpr Tile adjust_tile(Tile tile)
+    {
+        if constexpr (use_native_ordering)
+        {
+            return tile;
+        }
+        else if (use_rotated_ordering)
+        {
+            // return rotate(std::move(tile));
+            return tile;
+        }
+    }
+
 public:
-    constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
+    // constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
+    //  TODO just for now, manually hardcode the rotation
+    constexpr explicit TextOut(buffer_type &buf) : column{START_COLUMN}, line{START_LINE},
+                                                   buffer{buf} {}
 
     friend constexpr void clear(TextOut &dev)
     {
         clear(dev.buffer);
-        dev.column = 0;
-        dev.line = 0;
+        dev.column = START_COLUMN;
+        dev.line = START_LINE;
     }
 
     template <size_t N>
@@ -92,7 +190,7 @@ public:
     {
         if (check_if_printable(c))
         {
-            write_tile(dev.buffer, glyphs::decode_ascii(c), dev.column, dev.line);
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(c)), dev.column, dev.line);
             dev.increment_column();
             return;
         }
@@ -103,13 +201,13 @@ public:
         }
         if (check_if_tab(c))
         {
-            write_tile(dev.buffer, glyphs::decode_ascii(' '), dev.column, dev.line);
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
             dev.increment_column();
-            write_tile(dev.buffer, glyphs::decode_ascii(' '), dev.column, dev.line);
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
             dev.increment_column();
             return;
         }
-        write_tile(dev.buffer, glyphs::decode_ascii(static_cast<char>(1)), dev.column, dev.line);
+        draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(static_cast<char>(1))), dev.column, dev.line);
         dev.increment_column();
     }
 };

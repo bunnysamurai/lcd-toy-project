@@ -61,7 +61,7 @@ public:
      * @param y Row, in characters, in native screen display orientation
      */
     template <class TileT>
-    friend constexpr void write_tile(TileBuffer &video_buf, const TileT &tile, uint32_t x, uint32_t y)
+    friend constexpr void draw(TileBuffer &video_buf, const TileT &tile, uint32_t x, uint32_t y)
     {
         constexpr auto BITS_PER_BYTE{8};
         constexpr auto COLUMN_INCREMENT{TileT::pixel_width * BPP / BITS_PER_BYTE};

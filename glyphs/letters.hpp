@@ -50,9 +50,23 @@ namespace glyphs
             }
             return letter;
         }
-        // [[nodiscard]] friend constexpr LetterType rotate_cw(LetterType letter)
-        // {
-        // }
+        [[nodiscard]] friend constexpr LetterType rotate(LetterType letter)
+        {
+            // we perform a bitwise transpose...
+            letter = reverse(letter);
+            size_t prev_col{1};
+            for (size_t row = 0; row < LetterType::pixel_height; ++row)
+            {
+                for (size_t col = prev_col; col < LetterType::pixel_width; ++col)
+                {
+                    auto &row_{letter[row]};
+                    auto &col_{letter[col]};
+                    bit_manip::swap_bits(row_, col_, col, row);
+                }
+                ++prev_col;
+            }
+            return letter;
+        }
         // [[nodiscard]] friend constexpr LetterType rotate_ccw(LetterType letter)
         // {
         // }
@@ -1140,7 +1154,7 @@ namespace glyphs
     {
         constexpr auto one_bpp_transfer{[](auto lt) -> LetterType
                                         {
-                                            return reverse(invert(std::move(lt)));
+                                            return rotate(reverse(invert(std::move(lt))));
                                         }};
         constexpr auto num{[](const char ch)
                            {
