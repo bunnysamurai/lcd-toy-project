@@ -114,7 +114,27 @@ int main()
     sleep_ms(1000);
     scroll_left(tile_buf, 1);
     sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
     scroll_up(tile_buf, 8);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
+    sleep_ms(1000);
+    scroll_left(tile_buf, 1);
     sleep_ms(1000);
   }
 }
