@@ -77,7 +77,38 @@ public:
     {
         for (uint idx = 0; idx < size(video_buf.video_buf); ++idx)
         {
-            video_buf.video_buf[idx] = uint8_t{255};
+            video_buf.video_buf[idx] = uint8_t{255}; // TODO really need to abstract what is "white" and "black" for the display
+        }
+    }
+
+    friend constexpr void scroll_left(TileBuffer &video_buf, size_t count)
+    {
+        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+        const auto lookahead{count};
+        for (uint rowidx = 0; rowidx < size(video_buf.video_buf); rowidx += width)
+        {
+            for (uint idx = lookahead; idx < width; ++idx)
+            {
+                video_buf.video_buf[idx - lookahead + rowidx] = video_buf.video_buf[idx + rowidx];
+            }
+            for (uint idx = width - lookahead; idx < width; ++idx)
+            {
+                video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
+            }
+        }
+    }
+
+    friend constexpr void scroll_up(TileBuffer &video_buf, size_t count)
+    {
+        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+        const auto lookahead{width * count};
+        for (uint idx = lookahead; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx - lookahead] = video_buf.video_buf[idx];
+        }
+        for (uint idx = size(video_buf.video_buf) - lookahead; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
         }
     }
 
