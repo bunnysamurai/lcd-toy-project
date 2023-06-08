@@ -14,6 +14,7 @@ pico_sdk_init()
 add_executable(${PROJECT_NAME} 
     src/main_blink.cpp
     src/status_utilities.cpp
+    src/hid_app.c
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
@@ -21,12 +22,10 @@ target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     pico_stdlib 
     pico_multicore
+    tinyusb_host
     waveshare_driver
 )
-
-# so printf works?
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
 
 pico_add_extra_outputs(${PROJECT_NAME})
 

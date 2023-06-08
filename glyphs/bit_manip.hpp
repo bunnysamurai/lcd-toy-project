@@ -20,7 +20,7 @@ namespace bit_manip
         return out;
     }
     template <class T>
-    [[nodiscard]] constexpr void swap_bits(T &valA, T &valB, size_t posA, size_t posB) noexcept
+    constexpr void swap_bits(T &valA, T &valB, size_t posA, size_t posB) noexcept
     {
         /* Truth tables?
          *

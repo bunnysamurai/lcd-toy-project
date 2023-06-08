@@ -12,6 +12,8 @@
 #include "TextOut.hpp"
 #include "VideoBuf.hpp"
 
+#include "tusb.h"
+
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
                                {
@@ -84,6 +86,8 @@ int main()
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
   stdio_init_all();
 
+  tusb_init();
+
   if (!lcd_init(buffer))
   {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
@@ -95,6 +99,7 @@ int main()
 
   for (;;)
   {
+    tuh_task();// I guess this is required?
     clear(wrt);
     print(wrt, "+------------+\n");
     print(wrt, "| Meven 2040 |\n");
