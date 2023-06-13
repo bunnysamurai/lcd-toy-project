@@ -70,8 +70,14 @@ private:
     }
     constexpr void increment_row_native()
     {
-        // TODO When reaching the bottom, we just jump to the top of the screen.  Really?
-        line = line == MAX_ROW_COUNT - 1 ? 0 : line + 1;
+        if (line == MAX_ROW_COUNT - 1)
+        {
+            scroll_up(buffer, 8); // TODO magic number, it's the number of native rows to scroll, which is a function of the video buffer and the tiles used.
+        }
+        else
+        {
+            ++line;
+        }
     }
     constexpr void jump_to_new_row_native()
     {
@@ -99,13 +105,20 @@ private:
         // "row" in title actually means column
         // column ordering is in ascending order, so we simple add one
         // if current column is one-less-the-max, reset to zero.  This effectively increments the "row"
-        column = column == MAX_CHARACTER_COLUMN_COUNT - 1 ? 0 : column + 1;
+        if (column == MAX_CHARACTER_COLUMN_COUNT - 1)
+        {
+            scroll_left(buffer, 1); // TODO magic number, this is the number of native columns to scrll, which is a function of the video buffer and the tiles used.
+        }
+        else
+        {
+            ++column;
+        }
     }
     constexpr void jump_to_new_row_rotated()
     {
         // "row" in title actually means column
         // when we perform a jump, the "column" location needs to be reset
-        // whcih, in our case, means back to max row value
+        // which, in our case, means back to max row value
         increment_row();
         line = MAX_ROW_COUNT - 1;
     }
@@ -183,6 +196,14 @@ public:
                 break;
             }
             putc(dev, str[ii]);
+        }
+    }
+    friend constexpr void
+    print(TextOut &dev, const char c)
+    {
+        if (!check_if_null(c))
+        {
+            putc(dev, c);
         }
     }
 

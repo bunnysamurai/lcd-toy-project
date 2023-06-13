@@ -93,7 +93,7 @@ public:
             }
             for (uint idx = width - lookahead; idx < width; ++idx)
             {
-                video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
+                video_buf.video_buf[idx + rowidx] = 255; // TODO really need to abstract what is "white" and "black" for the display
             }
         }
     }

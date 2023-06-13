@@ -97,49 +97,27 @@ int main()
   multicore_launch_core1([]()
                          { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
 
+  clear(wrt);
+  print(wrt, "+------------+\n");
+  print(wrt, "| Meven 2040 |\n");
+  print(wrt, "+------------+\n");
+  sleep_ms(1000);
   for (;;)
   {
-    tuh_task();// I guess this is required?
-    clear(wrt);
-    print(wrt, "+------------+\n");
-    print(wrt, "| Meven 2040 |\n");
-    print(wrt, "+------------+\n");
-    sleep_ms(1000);
-    // clang-format off
-    print(wrt, R"(
-#include <iostream>
+    // tuh_task();// I guess this is required?
 
-int main()
-{
-  std::cout<<
-    "Hello, Steven!\n";
-}
-)");
-    // clang-format on
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_up(tile_buf, 8);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
-    scroll_left(tile_buf, 1);
-    sleep_ms(1000);
+    // run an animation, by hand
+    print(wrt, "C:\\> ");
+    sleep_ms(500);
+    static constexpr std::string_view the_stuff{R"(This is a story all about how my life got switched turned upside down so take a minute just sit right there while I tell you howibecametheprince of a town called BelAir.)"};
+    for (const auto c : the_stuff)
+    {
+      print(wrt, c);
+      sleep_ms(50);
+    }
+    sleep_ms(500);
+    print(wrt, '\n');
+    sleep_ms(100);
+    print(wrt, "Bad batch file or command\n");
   }
 }

@@ -1155,6 +1155,7 @@ namespace glyphs
         constexpr auto one_bpp_transfer{[](auto lt) -> LetterType
                                         {
                                             return rotate(reverse(invert(std::move(lt))));
+                                            // return reverse(invert(std::move(lt)));
                                         }};
         constexpr auto num{[](const char ch)
                            {
