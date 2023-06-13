@@ -119,5 +119,6 @@ int main()
     print(wrt, '\n');
     sleep_ms(100);
     print(wrt, "Bad batch file or command\n");
+    sleep_ms(200);
   }
 }
