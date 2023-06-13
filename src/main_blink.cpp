@@ -84,7 +84,6 @@ bool lcd_init(auto &video_buf)
 int main()
 {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
-  stdio_init_all();
 
   tusb_init();
 
@@ -104,7 +103,7 @@ int main()
   sleep_ms(1000);
   for (;;)
   {
-    // tuh_task();// I guess this is required?
+    tuh_task();// I guess this is required?
 
     // run an animation, by hand
     print(wrt, "C:\\> ");
