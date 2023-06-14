@@ -185,6 +185,19 @@ public:
         dev.line = START_LINE;
     }
 
+    // FIXME this is an awful function
+    friend constexpr void
+    print(TextOut &dev, const char *str)
+    {
+        for (size_t ii = 0; true; ++ii)
+        {
+            if (check_if_null(str[ii]))
+            {
+                break;
+            }
+            putc(dev, str[ii]);
+        }
+    }
     template <size_t N>
     friend constexpr void
     print(TextOut &dev, const char (&str)[N])
@@ -228,8 +241,6 @@ public:
             dev.increment_column();
             return;
         }
-        draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(static_cast<char>(1))), dev.column, dev.line);
-        dev.increment_column();
     }
 };
 

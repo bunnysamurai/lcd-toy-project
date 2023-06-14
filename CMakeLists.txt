@@ -14,7 +14,7 @@ pico_sdk_init()
 add_executable(${PROJECT_NAME} 
     src/main_blink.cpp
     src/status_utilities.cpp
-    src/hid_app.c
+    src/hid_app.cpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Os)

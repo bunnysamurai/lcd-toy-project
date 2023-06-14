@@ -49,6 +49,78 @@ static auto buffer{init_the_buffer()};
 static TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
 static TextOut wrt{tile_buf};
 
+void run_demo_animation(auto stop_looping_callback)
+{
+  auto &&quit_otherwise_sleep{[&](uint interval_ms)
+                              {
+                                if (stop_looping_callback())
+                                {
+                                  return true;
+                                }
+                                sleep_ms(interval_ms);
+                                return false;
+                              }};
+  clear(wrt);
+  print(wrt, "+------------------+\n");
+  print(wrt, "| Meven 2040 Demo! |\n");
+  print(wrt, "+------------------+\n");
+  if (quit_otherwise_sleep(1000))
+  {
+    return;
+  }
+  while (!stop_looping_callback())
+  {
+    // run an animation, by hand
+    print(wrt, "C:\\> ");
+    if (quit_otherwise_sleep(500))
+    {
+      return;
+    }
+    static constexpr std::string_view the_stuff{R"(This is a story all about how my life got switched turned upside down so take a minute just sit right there while I tell you howibecametheprince of a town called BelAir.)"};
+    bool please_quit{false};
+    for (const auto c : the_stuff)
+    {
+      print(wrt, c);
+      if (quit_otherwise_sleep(50))
+      {
+        return;
+      }
+    }
+    if (quit_otherwise_sleep(500))
+    {
+      return;
+    }
+    print(wrt, '\n');
+    if (quit_otherwise_sleep(100))
+    {
+      return;
+    }
+    print(wrt, "Bad batch file or command\n");
+    if (quit_otherwise_sleep(200))
+    {
+      return;
+    }
+  }
+}
+void handle_putchar(uint8_t c)
+{
+  putc(wrt, static_cast<char>(c));
+  // TODO hack this in here for now
+  if (c == '\n')
+  {
+    print(wrt, "[meven]$ ");
+  }
+}
+void handle_print(const char *str)
+{
+  print(wrt, str);
+  // TODO hack this in here for now
+  if (str[strlen(str) - 1] == '\n')
+  {
+    print(wrt, "[meven]$ ");
+  }
+}
+
 void setup_for_input(uint id)
 {
   gpio_init(id);
@@ -81,6 +153,14 @@ bool lcd_init(auto &video_buf)
 
   return status;
 }
+
+bool stop_demo{false}; // TODO globals are everywhere, be definition ;)
+void set_stop_demo()
+{
+  // FIXME race conditions
+  stop_demo = true;
+}
+
 int main()
 {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
@@ -93,31 +173,25 @@ int main()
   }
 
   // That's right, this is its only job.
-  multicore_launch_core1([]()
-                         { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
+  // multicore_launch_core1([]()
+  //                        { BlinkStatus{BlinkStatus::Milliseconds{1000}}.blink_forever(); });
 
+  // start by running the demo
+  // FIXME race conditions
+  multicore_launch_core1([]
+                         { run_demo_animation([&]()
+                                              { return stop_demo; }); });
+  while (!stop_demo)
+  {
+    tuh_task(); // I guess this is required?  Looks to handle all pending interrupts, then returns
+  }
+  sleep_ms(1000); // TODO hack sleep to wait for the animation to stop running.  There's probably a way to check if the other core is halted...
   clear(wrt);
-  print(wrt, "+------------+\n");
-  print(wrt, "| Meven 2040 |\n");
-  print(wrt, "+------------+\n");
-  sleep_ms(1000);
+  print(wrt, "[meven]$ ");
   for (;;)
   {
-    tuh_task();// I guess this is required?
+    tuh_task(); // I guess this is required?  Looks to handle all pending interrupts, then returns
 
-    // run an animation, by hand
-    print(wrt, "C:\\> ");
-    sleep_ms(500);
-    static constexpr std::string_view the_stuff{R"(This is a story all about how my life got switched turned upside down so take a minute just sit right there while I tell you howibecametheprince of a town called BelAir.)"};
-    for (const auto c : the_stuff)
-    {
-      print(wrt, c);
-      sleep_ms(50);
-    }
-    sleep_ms(500);
-    print(wrt, '\n');
-    sleep_ms(100);
-    print(wrt, "Bad batch file or command\n");
-    sleep_ms(200);
+    // all processing handed in the keyboard processing callback. See hid_app.cpp for more details.
   }
 }
