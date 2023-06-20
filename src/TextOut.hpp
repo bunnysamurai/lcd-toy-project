@@ -26,6 +26,10 @@ constexpr bool check_if_null(const char ch)
 {
     return ch == '\0';
 }
+constexpr bool check_if_backspace(const char ch)
+{
+    return ch == 0x08;
+}
 
 /**
  *
@@ -57,6 +61,17 @@ private:
     buffer_type &buffer;
 
     // these methods are for "native" image buffer ordering
+    constexpr void decrement_column_native()
+    {
+        if (column == 1)
+        {
+            jump_to_previous_row();
+        }
+        else
+        {
+            --column;
+        }
+    }
     constexpr void increment_column_native()
     {
         if (column == MAX_CHARACTER_COLUMN_COUNT - 1)
@@ -66,6 +81,13 @@ private:
         else
         {
             ++column;
+        }
+    }
+    constexpr void decrement_row_native()
+    {
+        if (line > 0)
+        {
+            --line;
         }
     }
     constexpr void increment_row_native()
@@ -79,6 +101,11 @@ private:
             ++line;
         }
     }
+    constexpr void jump_to_previous_row_native()
+    {
+        decrement_row();
+        column = MAX_CHARACTER_COLUMN_COUNT - 1;
+    }
     constexpr void jump_to_new_row_native()
     {
         increment_row();
@@ -86,6 +113,18 @@ private:
     }
 
     // these methods are for "rotated" image buffer ordering
+    constexpr void decrement_column_rotated()
+    {
+        // when we decrement a "column" position, we actually increment the line position
+        if (line == MAX_ROW_COUNT - 1)
+        {
+            jump_to_previous_row();
+        }
+        else
+        {
+            ++line;
+        }
+    }
     constexpr void increment_column_rotated()
     {
         // "column" in the title actually means line
@@ -93,11 +132,19 @@ private:
         // if the current line position is zero, we "jump_to_new_row_rotated"
         if (line == 0)
         {
-            jump_to_new_row_rotated();
+            jump_to_new_row();
         }
         else
         {
             --line;
+        }
+    }
+    constexpr void decrement_row_rotated()
+    {
+        // "row" in title actually means column
+        if (column > 0)
+        {
+            --column;
         }
     }
     constexpr void increment_row_rotated()
@@ -114,6 +161,11 @@ private:
             ++column;
         }
     }
+    constexpr void jump_to_previous_row_rotated()
+    {
+        decrement_row();
+        line = 0;
+    }
     constexpr void jump_to_new_row_rotated()
     {
         // "row" in title actually means column
@@ -124,6 +176,17 @@ private:
     }
 
     // FIXME SWITCHED ON MACRO.  BOO.
+    constexpr void decrement_column()
+    {
+        if constexpr (use_native_ordering)
+        {
+            decrement_column_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            decrement_column_rotated();
+        }
+    }
     constexpr void increment_column()
     {
         if constexpr (use_native_ordering)
@@ -135,6 +198,17 @@ private:
             increment_column_rotated();
         }
     }
+    constexpr void decrement_row()
+    {
+        if constexpr (use_native_ordering)
+        {
+            decrement_row_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            decrement_row_rotated();
+        }
+    }
     constexpr void increment_row()
     {
         if constexpr (use_native_ordering)
@@ -144,6 +218,17 @@ private:
         else if (use_rotated_ordering)
         {
             increment_row_rotated();
+        }
+    }
+    constexpr void jump_to_previous_row()
+    {
+        if constexpr (use_native_ordering)
+        {
+            jump_to_previous_row_native();
+        }
+        else if (use_rotated_ordering)
+        {
+            jump_to_previous_row_rotated();
         }
     }
     constexpr void jump_to_new_row()
@@ -173,8 +258,6 @@ private:
     }
 
 public:
-    // constexpr explicit TextOut(buffer_type &buf) : column{0}, line{0}, buffer{buf} {}
-    //  TODO just for now, manually hardcode the rotation
     constexpr explicit TextOut(buffer_type &buf) : column{START_COLUMN}, line{START_LINE},
                                                    buffer{buf} {}
 
@@ -240,6 +323,11 @@ public:
             draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
             dev.increment_column();
             return;
+        }
+        if (check_if_backspace(c))
+        {
+            dev.decrement_column();
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
         }
     }
 };
