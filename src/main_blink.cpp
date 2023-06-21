@@ -77,7 +77,6 @@ void run_demo_animation(auto stop_looping_callback)
       return;
     }
     static constexpr std::string_view the_stuff{R"(This is a story all about how my life got switched turned upside down so take a minute just sit right there while I tell you howibecametheprince of a town called BelAir.)"};
-    bool please_quit{false};
     for (const auto c : the_stuff)
     {
       print(wrt, c);
@@ -102,12 +101,100 @@ void run_demo_animation(auto stop_looping_callback)
     }
   }
 }
+template <class IOThing>
+void do_some_fake_processing(IOThing &thing)
+{
+  print(thing, "Working");
+  for (size_t ii = 0; ii < 3; ++ii)
+  {
+    sleep_ms(1000);
+    print(thing, '.');
+  }
+  sleep_ms(500);
+  print(thing, " Work complete.\n");
+}
+
+class StaticCommandLine
+{
+public:
+  static void push_char(char character)
+  {
+    // add to the command buffer
+    if (next_idx < m_buffer.size())
+    {
+      m_buffer[next_idx] = character;
+      advance_next_idx();
+    }
+  }
+  static void pop_char()
+  {
+    reverse_next_idx();
+  }
+  static void process_command()
+  {
+    auto &&check_preconditions{[&]()
+                               {
+                                 return next_idx < m_buffer.size();
+                               }};
+    if (!check_preconditions())
+    {
+      // print(wrt, "Error: too many characters for command processing!\n");
+      do_some_fake_processing(wrt);
+    }
+    else
+    {
+      // valid commands
+      static constexpr auto CLEAR_COMMAND{std::array<char, 5>{'c', 'l', 'e', 'a', 'r'}};
+      if (std::equal(std::begin(m_buffer), std::next(std::begin(m_buffer), next_idx), std::begin(CLEAR_COMMAND), std::end(CLEAR_COMMAND)))
+      {
+        clear(wrt);
+      }
+      else
+      {
+        do_some_fake_processing(wrt);
+      }
+    }
+    clear_buffer();
+  }
+
+private:
+  static void advance_next_idx()
+  {
+    ++next_idx;
+  }
+  static void reverse_next_idx()
+  {
+    if (next_idx > 0)
+    {
+      --next_idx;
+    }
+  }
+  static void clear_buffer()
+  {
+    next_idx = 0;
+  }
+  static constexpr size_t BUFLEN{16};
+  static size_t next_idx;
+  static std::array<char, BUFLEN> m_buffer;
+};
+size_t StaticCommandLine::next_idx{};
+std::array<char, StaticCommandLine::BUFLEN> StaticCommandLine::m_buffer{};
+
 void handle_putchar(uint8_t c)
 {
   putc(wrt, static_cast<char>(c));
+  if (check_if_printable(c))
+  {
+    StaticCommandLine::push_char(c);
+  }
+  if (check_if_backspace(c))
+  {
+    StaticCommandLine::pop_char();
+  }
   // TODO hack this in here for now
   if (c == '\n')
   {
+    StaticCommandLine::process_command();
     print(wrt, "[meven]$ ");
   }
 }

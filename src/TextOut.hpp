@@ -309,11 +309,14 @@ public:
         {
             draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(c)), dev.column, dev.line);
             dev.increment_column();
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column, dev.line);
             return;
         }
         if (check_if_newline(c))
         {
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
             dev.jump_to_new_row();
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column, dev.line);
             return;
         }
         if (check_if_tab(c))
@@ -322,12 +325,14 @@ public:
             dev.increment_column();
             draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
             dev.increment_column();
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column, dev.line);
             return;
         }
         if (check_if_backspace(c))
         {
-            dev.decrement_column();
             draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column, dev.line);
+            dev.decrement_column();
+            draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column, dev.line);
         }
     }
 };
