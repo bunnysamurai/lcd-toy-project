@@ -86,7 +86,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *desc_re
   {
     hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
     handle_print("HID has some number of reports\n");
-    // printf("HID has %u reports \r\n", hid_info[instance].report_count);
   }
 
   // request to receive report
@@ -94,7 +93,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const *desc_re
   if (!tuh_hid_receive_report(dev_addr, instance))
   {
     handle_print("Error: cannot request to receive report\n");
-    // printf("Error: cannot request to receive report\r\n");
   }
   set_stop_demo();
 }

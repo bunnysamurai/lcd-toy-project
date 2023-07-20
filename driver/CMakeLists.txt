@@ -9,9 +9,10 @@ project(waveshare_driver)
 pico_sdk_init()
 
 add_library(waveshare_driver STATIC dispWaveshareLcd.c)
-target_compile_options(${PROJECT_NAME} PRIVATE -O3)
+target_compile_options(${PROJECT_NAME} PUBLIC -O3)
+target_link_options(${PROJECT_NAME} PUBLIC -flto)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(${PROJECT_NAME} PUBLIC 
     pico_stdlib 
     hardware_dma 
     hardware_pio 
