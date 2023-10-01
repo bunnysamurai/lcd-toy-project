@@ -14,6 +14,8 @@
 
 #include "tusb.h"
 
+#include "../basic_io/keyboard/TinyUsbKeyboard.hpp"
+
 static constexpr uint8_t BPP{1};
 static constexpr size_t BUFLEN{[]
                                {
@@ -278,18 +280,17 @@ int main()
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
 
-
-  /* Needs a rethink.  Some thoughts: 
+  /* Needs a rethink.  Some thoughts:
    *  I'd like to maintain running a demo on startup that gets cleared once there's keyboard input.
    *  I feel I need a way to register new callbacks with the keyboard processing loop, so each new application that wants
    *  to run can get access (subscribe?) to the keyboard inputs.
    *  Need a way to add commands easily, to run different programs.  What does a program need?  Input from the keyboard and access to the video buffer.
    *  If we do this like an OS, then a program can opt into receiving keyboard input in the usual fashion: std::cin, cv::waitKey(), etc. which are all blocking and that's a good thing.
    *  As for interfacing with the video buffer, that's pretty easy, as we already have a method for doing this :)
-   * 
+   *
    *  I think, then, the next step is handling keyboard inputs in a sane way, that other applications can get access to easily.
    *  Right now, there's hardcoded callbacks that only interacts with the one app "console".
-   * 
+   *
    *  Design: If a process wants keyboard input, then:
    *    #include "keyboard_input.h"
    *
@@ -298,7 +299,7 @@ int main()
    *      char key_pressed;
    *      wait_key( key_pressed, 1000ms ); // don't forget to handle errors
    *    }
-   * 
+   *
    *    result_t wait_key(char& out, uint timeout)
    *    {
    *      // precondition: a keyboard is connected
@@ -314,21 +315,21 @@ int main()
    *      }
    *      return result_t::ERROR_TIMEOUT;
    *    }
-   * 
-   *  Design: if a process wants to write to a screen... hmm.  
+   *
+   *  Design: if a process wants to write to a screen... hmm.
    *    The video buffer is allocated exactly once, and by the "OS" as it has visibility into what hardware is capable of.
    *    So initializing the raw video buffer will be done in the top-level main(), as it already is.
    *    The question, then, is how to provide higher level functionality?  Maybe an "OS" method that just gives a pointer to the raw video buffer and it's limitations?
    *    Sounds like we're punting a bit to the user.  Which I like!
-   * 
+   *
    *    #include "vidbuf.h"
-   * 
+   *
    *    int main()
    *    {
    *      vidbuf_type p_vid;
    *      vidbuf_get_buffer(p_vid); // as always, remember to handle your errors!
    *    }
-   *  
+   *
    *    result_t vidbuf_get(vidbuf_type &out_struct)
    *    {
    *      // do all the HW specific things to get the video buffer system up and running.  For example:
@@ -340,33 +341,33 @@ int main()
    *      {
    *        return result_t::ERROR_LCD_INIT_FAILURE;
    *      }
-   * 
+   *
    *      // now, let our caller know the details:
    *      out_struct.p_buf = &buf;
    *      out_struct.bpp = BPP;
    *      out_struct.width = M;
    *      out_struct.height = N;
    *      // if we want to get fancy, we could hand callbacks to the user, or let the user register callbacks, that signal/get called on "VSYNC"
-   *      
+   *
    *      return result_t::SUCCESS;
    *    }
-   * 
+   *
    *    This still allows for the "OS" to provide higher level features, like TextOut and TileBuffer. All of these, including user-defined, all share the same video buffer resource.
-   * 
+   *
    *    #include "TileBuffer.h"
    *    #include "TextOut.h"
-   * 
+   *
    *    int main()
    *    {
    *      result_t err;
    *      auto console{ get_text_out_device(err) };
-   *      auto tiler{ get_tile_buffer_device(err) }; // please, friends don't let friends skip error handling 
-   * 
+   *      auto tiler{ get_tile_buffer_device(err) }; // please, friends don't let friends skip error handling
+   *
    *      print(console, "This is a thing!");
    *      draw(tiler, custom_tile, 15, 22);
    *      clear(console);
    *    }
-   * 
+   *
    *    auto get_tile_buffer_device(result_t& err)
    *    {
    *      vidbuf_type vid;

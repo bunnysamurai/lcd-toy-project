@@ -15,8 +15,10 @@ add_executable(${PROJECT_NAME}
     src/main_blink.cpp
     src/status_utilities.cpp
     src/hid_app.cpp
+    basic_io/keyboard/TinyUsbKeyboard.cpp
 )
 
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_link_options(${PROJECT_NAME} PRIVATE -flto)
 
