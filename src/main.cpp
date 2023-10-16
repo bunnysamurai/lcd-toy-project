@@ -12,8 +12,6 @@
 #include "TextOut.hpp"
 #include "VideoBuf.hpp"
 
-#include "tusb.h"
-
 #include "../basic_io/keyboard/TinyUsbKeyboard.hpp"
 
 static constexpr uint8_t BPP{1};
@@ -219,15 +217,6 @@ void handle_putchar(uint8_t c)
     print(wrt, "[meven]$ ");
   }
 }
-void handle_print(const char *str)
-{
-  print(wrt, str);
-  // TODO hack this in here for now
-  if (str[strlen(str) - 1] == '\n')
-  {
-    print(wrt, "[meven]$ ");
-  }
-}
 
 void setup_for_input(uint id)
 {
@@ -272,8 +261,6 @@ void set_stop_demo()
 int main()
 {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
-
-  tusb_init();
 
   if (!lcd_init(buffer))
   {
@@ -368,15 +355,15 @@ int main()
    *      clear(console);
    *    }
    *
-   *    auto get_tile_buffer_device(result_t& err)
+   *    auto& get_tile_buffer_device(result_t& err)
    *    {
    *      vidbuf_type vid;
    *      vidbuf_get_buffer(vid);
-   *      static TileBuffer<bsp::screen_width(), bsp::screen_height(), bsp::screen_bsp()> tile_buf{*(vid.p_buf)};
+   *      static TileBuffer<bsp::screen_width(), bsp::screen_height(), bsp::screen_bpp()> tile_buf{*(vid.p_buf)};
    *      return tile_buf;
    *    }
    *
-   *    auto get_text_out_device(result_t& err)
+   *    auto& get_text_out_device(result_t& err)
    *    {
    *      result_t err;
    *      static TextOut wrt{get_tile_buffer_device(err)};
@@ -388,18 +375,23 @@ int main()
   // FIXME race conditions
   multicore_launch_core1([]
                          { run_demo_animation([&]()
-                                              { return stop_demo; }); });
+                                              { return stop_demo; });
+                                              while (true){
+/* spin forever */
+                                              } });
   while (!stop_demo)
   {
-    tuh_task(); // I guess this is required?  Looks to handle all pending interrupts, then returns
+    keyboard::result_t err;
+    const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
+    set_stop_demo();
   }
   sleep_ms(1000); // TODO hack sleep to wait for the animation to stop running.  There's probably a way to check if the other core is halted...
   clear(wrt);
   print(wrt, "[meven]$ ");
   for (;;)
   {
-    tuh_task(); // I guess this is required?  Looks to handle all pending interrupts, then returns
-
-    // all processing handed in the keyboard processing callback. See hid_app.cpp for more details.
+    keyboard::result_t err;
+    const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
+    handle_putchar(c);
   }
 }

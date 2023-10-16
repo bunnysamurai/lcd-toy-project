@@ -14,7 +14,11 @@ namespace keyboard::bsp
         TinyUsb_BasicKeyboard() noexcept;
         [[nodiscard]] char wait_key(duration timeout, result_t &err) noexcept;
 
+        void push_char(char) noexcept;
+
     private:
+        char current_char;
+        bool received{false};
     };
 
 }
