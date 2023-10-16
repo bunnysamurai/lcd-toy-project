@@ -12,7 +12,7 @@ pico_sdk_init()
 
 #app
 add_executable(${PROJECT_NAME} 
-    src/main_blink.cpp
+    src/main.cpp
     src/status_utilities.cpp
     src/hid_app.cpp
     basic_io/keyboard/TinyUsbKeyboard.cpp
