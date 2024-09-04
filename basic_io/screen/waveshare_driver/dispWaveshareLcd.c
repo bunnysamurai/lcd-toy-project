@@ -930,6 +930,18 @@ void dispSetClut(int32_t firstIdx, uint32_t numEntries, const ClutEntry_t *entri
 #endif
 }
 
+uint8_t dispGetDepth() { return mCurDepth; }
+DispDimensions_t dispGetVirtualDimensions()
+{
+	DispDimensions_t result = {.width = mVirtWidth, .height = mVirtHeight};
+	return result;
+}
+DispDimensions_t dispGetPhysicalDimensions()
+{
+	DispDimensions_t result = {.width = mPhyWidth, .height = mPhyHeight};
+	return result;
+}
+
 void dispSetDepth(uint8_t depth)
 {
 	if (mCurDepth != depth)
@@ -964,12 +976,20 @@ bool dispOff(void)
 	return dispPrvTurnOff();
 }
 
+void dispSetVideoBuffer(const uint8_t *framebuffer)
+{
+	mFb = (const void *)framebuffer;
+}
+const uint8_t *dispGetVideoBuffer()
+{
+	return (const uint8_t *)mFb;
+}
+
 bool dispInit(const uint8_t *framebuffer, uint8_t depth, DispDimensions_t virtual_size, DispDimensions_t physical_size)
 {
 	dispSetPhysicalDimensions(physical_size);
 	dispSetVirtualDimensions(virtual_size);
-
-	mFb = (const void *)framebuffer;
+	dispSetVideoBuffer(framebuffer);
 	dispSetDepth(depth);
 
 	return dispPrvTurnOn(mCurDepth, true);

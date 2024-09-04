@@ -25,13 +25,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_SUPPORTED_BPP 16
-// #define DISP_WIDTH 240 // the size of the display you want
-// #define DISP_HEIGHT 320
-
-// #define LCD_REAL_WIDTH 240 // actual size of the LCD display
-// #define LCD_REAL_HEIGHT 320
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -56,7 +49,13 @@ extern "C"
 	void dispSetDepth(uint8_t depth);
 	bool dispSetVirtualDimensions(DispDimensions_t virtual_size);
 	bool dispSetPhysicalDimensions(DispDimensions_t physical_size);
+	uint8_t dispGetDepth();
+	DispDimensions_t dispGetVirtualDimensions();
+	DispDimensions_t dispGetPhysicalDimensions();
+
 	void dispSetClut(int32_t firstIdx, uint32_t numEntries, const ClutEntry_t *entries);
+	void dispSetVideoBuffer(const uint8_t *framebuffer);
+	const uint8_t* dispGetVideoBuffer();
 	bool dispInit(const uint8_t *framebuffer, uint8_t depth, DispDimensions_t virtual_size, DispDimensions_t physical_size);
 	bool dispOn(void);
 	bool dispOff(void);

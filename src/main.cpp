@@ -8,18 +8,21 @@
 #include "pico/multicore.h"
 
 #include "status_utilities.hpp"
-#include "TextConsole.hpp"
+#include "TextOut.hpp"
+// #include "TextConsole.hpp"
 #include "../glyphs/letters.hpp"
 #include "VideoBuf.hpp"
 
 #include "../basic_io/keyboard/TinyUsbKeyboard.hpp"
 
 static constexpr uint8_t BPP{1};
+static constexpr uint32_t DISPLAY_WIDTH{screen::PHYSICAL_SIZE.width};
+static constexpr uint32_t DISPLAY_HEIGHT{screen::PHYSICAL_SIZE.height};
 static constexpr size_t BUFLEN{[]
                                {
                                  // pixels per byte is a function of bpp
                                  // need to convert from number of pixels to number of bits, then to number of bytes.
-                                 return mVirtWidth * mVirtHeight * BPP / 8;
+                                 return DISPLAY_WIDTH * DISPLAY_HEIGHT * BPP / 8;
                                }()};
 
 template <class T, class U>
@@ -40,8 +43,8 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer()
 }
 
 static auto buffer{init_the_buffer()};
-static TileBuffer<mVirtWidth, mVirtHeight, BPP> tile_buf{buffer};
-static TextConsole<decltype(tile_buf), glyphs::LetterType> wrt{tile_buf};
+static TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, BPP> tile_buf{buffer};
+static TextOut<decltype(tile_buf)> wrt{tile_buf};
 
 void run_demo_animation(auto stop_looping_callback)
 {
@@ -218,39 +221,6 @@ void handle_putchar(uint8_t c)
   }
 }
 
-// void setup_for_input(uint id)
-// {
-//   gpio_init(id);
-//   gpio_set_dir(id, false);
-// }
-// void setup_for_output(uint id)
-// {
-//   gpio_init(id);
-//   gpio_set_dir(id, true);
-// }
-
-// bool lcd_init(auto &video_buf)
-// {
-//   bool status{true};
-//   setup_for_output(PIN_TOUCH_CS);
-//   setup_for_output(PIN_LCD_RESET);
-//   setup_for_output(PIN_LCD_DnC);
-//   setup_for_output(PIN_LCD_CS);
-//   setup_for_output(PIN_SPI_CLK);
-//   setup_for_output(PIN_SPI_MOSI);
-//   setup_for_input(PIN_SPI_MISO);
-//   setup_for_output(PIN_LCD_BL);
-
-//   status &= dispInit(std::data(video_buf), 1);
-//   dispSetDepth(BPP);
-
-//   printf("INFO: Turning on backlight\n");
-
-//   gpio_put(PIN_LCD_BL, true);
-
-//   return status;
-// }
-
 bool stop_demo{false}; // TODO globals are everywhere, by definition ;)
 void set_stop_demo()
 {
@@ -258,11 +228,16 @@ void set_stop_demo()
   stop_demo = true;
 }
 
+static bool screen_init()
+{
+  return screen::init(std::data(buffer), {.row = 0, .column = 0}, {.width = DISPLAY_WIDTH, .height = DISPLAY_HEIGHT}, {.bpp = BPP});
+}
+
 int main()
 {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
 
-  if (!screen::init(std::data(buffer), BPP))
+  if (!screen_init())
   {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }

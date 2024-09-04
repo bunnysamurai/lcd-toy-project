@@ -34,6 +34,8 @@ namespace
     }
 }
 
+
+#if 0 // TODO not yet
 template <class font_type, class tiled_buffer_device>
 class CharacterBuffer
 {
@@ -64,6 +66,7 @@ private:
 
     tiled_buffer_device video_buf;
 };
+#endif
 
 template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP>
 class TileBuffer
