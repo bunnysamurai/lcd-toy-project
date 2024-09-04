@@ -34,8 +34,39 @@ namespace
     }
 }
 
+template <class font_type, class tiled_buffer_device>
+class CharacterBuffer
+{
+public:
+    /**
+     * @brief Please draw this character at this row and column on the screen
+     */
+    friend constexpr void draw(CharacterBuffer &video_buf, char c, uint32_t column, uint32_t row)
+    {
+        constexpr auto BITS_PER_BYTE{8};
+        constexpr auto COLUMN_INCREMENT{font_type::pixel_width * BPP / BITS_PER_BYTE};
+        constexpr auto TILE_ELEMENT_ROW_INCREMENT{video_buf.template max_tiles_per_row<font_type>()};
+        constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * font_type::pixel_height};
+
+        const auto tile{decode(c)};
+        for (uint idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
+        {
+            video_buf.video_buf[idx] = tile[ii];
+        }
+    }
+
+private:
+
+    font_type decode(char c)
+    {
+        return decoder(c);
+    }
+
+    tiled_buffer_device video_buf;
+};
+
 template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP>
-struct TileBuffer
+class TileBuffer
 {
 public:
     using buffer_type = std::array<uint8_t, compute_video_buffer_length(WIDTH_IN_PIXELS, HEIGHT_IN_PIXELS, BPP)>;

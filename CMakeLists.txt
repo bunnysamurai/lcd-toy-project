@@ -25,10 +25,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib 
     pico_multicore
     tinyusb_host
-    waveshare_driver
+    #waveshare_driver
+    screen_driver
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src ${CMAKE_CURRENT_LIST_DIR}/basic_io/keyboard)
 
 pico_add_extra_outputs(${PROJECT_NAME})
 
-add_subdirectory(driver)
+add_subdirectory(basic_io/screen)

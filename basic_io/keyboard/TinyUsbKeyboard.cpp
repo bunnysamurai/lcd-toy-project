@@ -1,7 +1,7 @@
 #include "TinyUsbKeyboard.hpp"
 #include "bsp/board.h"
 #include "tusb.h"
-#include "TextOut.hpp"
+#include "TextConsole.hpp"
 
 namespace
 {

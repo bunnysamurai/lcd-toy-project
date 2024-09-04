@@ -1280,7 +1280,7 @@ namespace glyphs
         // alpha numeric for now
         // for the magic number (or expression, such as it is), see the table at the top of:
         //      https://en.wikipedia.org/wiki/ASCII
-        static constexpr auto letter_list{init_letter_list()};
+        static constexpr auto letter_list{init_letter_list()}; // TODO here we could specify exactly where this lives in memory
         static constexpr auto decode{
             [](const char ch)
             { return ch - 32; }};

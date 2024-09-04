@@ -1,4 +1,4 @@
-#include "../driver/dispWaveshareLcd.h"
+#include "../basic_io/screen/display.hpp"
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -8,8 +8,8 @@
 #include "pico/multicore.h"
 
 #include "status_utilities.hpp"
-#include "../driver/pinout.h"
-#include "TextOut.hpp"
+#include "TextConsole.hpp"
+#include "../glyphs/letters.hpp"
 #include "VideoBuf.hpp"
 
 #include "../basic_io/keyboard/TinyUsbKeyboard.hpp"
@@ -19,7 +19,7 @@ static constexpr size_t BUFLEN{[]
                                {
                                  // pixels per byte is a function of bpp
                                  // need to convert from number of pixels to number of bits, then to number of bytes.
-                                 return DISP_WIDTH * DISP_HEIGHT * BPP / 8;
+                                 return mVirtWidth * mVirtHeight * BPP / 8;
                                }()};
 
 template <class T, class U>
@@ -40,8 +40,8 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer()
 }
 
 static auto buffer{init_the_buffer()};
-static TileBuffer<DISP_WIDTH, DISP_HEIGHT, BPP> tile_buf{buffer};
-static TextOut wrt{tile_buf};
+static TileBuffer<mVirtWidth, mVirtHeight, BPP> tile_buf{buffer};
+static TextConsole<decltype(tile_buf), glyphs::LetterType> wrt{tile_buf};
 
 void run_demo_animation(auto stop_looping_callback)
 {
@@ -218,38 +218,38 @@ void handle_putchar(uint8_t c)
   }
 }
 
-void setup_for_input(uint id)
-{
-  gpio_init(id);
-  gpio_set_dir(id, false);
-}
-void setup_for_output(uint id)
-{
-  gpio_init(id);
-  gpio_set_dir(id, true);
-}
+// void setup_for_input(uint id)
+// {
+//   gpio_init(id);
+//   gpio_set_dir(id, false);
+// }
+// void setup_for_output(uint id)
+// {
+//   gpio_init(id);
+//   gpio_set_dir(id, true);
+// }
 
-bool lcd_init(auto &video_buf)
-{
-  bool status{true};
-  setup_for_output(PIN_TOUCH_CS);
-  setup_for_output(PIN_LCD_RESET);
-  setup_for_output(PIN_LCD_DnC);
-  setup_for_output(PIN_LCD_CS);
-  setup_for_output(PIN_SPI_CLK);
-  setup_for_output(PIN_SPI_MOSI);
-  setup_for_input(PIN_SPI_MISO);
-  setup_for_output(PIN_LCD_BL);
+// bool lcd_init(auto &video_buf)
+// {
+//   bool status{true};
+//   setup_for_output(PIN_TOUCH_CS);
+//   setup_for_output(PIN_LCD_RESET);
+//   setup_for_output(PIN_LCD_DnC);
+//   setup_for_output(PIN_LCD_CS);
+//   setup_for_output(PIN_SPI_CLK);
+//   setup_for_output(PIN_SPI_MOSI);
+//   setup_for_input(PIN_SPI_MISO);
+//   setup_for_output(PIN_LCD_BL);
 
-  status &= dispInit(std::data(video_buf), 1);
-  dispSetDepth(BPP);
+//   status &= dispInit(std::data(video_buf), 1);
+//   dispSetDepth(BPP);
 
-  printf("INFO: Turning on backlight\n");
+//   printf("INFO: Turning on backlight\n");
 
-  gpio_put(PIN_LCD_BL, true);
+//   gpio_put(PIN_LCD_BL, true);
 
-  return status;
-}
+//   return status;
+// }
 
 bool stop_demo{false}; // TODO globals are everywhere, by definition ;)
 void set_stop_demo()
@@ -262,7 +262,7 @@ int main()
 {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit per pixel yet. Sorry.");
 
-  if (!lcd_init(buffer))
+  if (!screen::init(std::data(buffer), BPP))
   {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
@@ -339,10 +339,10 @@ int main()
    *      return result_t::SUCCESS;
    *    }
    *
-   *    This still allows for the "OS" to provide higher level features, like TextOut and TileBuffer. All of these, including user-defined, all share the same video buffer resource.
+   *    This still allows for the "OS" to provide higher level features, like TextConsole and TileBuffer. All of these, including user-defined, all share the same video buffer resource.
    *
    *    #include "TileBuffer.h"
-   *    #include "TextOut.h"
+   *    #include "TextConsole.h"
    *
    *    int main()
    *    {
@@ -366,7 +366,7 @@ int main()
    *    auto& get_text_out_device(result_t& err)
    *    {
    *      result_t err;
-   *      static TextOut wrt{get_tile_buffer_device(err)};
+   *      static TextConsole wrt{get_tile_buffer_device(err)};
    *      return wrt;
    *    }
    */

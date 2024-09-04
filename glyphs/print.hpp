@@ -23,7 +23,7 @@ namespace glyphs
         // x positions are byte indexes in the video buffer
         // y positions are 8row increments
         // FIXME Global macros are the worst.  Let's abstract with a type somehow.
-        constexpr auto LCD_EFFECTIVE_WIDTH{DISP_WIDTH / 8};
+        constexpr auto LCD_EFFECTIVE_WIDTH{mVirtWidth / 8};
         for (uint idx = y * LCD_EFFECTIVE_WIDTH + x, ii = 0; ii < size(letter); idx += LCD_EFFECTIVE_WIDTH, ++ii)
         {
             video_buf[idx] = letter[ii];

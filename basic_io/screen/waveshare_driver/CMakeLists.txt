@@ -1,7 +1,8 @@
 
-set(PICO_SDK_PATH /home/bunnysamurai/sw/pico-sdk)
+#set(PICO_SDK_PATH /home/bunnysamurai/sw/pico-sdk)
 # boilerplate, always before project()
-include(../cmake/pico_sdk_import.cmake)
+message(${CMAKE_SOURCE_DIR}/cmake/pico_sdk_import.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/pico_sdk_import.cmake)
 
 project(waveshare_driver)
 
