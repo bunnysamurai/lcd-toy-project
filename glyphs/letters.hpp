@@ -55,9 +55,9 @@ namespace glyphs
             // we perform a bitwise transpose...
             letter = reverse(letter);
             size_t prev_col{1};
-            for (size_t row = 0; row < LetterType::pixel_height; ++row)
+            for (size_t row = 0; row < LetterType::height_pixels; ++row)
             {
-                for (size_t col = prev_col; col < LetterType::pixel_width; ++col)
+                for (size_t col = prev_col; col < LetterType::width_pixels; ++col)
                 {
                     auto &row_{letter[row]};
                     auto &col_{letter[col]};

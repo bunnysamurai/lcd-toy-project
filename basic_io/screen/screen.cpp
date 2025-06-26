@@ -63,7 +63,7 @@ namespace screen
         setup_for_input(PIN_SPI_MISO);
         setup_for_output(PIN_LCD_BL);
 
-        status &= dispInit(video_buf, format.bpp, {.width = virtual_size.width, .height = virtual_size.height}, PHYSICAL_SIZE);
+        status &= dispInit(video_buf, format.bpp, {.width = virtual_size.width, .height = virtual_size.height}, {.width = PHYSICAL_SIZE.width, .height = PHYSICAL_SIZE.height});
 
         // printf("INFO: Turning on backlight\n");
 

@@ -16,7 +16,7 @@ constexpr bool check_if_printable(const char c)
 }
 constexpr bool check_if_newline(const char c)
 {
-    return c == '\n';
+    return c == '\n' || c == '\r';
 }
 constexpr bool check_if_tab(const char c)
 {

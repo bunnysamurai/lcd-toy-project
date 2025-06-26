@@ -24,8 +24,7 @@ namespace screen
   inline constexpr Dimensions PHYSICAL_SIZE{.width = 240, .height = 320};
   inline constexpr uint8_t MAX_SUPPORTED_BPP{16};
 
-  [[nodiscard]] bool
-  init(const uint8_t *video_buf, Position virtual_topleft, Dimensions virtual_size, Format format) noexcept;
+  [[nodiscard]] bool init(const uint8_t *video_buf, Position virtual_topleft, Dimensions virtual_size, Format format) noexcept;
   [[nodiscard]] const uint8_t *get_video_buffer() noexcept;
   void set_video_buffer(const uint8_t *buffer);
   [[nodiscard]] Format get_format() noexcept;

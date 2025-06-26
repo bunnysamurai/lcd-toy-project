@@ -16,7 +16,7 @@ namespace
     template <class CharType>
     constexpr size_t to_character_width(const size_t screen_width_in_pixels, const size_t bits_per_pixel)
     {
-        return screen_width_in_pixels * bits_per_pixel / CharType::pixel_width;
+        return screen_width_in_pixels * bits_per_pixel / CharType::width_pixels;
     }
     /**
      * @param screen_height_in_pixels Number of pixels per column of the display.
@@ -26,7 +26,7 @@ namespace
     template <class CharType>
     constexpr size_t to_character_height(const size_t screen_height_in_pixels, const size_t bits_per_pixel)
     {
-        return screen_height_in_pixels * bits_per_pixel / CharType::pixel_height;
+        return screen_height_in_pixels * bits_per_pixel / CharType::height_pixels;
     }
     constexpr size_t compute_video_buffer_length(size_t width, size_t height, size_t bits_per_pixel)
     {
@@ -67,6 +67,7 @@ private:
 };
 #endif
 
+#if 0 // not yet
 /*
     Here we'll impose some conditions on the format of the TileT:
     It must specify it's native BPP storage
@@ -106,8 +107,8 @@ public:
     template <class TileT>
     friend constexpr void draw(TileWriter &video_buf, const TileT &tile, uint32_t x, uint32_t y)
     {
-        static constexpr auto BITS_PER_BYTE{sizeof(uint8_t) * 8};
-        static constexpr auto WIDTH_INC{std::max(1, BITS_PER_BYTE / BPP)}; // This will depend on BPP of the display.  We always write a byte at a time.
+        constexpr auto BITS_PER_BYTE{sizeof(uint8_t) * 8};
+        constexpr auto WIDTH_INC{std::max(1U, BITS_PER_BYTE / BPP)}; // This will depend on BPP of the display.  We always write a byte at a time.
 
         const auto HEIGHT_STOP{std::min(HEIGHT_IN_PIXELS, y + TileT::height_pixels)};
         const auto WIDTH_STOP{std::min(WIDTH_IN_PIXELS, x + TileT::width_pixels)};
@@ -210,6 +211,7 @@ public:
 private:
     buffer_type &video_buf;
 };
+#endif
 
 template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP>
 class TileBuffer
@@ -241,9 +243,9 @@ public:
     friend constexpr void draw(TileBuffer &video_buf, const TileT &tile, uint32_t x, uint32_t y)
     {
         constexpr auto BITS_PER_BYTE{8};
-        constexpr auto COLUMN_INCREMENT{TileT::pixel_width * BPP / BITS_PER_BYTE};
+        constexpr auto COLUMN_INCREMENT{TileT::width_pixels * BPP / BITS_PER_BYTE};
         constexpr auto TILE_ELEMENT_ROW_INCREMENT{video_buf.template max_tiles_per_row<TileT>()};
-        constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * TileT::pixel_height};
+        constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * TileT::height_pixels};
         for (uint idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
         {
             video_buf.video_buf[idx] = tile[ii];
