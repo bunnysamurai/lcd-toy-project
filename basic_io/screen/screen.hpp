@@ -1,5 +1,5 @@
-#if !defined(SCREEN_DISPLAY_H)
-#define SCREEN_DISPLAY_H
+#if !defined(SCREEN_H)
+#define SCREEN_H
 
 #include <cstdint>
 

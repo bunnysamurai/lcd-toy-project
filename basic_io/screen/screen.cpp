@@ -1,5 +1,4 @@
-// TODO This file will be directly included by the build configuration... is this a good idea? WHO KNOWS!
-#include "display.hpp"
+#include "screen.hpp"
 
 // TODO consider not using the Pico SDK?
 #include "pico/stdlib.h"
@@ -22,11 +21,11 @@ namespace screen
             gpio_set_dir(id, true);
         }
 
-        constexpr DispDimensions_t PHYSICAL_SCREEN_SIZE{.width = PHYSICAL_SIZE.width, .height = PHYSICAL_SIZE.height};
+        constexpr DispDimensions_t PHYSICAL_CREEN_SIZE{.width = PHYSICAL_SIZE.width, .height = PHYSICAL_SIZE.height};
 
         [[nodiscard]] constexpr bool range_check_dimensions(Dimensions testdim) noexcept
         {
-            return testdim.width <= PHYSICAL_SCREEN_SIZE.width && testdim.height <= PHYSICAL_SCREEN_SIZE.height;
+            return testdim.width <= PHYSICAL_SIZE.width && testdim.height <= PHYSICAL_SIZE.height;
         }
     }
 
@@ -46,7 +45,7 @@ namespace screen
         return dispGetVideoBuffer();
     }
 
-    bool init(const uint8_t *video_buf, [[maybe_unused]] Position virtual_topleft, Dimensions virtual_size, Format format) noexcept
+    bool init(const uint8_t* video_buf, [[maybe_unused]] Position virtual_topleft, Dimensions virtual_size, Format format) noexcept
     {
         if (!range_check_dimensions(virtual_size))
         {
@@ -64,7 +63,7 @@ namespace screen
         setup_for_input(PIN_SPI_MISO);
         setup_for_output(PIN_LCD_BL);
 
-        status &= dispInit(video_buf, format.bpp, {.width = virtual_size.width, .height = virtual_size.height}, PHYSICAL_SCREEN_SIZE);
+        status &= dispInit(video_buf, format.bpp, {.width = virtual_size.width, .height = virtual_size.height}, PHYSICAL_SIZE);
 
         // printf("INFO: Turning on backlight\n");
 

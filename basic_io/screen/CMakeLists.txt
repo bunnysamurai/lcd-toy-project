@@ -3,7 +3,7 @@ project(screen_driver)
 
 
 add_subdirectory(waveshare_driver)
-set(${PROJECT_NAME}_SOURCES "display.cpp")
+set(${PROJECT_NAME}_SOURCES "screen.cpp")
 set(${PROJECT_NAME}_LIBS waveshare_driver)
 
 add_library(${PROJECT_NAME} STATIC ${${PROJECT_NAME}_SOURCES})

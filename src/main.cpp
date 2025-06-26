@@ -1,4 +1,4 @@
-#include "../basic_io/screen/display.hpp"
+#include "../basic_io/screen/screen.hpp"
 #include <algorithm>
 #include <array>
 #include <limits>

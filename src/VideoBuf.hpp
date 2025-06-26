@@ -34,7 +34,6 @@ namespace
     }
 }
 
-
 #if 0 // TODO not yet
 template <class font_type, class tiled_buffer_device>
 class CharacterBuffer
@@ -67,6 +66,150 @@ private:
     tiled_buffer_device video_buf;
 };
 #endif
+
+/*
+    Here we'll impose some conditions on the format of the TileT:
+    It must specify it's native BPP storage
+    If it's BPP is less than 8, then it's pixel width must be an even multiple of 8 (i.e. is byte aligned)
+    Regardless of it's BPP, the underlying data must be stored as an array of bytes.
+
+    The TileWriter will be interacting with a buffer that specifies it's display-mode BPP
+    We'll handle any conversions necessary on the TileT's behalf?
+*/
+template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP, typename buffer_type>
+class TileWriter
+{
+public:
+    static_assert(compute_video_buffer_length(WIDTH_IN_PIXELS, HEIGHT_IN_PIXELS, BPP) <= std::tuple_size_v<buffer_type>);
+
+    explicit TileWriter(buffer_type &buf) : video_buf{buf} {}
+
+    template <class TileT>
+    [[nodiscard]] static constexpr size_t max_tiles_per_row()
+    {
+        return to_character_width<TileT>(WIDTH_IN_PIXELS, BPP);
+    }
+    template <class TileT>
+    [[nodiscard]] static constexpr size_t max_tiles_per_column()
+    {
+        return to_character_height<TileT>(HEIGHT_IN_PIXELS, BPP);
+    }
+
+    // start with our customization point method of choice, plain ol' ADL!
+    /**
+     * @brief blit the tile at pixel location (x,y)
+     * @param video_buf Whatever the video buffer data structure is.  This will be the default implementation?
+     * @param tile The tile to print
+     * @param x Column, in pixels, in native screen display orientation
+     * @param y Row, in pixels, in native screen display orientation
+     */
+    template <class TileT>
+    friend constexpr void draw(TileWriter &video_buf, const TileT &tile, uint32_t x, uint32_t y)
+    {
+        static constexpr auto BITS_PER_BYTE{sizeof(uint8_t) * 8};
+        static constexpr auto WIDTH_INC{std::max(1, BITS_PER_BYTE / BPP)}; // This will depend on BPP of the display.  We always write a byte at a time.
+
+        const auto HEIGHT_STOP{std::min(HEIGHT_IN_PIXELS, y + TileT::height_pixels)};
+        const auto WIDTH_STOP{std::min(WIDTH_IN_PIXELS, x + TileT::width_pixels)};
+        // we'll allow wrap-around for now
+
+        for (uint yy = y; yy < HEIGHT_STOP; ++yy)
+        {
+            const auto yy_start{yy * WIDTH_IN_PIXELS};
+            uint xx = x;
+            const auto idx{yy_start + xx};
+            if constexpr (BPP == 1)
+            {
+                /*
+                value to blit = 1111'1111       <- this can be arbitrarily length, but constrained to integral multiples of 8??
+
+                  1111'1111
+                | 0000'0000  0000'0000
+                -----------------------
+                  1111'1111  0000'0000
+
+                   1111'111  1
+                | 0000'0000  0000'0000
+                -----------------------
+                  0111'1111  1000'0000
+
+                    1111'11  11
+                | 0000'0000  0000'0000
+                -----------------------
+                  0011'1111  1100'0000
+
+                etc.
+
+                          1  111'1111
+                | 0000'0000  0000'0000
+                -----------------------
+                  0000'0001  1111'1110
+
+                More generally, there can be more bits in between.  In which case, it's a matter of determining the
+                intial bit shift, then iterating through all of the bytes on this row from the tile, shifting them as
+                appropriate.
+                */
+                // the shift is rem
+                const auto rem{xx & 0b0000'0111U};
+                uint8_t rem_byte{}; // this receives the bits that were shifted out of the byte
+            }
+            else if (BPP == TileT::BPP)
+            {
+                video_buf.video_buf[idx] = tile[tile_idx]
+            }
+        }
+
+        // constexpr auto COLUMN_INCREMENT{TileT::width_pixels * BPP / BITS_PER_BYTE};
+        // constexpr auto TILE_ELEMENT_ROW_INCREMENT{video_buf.template max_tiles_per_row<TileT>()};
+        // constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * TileT::pixel_height};
+        // for (uint idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
+        // {
+        //     video_buf.video_buf[idx] = tile[ii];
+        // }
+    }
+
+    friend constexpr void clear(TileWriter &video_buf)
+    {
+        for (uint idx = 0; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx] = uint8_t{255}; // TODO really need to abstract what is "white" and "black" for the display
+        }
+    }
+
+    friend constexpr void scroll_left(TileWriter &video_buf, size_t count)
+    {
+        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+        const auto lookahead{count};
+        for (uint rowidx = 0; rowidx < size(video_buf.video_buf); rowidx += width)
+        {
+            for (uint idx = lookahead; idx < width; ++idx)
+            {
+                video_buf.video_buf[idx - lookahead + rowidx] = video_buf.video_buf[idx + rowidx];
+            }
+            for (uint idx = width - lookahead; idx < width; ++idx)
+            {
+                video_buf.video_buf[idx + rowidx] = 255; // TODO really need to abstract what is "white" and "black" for the display
+            }
+        }
+    }
+
+    friend constexpr void scroll_up(TileWriter &video_buf, size_t count)
+    {
+        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+        const auto lookahead{width * count};
+        for (uint idx = lookahead; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx - lookahead] = video_buf.video_buf[idx];
+        }
+        for (uint idx = size(video_buf.video_buf) - lookahead; idx < size(video_buf.video_buf); ++idx)
+        {
+            video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
+        }
+    }
+
+private:
+    buffer_type &video_buf;
+};
 
 template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP>
 class TileBuffer

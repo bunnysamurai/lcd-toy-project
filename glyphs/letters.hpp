@@ -9,12 +9,12 @@
 
 namespace glyphs
 {
-    // using LetterType = std::array<uint8_t, 8>;
     struct LetterType
     {
-        static constexpr size_t pixel_width{8};  // in elements, aka pixels
-        static constexpr size_t pixel_height{8}; // in elements, aka pixels
-        std::array<uint8_t, pixel_height> m_data;
+        static constexpr size_t width_pixels{8};  // in elements, aka pixels
+        static constexpr size_t height_pixels{8}; // in elements, aka pixels
+        static constexpr size_t BPP{1}; // native BPP format
+        std::array<uint8_t, height_pixels> m_data;
 
         [[nodiscard]] constexpr uint8_t &operator[](size_t ii) { return m_data[ii]; }
         [[nodiscard]] constexpr const uint8_t &operator[](size_t ii) const { return m_data[ii]; }
