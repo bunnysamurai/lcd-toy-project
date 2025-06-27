@@ -616,7 +616,7 @@ static void dipPrvPinsSetup(bool forPio) // uses SM0. only safe while SM0 is sto
 		pio0_hw->sm[0].instr = I_SET(0, 0, SET_DST_PINDIRS, 1);
 		pio0_hw->sm[0].instr = I_SET(0, 0, SET_DST_PINS, j >= 2);
 
-		iobank0_hw->io[pin].ctrl = (iobank0_hw->io[pin].ctrl & ~IO_BANK0_GPIO0_CTRL_FUNCSEL_BITS) | ((forPio ? IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_PIO0_0 : IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_SIO_0) << IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB);
+		io_bank0_hw->io[pin].ctrl = (io_bank0_hw->io[pin].ctrl & ~IO_BANK0_GPIO0_CTRL_FUNCSEL_BITS) | ((forPio ? IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_PIO0_0 : IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_SIO_0) << IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB);
 	}
 }
 

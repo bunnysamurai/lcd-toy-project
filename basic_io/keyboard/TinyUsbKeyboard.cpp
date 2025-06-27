@@ -1,5 +1,4 @@
 #include "TinyUsbKeyboard.hpp"
-#include "bsp/board.h"
 #include "tusb.h"
 #include "TextConsole.hpp"
 

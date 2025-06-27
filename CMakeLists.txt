@@ -26,9 +26,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_multicore
     tinyusb_host
     screen_driver
+    ben_shell
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src ${CMAKE_CURRENT_LIST_DIR}/basic_io/keyboard)
 
 pico_add_extra_outputs(${PROJECT_NAME})
 
 add_subdirectory(basic_io/screen)
+add_subdirectory(ben-shell)

@@ -15,6 +15,8 @@
 
 #include "../basic_io/keyboard/TinyUsbKeyboard.hpp"
 
+#include "Shell.h"
+
 static constexpr uint8_t BPP{1};
 static constexpr uint32_t DISPLAY_WIDTH{screen::PHYSICAL_SIZE.width};
 static constexpr uint32_t DISPLAY_HEIGHT{screen::PHYSICAL_SIZE.height};
@@ -174,7 +176,6 @@ void handle_putchar(uint8_t c) {
     StaticCommandLine::process_command();
     print(wrt, "[meven]$ ");
   }
-
 }
 
 bool stop_demo{false}; // TODO globals are everywhere, by definition ;)
@@ -187,6 +188,20 @@ static bool screen_init() {
   return screen::init(std::data(buffer), {.row = 0, .column = 0},
                       {.width = DISPLAY_WIDTH, .height = DISPLAY_HEIGHT},
                       {.bpp = BPP});
+}
+
+int my_fputc(int ch, FILE *stream) {
+  (void)stream;
+  putc(wrt, static_cast<char>(ch));
+  return ch;
+}
+
+int ShellCmd_Info(int argc, const char *argv[]) {
+  (void)argc;
+  (void)argv;
+
+  printf("Hello, here's some info...\n");
+  return EXIT_SUCCESS;
 }
 
 int main() {
@@ -329,6 +344,8 @@ int main() {
   sleep_ms(
       1000); // TODO hack sleep to wait for the animation to stop running.
              // There's probably a way to check if the other core is halted...
+
+#if 0 // old way
   clear(wrt);
   print(wrt, "[meven]$ ");
   for (;;) {
@@ -336,4 +353,26 @@ int main() {
     const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
     handle_putchar(c);
   }
+#else
+  static constexpr uint SHELL_BUFFER_LEN{64U};
+  static constexpr uint ARGV_LEN{32U};
+  static char shell_buffer[SHELL_BUFFER_LEN]; /* characters input by the user */
+  static char
+      *argument_values[ARGV_LEN]; /* list of pointers into shell_buffer */
+
+  ShellFunction_t additional_cmds[] = {
+      {.id = "info", .callback = ShellCmd_Info},
+  };
+  const int ADDITIONAL_CMDS_LENGTH =
+      sizeof(additional_cmds) / sizeof(ShellFunction_t);
+  for (int ii = 0; ii < ADDITIONAL_CMDS_LENGTH; ++ii) {
+    Shell_RegisterCommand(additional_cmds[ii]);
+  }
+
+  const ShellInterface_t my_interface{.fn_fputc = my_fputc};
+  Shell_RegisterInterface(my_interface);
+
+  /* launch the shell... does not return */
+  ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);
+#endif
 }
