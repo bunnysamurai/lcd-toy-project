@@ -5,6 +5,7 @@
 
 #include "pico/multicore.h"
 #include "pico/printf.h"
+#include "pico/stdio/driver.h"
 #include "pico/stdlib.h"
 
 #include "TextOut.hpp"
@@ -190,11 +191,39 @@ static bool screen_init() {
                       {.bpp = BPP});
 }
 
-int my_fputc(int ch, FILE *stream) {
-  (void)stream;
-  putc(wrt, static_cast<char>(ch));
-  return ch;
+/* callbacks for stdio_driver_t */
+void my_out_chars(const char *buf, int len) {
+  for (int ii = 0; ii < len; ++ii) {
+    putc(wrt, buf[ii]);
+  }
 }
+void my_out_flush() { /* do nothing, we don't buffer... right meow */ }
+int my_in_chars(char *buf, int len) {
+  /* we block until we get all the keys! */
+  keyboard::result_t err;
+  for (int ii = 0; ii < len; ++ii) {
+    const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
+    if (err != keyboard::result_t::SUCCESS) {
+      return ii;
+    }
+    buf[ii] = c;
+  }
+  return len;
+}
+
+void stdio_init_mine() {
+  static stdio_driver_t my_driver = {.out_chars = my_out_chars,
+                                     .out_flush = my_out_flush,
+                                     .in_chars = my_in_chars};
+  stdio_set_driver_enabled(&my_driver, true);
+}
+
+int mywrap_putchar(int c, FILE *) { return stdio_putchar(c); }
+int mywrap_flush(FILE *) {
+  stdio_flush();
+  return 0;
+}
+int mywrap_getchar(FILE *) { return stdio_getchar(); }
 
 int ShellCmd_Info(int argc, const char *argv[]) {
   (void)argc;
@@ -208,125 +237,11 @@ int main() {
   static_assert(BPP == 1, "init_letter_list(): Haven't handled more that 1 bit "
                           "per pixel yet. Sorry.");
 
+  stdio_init_mine();
+
   if (!screen_init()) {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
-
-  /* Needs a rethink.  Some thoughts:
-   *  I'd like to maintain running a demo on startup that gets cleared once
-   * there's keyboard input. I feel I need a way to register new callbacks with
-   * the keyboard processing loop, so each new application that wants to run can
-   * get access (subscribe?) to the keyboard inputs. Need a way to add commands
-   * easily, to run different programs.  What does a program need?  Input from
-   * the keyboard and access to the video buffer. If we do this like an OS, then
-   * a program can opt into receiving keyboard input in the usual fashion:
-   * std::cin, cv::waitKey(), etc. which are all blocking and that's a good
-   * thing. As for interfacing with the video buffer, that's pretty easy, as we
-   * already have a method for doing this :)
-   *
-   *  I think, then, the next step is handling keyboard inputs in a sane way,
-   * that other applications can get access to easily. Right now, there's
-   * hardcoded callbacks that only interacts with the one app "console".
-   *
-   *  Design: If a process wants keyboard input, then:
-   *    #include "keyboard_input.h"
-   *
-   *    int main()
-   *    {
-   *      char key_pressed;
-   *      wait_key( key_pressed, 1000ms ); // don't forget to handle errors
-   *    }
-   *
-   *    result_t wait_key(char& out, uint timeout)
-   *    {
-   *      // precondition: a keyboard is connected
-   *      timer obj{timeout};
-   *      while(obj.not_timed_out())
-   *      {
-   *        tuh_task();
-   *        if( !tuh_kbuffer_is_emtpy() )
-   *        {
-   *          out = tuh_pop_kbuffer();
-   *          return result_t::SUCCESS;
-   *        }
-   *      }
-   *      return result_t::ERROR_TIMEOUT;
-   *    }
-   *
-   *  Design: if a process wants to write to a screen... hmm.
-   *    The video buffer is allocated exactly once, and by the "OS" as it has
-   * visibility into what hardware is capable of. So initializing the raw video
-   * buffer will be done in the top-level main(), as it already is. The
-   * question, then, is how to provide higher level functionality?  Maybe an
-   * "OS" method that just gives a pointer to the raw video buffer and it's
-   * limitations? Sounds like we're punting a bit to the user.  Which I like!
-   *
-   *    #include "vidbuf.h"
-   *
-   *    int main()
-   *    {
-   *      vidbuf_type p_vid;
-   *      vidbuf_get_buffer(p_vid); // as always, remember to handle your
-   * errors!
-   *    }
-   *
-   *    result_t vidbuf_get(vidbuf_type &out_struct)
-   *    {
-   *      // do all the HW specific things to get the video buffer system up and
-   * running.  For example: static constexpr M{ bsp::screen_width() }; static
-   * constexpr N{ bsp::screen_height() }; static constexpr BPP{
-   * bsp::screen_bpp() }; static std::array<uint8_t, M*N*BPP / 8> buf{}; if(
-   * !bsp::screen_init(buf) ) // which can delegate to lcd_init() above, for
-   * example
-   *      {
-   *        return result_t::ERROR_LCD_INIT_FAILURE;
-   *      }
-   *
-   *      // now, let our caller know the details:
-   *      out_struct.p_buf = &buf;
-   *      out_struct.bpp = BPP;
-   *      out_struct.width = M;
-   *      out_struct.height = N;
-   *      // if we want to get fancy, we could hand callbacks to the user, or
-   * let the user register callbacks, that signal/get called on "VSYNC"
-   *
-   *      return result_t::SUCCESS;
-   *    }
-   *
-   *    This still allows for the "OS" to provide higher level features, like
-   * TextConsole and TileBuffer. All of these, including user-defined, all share
-   * the same video buffer resource.
-   *
-   *    #include "TileBuffer.h"
-   *    #include "TextConsole.h"
-   *
-   *    int main()
-   *    {
-   *      result_t err;
-   *      auto console{ get_text_out_device(err) };
-   *      auto tiler{ get_tile_buffer_device(err) }; // please, friends don't
-   * let friends skip error handling
-   *
-   *      print(console, "This is a thing!");
-   *      draw(tiler, custom_tile, 15, 22);
-   *      clear(console);
-   *    }
-   *
-   *    auto& get_tile_buffer_device(result_t& err)
-   *    {
-   *      vidbuf_type vid;
-   *      vidbuf_get_buffer(vid);
-   *      static TileBuffer<bsp::screen_width(), bsp::screen_height(),
-   * bsp::screen_bpp()> tile_buf{*(vid.p_buf)}; return tile_buf;
-   *    }
-   *
-   *    auto& get_text_out_device(result_t& err)
-   *    {
-   *      result_t err;
-   *      static TextConsole wrt{get_tile_buffer_device(err)};
-   *      return wrt;
-   *    }
-   */
 
   // start by running the demo
   // FIXME race conditions
@@ -345,15 +260,7 @@ int main() {
       1000); // TODO hack sleep to wait for the animation to stop running.
              // There's probably a way to check if the other core is halted...
 
-#if 0 // old way
   clear(wrt);
-  print(wrt, "[meven]$ ");
-  for (;;) {
-    keyboard::result_t err;
-    const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
-    handle_putchar(c);
-  }
-#else
   static constexpr uint SHELL_BUFFER_LEN{64U};
   static constexpr uint ARGV_LEN{32U};
   static char shell_buffer[SHELL_BUFFER_LEN]; /* characters input by the user */
@@ -369,10 +276,12 @@ int main() {
     Shell_RegisterCommand(additional_cmds[ii]);
   }
 
-  const ShellInterface_t my_interface{.fn_fputc = my_fputc};
+  const ShellInterface_t my_interface{.printf = stdio_printf,
+                                      .putc = mywrap_putchar,
+                                      .flush = mywrap_flush,
+                                      .getc = mywrap_getchar};
   Shell_RegisterInterface(my_interface);
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);
-#endif
 }

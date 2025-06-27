@@ -5,7 +5,10 @@
 #include <stdio.h>
 
 typedef int (*shell_func_t)(int, const char *[]);
-typedef int (*fn_fputc_t)(int, FILE*);
+typedef int (*fn_printf_t)(const char*, ...);
+typedef int (*fn_putc_t)(int, FILE*);
+typedef int (*fn_flush_t)(FILE*);
+typedef int (*fn_getc_t)(FILE*);
 
 typedef struct {
   const char *id;
@@ -13,7 +16,10 @@ typedef struct {
 } ShellFunction_t;
 
 typedef struct {
-  fn_fputc_t fn_fputc;
+  fn_printf_t printf;
+  fn_putc_t putc;
+  fn_flush_t flush;
+  fn_getc_t getc;
 } ShellInterface_t;
 
 #ifdef __cplusplus

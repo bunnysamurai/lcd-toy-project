@@ -13,12 +13,14 @@ static const char *SHELL_WELCOME = "========================================\n"
                                    "Type 'help' to see list of available    \n"
                                    "commands.                               ";
 
-static ShellInterface_t s_intf = {.fn_fputc = fputc};
-
-int fputc(int ch, FILE* stream)
-{
-    s_intf.fn_fputc(ch, stream);
-}
+// clang-format off
+static ShellInterface_t s_intf = {
+  .printf = printf,
+  .putc = putc,
+  .flush = fflush,
+  .getc = getc
+};
+// clang-format on
 
 static int Shell_Help(int, const char *[]);
 static int Shell_Clear(int, const char *[]);
@@ -44,7 +46,7 @@ static size_t shell_ftable_length = 2 + BUILD_CFG_TEST_COMMANDS;
 
 static int Shell_Help(int, const char *[]) {
   for (int ii = 0; ii < shell_ftable_length; ++ii) {
-    printf("  %s\n", shell_ftable[ii].id);
+    s_intf.printf("  %s\n", shell_ftable[ii].id);
   }
   return 0;
 }
@@ -52,19 +54,20 @@ static int Shell_Clear(int, const char *[]) {
   /* https://stackoverflow.com/questions/37774983/clearing-the-screen-by-printing-a-character
    */
   /* appears to work for Tera Term and vscode terminals */
-  printf("\033[2J"); // clear the screen buffer
-  printf("\033[H");  // move cursor to the "home" position
+  s_intf.printf("\033[2J"); // clear the screen buffer
+  s_intf.printf("\033[H");  // move cursor to the "home" position
   return 0;
 }
 
 #ifdef BUILD_TEST_CMD
 static int Shell_Test(int argc, const char *argv[]) {
-  printf("Welcome to SHELL_TEST (TM), we just echo back what you give us!\n");
-  printf("  argc = %d\n  Arguments = { ", argc);
+  s_intf.printf(
+      "Welcome to SHELL_TEST (TM), we just echo back what you give us!\n");
+  s_intf.printf("  argc = %d\n  Arguments = { ", argc);
   for (int ii = 0; ii < argc; ++ii) {
-    printf("%s ", argv[ii]);
+    s_intf.printf("%s ", argv[ii]);
   }
-  printf("}\n");
+  s_intf.printf("}\n");
   return 0;
 }
 #endif
@@ -108,7 +111,7 @@ static void shell_populate_argv(char *shell_buffer, int length,
     }
     default: {
       /* shouldn't be possible */
-      printf("Impossible case inside shell_populate_argv!\n");
+      s_intf.printf("Impossible case inside shell_populate_argv!\n");
       break;
     }
     }
@@ -127,7 +130,7 @@ static int call_shell_function(const char **argv, int argc) {
     }
   }
 
-  printf("Command '%s' not found!\n", argv[0]);
+  s_intf.printf("Command '%s' not found!\n", argv[0]);
   return 0;
 }
 
@@ -140,27 +143,31 @@ int Shell_RegisterCommand(ShellFunction_t command) {
   return 1;
 }
 
-void Shell_RegisterInterface(ShellInterface_t intf){
-    s_intf.fn_fputc = intf.fn_fputc;
+void Shell_RegisterInterface(ShellInterface_t intf) {
+  s_intf.printf = intf.printf;
+  s_intf.putc = intf.putc;
+  s_intf.flush = intf.flush;
+  s_intf.getc = intf.getc;
 }
 
 void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
                size_t argv_len) {
   if (!(shell_ftable_length < SHELL_FTABLE_LENGTH_MAX)) {
-    printf("[FATAL] Shell has been misconfigured.  Please speak with the "
-           "developer to get this fixed.\n");
+    s_intf.printf(
+        "[FATAL] Shell has been misconfigured.  Please speak with the "
+        "developer to get this fixed.\n");
     return;
   }
-  printf("%s\n", SHELL_WELCOME);
+  s_intf.printf("%s\n", SHELL_WELCOME);
   for (;;) {
     unsigned int char_count = 0;
     memset(&shell_buffer[0], 0, sizeof(char) * shell_buffer_len);
     memset(&argv_buffer[0], 0, sizeof(char *) * argv_len);
 
-    printf("%s", SHELL_PROMPT);
-    // fflush(stdout);
+    s_intf.printf("%s", SHELL_PROMPT);
+    s_intf.flush(stdout);
     for (;;) {
-      int value = getc(stdin);
+      int value = s_intf.getc(stdin);
       if (value == EOF) {
         continue;
       }
@@ -182,22 +189,24 @@ void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
         shell_buffer[char_count++] = ch;
         char_count &= (shell_buffer_len - 1) & 0xFFU;
         /* hmm, this seems to be terminal dependent? */
-        putc(ch, stdout);
-      } else if (ch == '\n') {
+        s_intf.putc(ch, stdout);
+      } else if (ch == '\n' || ch == '\r') {
         /* hmm, this seems to be terminal dependent? */
-        printf("\r\n");
+        // s_intf.printf("\r\n");
+        s_intf.putc('\n', stdout);
         break;
       } else if (ch == '\b') {
         if (char_count) {
           /* hmm, this seems to be terminal dependent? */
-          putc('\b', stdout);
-          putc(' ', stdout);
-          putc('\b', stdout);
+          s_intf.putc('\b', stdout);
+          s_intf.putc(' ', stdout);
+          s_intf.putc('\b', stdout);
           char_count--;
           shell_buffer[char_count] = '\0';
         }
       } else {
         /* doing nothing on purpose */
+        s_intf.printf("hey, got a character I don't understand! It's hex value is 0x%02X\n", ch);
       }
     }
     /*
@@ -214,7 +223,7 @@ void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
     int status =
         call_shell_function((const char **)&argv_buffer[0], argument_count);
     if (status) {
-      printf("Error! Status = %d\n", status);
+      s_intf.printf("Error! Status = %d\n", status);
     }
   }
 }
