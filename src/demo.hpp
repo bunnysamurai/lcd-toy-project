@@ -3,8 +3,7 @@
 
 namespace demo {
 
-using callback_t = bool(*)(void);
-void run_animation(callback_t stop_looping_callback);
+void run_animation();
 
 } // namespace demo
 #endif
