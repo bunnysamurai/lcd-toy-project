@@ -1,5 +1,5 @@
 
-project(screen_driver)
+project(bsio_screen)
 
 
 add_subdirectory(waveshare_driver)

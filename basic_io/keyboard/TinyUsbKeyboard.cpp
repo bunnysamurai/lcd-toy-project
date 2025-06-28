@@ -1,6 +1,5 @@
 #include "TinyUsbKeyboard.hpp"
 #include "tusb.h"
-#include "TextConsole.hpp"
 
 namespace
 {

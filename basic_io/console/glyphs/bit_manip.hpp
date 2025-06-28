@@ -2,7 +2,7 @@
 #define BIT_MANIP_HPP
 
 #include <cstdint>
-#include <bitset>
+// #include <bitset>
 
 namespace bit_manip
 {
@@ -12,7 +12,7 @@ namespace bit_manip
     {
         T out{};
         constexpr auto EXCEPT_THE_LAST{sizeof(T) * 8 - 1};
-        for (uint ii = 0; ii < EXCEPT_THE_LAST; ++ii)
+        for (uint32_t ii = 0; ii < EXCEPT_THE_LAST; ++ii)
         {
             out = (out + ((val >> ii) & 0x01)) << 1;
         }

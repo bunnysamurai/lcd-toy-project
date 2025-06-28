@@ -1,7 +1,7 @@
 #ifndef TEXTOUT_HPP
 #define TEXTOUT_HPP
 
-#include "../glyphs/letters.hpp"
+#include "glyphs/letters.hpp"
 #include <array>
 #include <cstddef>
 
@@ -34,16 +34,16 @@ private:
       buffer_type::template max_tiles_per_row<glyphs::LetterType>()};
   static constexpr auto MAX_ROW_COUNT{
       buffer_type::template max_tiles_per_column<glyphs::LetterType>()};
-  static constexpr uint START_COLUMN{0};
-  static constexpr uint START_LINE{[]() {
+  static constexpr uint32_t START_COLUMN{0};
+  static constexpr uint32_t START_LINE{[]() {
     if constexpr (use_native_ordering) {
       return 0;
     } else if (use_rotated_ordering) {
       return MAX_ROW_COUNT - 1;
     }
   }()};
-  uint column;
-  uint line;
+  uint32_t column;
+  uint32_t line;
   buffer_type &buffer;
 
   // these methods are for "native" image buffer ordering
@@ -224,11 +224,11 @@ public:
     }
   }
 
-  friend constexpr void set_line(TextOut &dev, uint line) {
+  friend constexpr void set_line(TextOut &dev, uint32_t line) {
     dev.line = line > MAX_ROW_COUNT - 1 ? MAX_ROW_COUNT - 1 : line;
   }
 
-  friend constexpr void set_column(TextOut &dev, uint col) {
+  friend constexpr void set_column(TextOut &dev, uint32_t col) {
     dev.column = col > MAX_CHARACTER_COLUMN_COUNT - 1
                      ? MAX_CHARACTER_COLUMN_COUNT - 1
                      : col;

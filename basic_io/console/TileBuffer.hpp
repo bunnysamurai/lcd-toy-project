@@ -246,7 +246,7 @@ public:
         constexpr auto COLUMN_INCREMENT{TileT::width_pixels * BPP / BITS_PER_BYTE};
         constexpr auto TILE_ELEMENT_ROW_INCREMENT{video_buf.template max_tiles_per_row<TileT>()};
         constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * TileT::height_pixels};
-        for (uint idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
+        for (uint32_t idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
         {
             video_buf.video_buf[idx] = tile[ii];
         }
@@ -254,7 +254,7 @@ public:
 
     friend constexpr void clear(TileBuffer &video_buf)
     {
-        for (uint idx = 0; idx < size(video_buf.video_buf); ++idx)
+        for (uint32_t idx = 0; idx < size(video_buf.video_buf); ++idx)
         {
             video_buf.video_buf[idx] = uint8_t{255}; // TODO really need to abstract what is "white" and "black" for the display
         }
@@ -264,13 +264,13 @@ public:
     {
         constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
         const auto lookahead{count};
-        for (uint rowidx = 0; rowidx < size(video_buf.video_buf); rowidx += width)
+        for (uint32_t rowidx = 0; rowidx < size(video_buf.video_buf); rowidx += width)
         {
-            for (uint idx = lookahead; idx < width; ++idx)
+            for (uint32_t idx = lookahead; idx < width; ++idx)
             {
                 video_buf.video_buf[idx - lookahead + rowidx] = video_buf.video_buf[idx + rowidx];
             }
-            for (uint idx = width - lookahead; idx < width; ++idx)
+            for (uint32_t idx = width - lookahead; idx < width; ++idx)
             {
                 video_buf.video_buf[idx + rowidx] = 255; // TODO really need to abstract what is "white" and "black" for the display
             }
@@ -281,11 +281,11 @@ public:
     {
         constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
         const auto lookahead{width * count};
-        for (uint idx = lookahead; idx < size(video_buf.video_buf); ++idx)
+        for (uint32_t idx = lookahead; idx < size(video_buf.video_buf); ++idx)
         {
             video_buf.video_buf[idx - lookahead] = video_buf.video_buf[idx];
         }
-        for (uint idx = size(video_buf.video_buf) - lookahead; idx < size(video_buf.video_buf); ++idx)
+        for (uint32_t idx = size(video_buf.video_buf) - lookahead; idx < size(video_buf.video_buf); ++idx)
         {
             video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
         }

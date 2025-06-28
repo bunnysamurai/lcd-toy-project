@@ -23,7 +23,6 @@ static ShellInterface_t s_intf = {
 // clang-format on
 
 static int Shell_Help(int, const char *[]);
-static int Shell_Clear(int, const char *[]);
 #ifdef BUILD_TEST_CMD
 static int Shell_Test(int argc, const char *argv[]);
 #endif
@@ -32,7 +31,6 @@ static int Shell_Test(int argc, const char *argv[]);
   32 /* Maximum number of commands the shell can support */
 static ShellFunction_t shell_ftable[SHELL_FTABLE_LENGTH_MAX] = {
     {.id = "help", .callback = Shell_Help},
-    {.id = "clear", .callback = Shell_Clear},
 #ifdef BUILD_TEST_CMD
     {.id = "test", .callback = Shell_Test},
 #endif
@@ -42,20 +40,12 @@ static ShellFunction_t shell_ftable[SHELL_FTABLE_LENGTH_MAX] = {
 #else
 #define BUILD_CFG_TEST_COMMANDS 0
 #endif
-static size_t shell_ftable_length = 2 + BUILD_CFG_TEST_COMMANDS;
+static size_t shell_ftable_length = 1 + BUILD_CFG_TEST_COMMANDS;
 
 static int Shell_Help(int, const char *[]) {
   for (int ii = 0; ii < shell_ftable_length; ++ii) {
     s_intf.printf("  %s\n", shell_ftable[ii].id);
   }
-  return 0;
-}
-static int Shell_Clear(int, const char *[]) {
-  /* https://stackoverflow.com/questions/37774983/clearing-the-screen-by-printing-a-character
-   */
-  /* appears to work for Tera Term and vscode terminals */
-  s_intf.printf("\033[2J"); // clear the screen buffer
-  s_intf.printf("\033[H");  // move cursor to the "home" position
   return 0;
 }
 
@@ -206,7 +196,9 @@ void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
         }
       } else {
         /* doing nothing on purpose */
-        s_intf.printf("hey, got a character I don't understand! It's hex value is 0x%02X\n", ch);
+        s_intf.printf("hey, got a character I don't understand! It's hex value "
+                      "is 0x%02X\n",
+                      ch);
       }
     }
     /*
