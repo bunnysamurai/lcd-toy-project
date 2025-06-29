@@ -874,7 +874,6 @@ static bool dispPrvTurnOn(uint_fast8_t depth, bool firstTime)
 
 	else if (mDispOn)
 	{
-
 		printf("depth change with no off\n");
 		return false;
 	}
@@ -883,14 +882,12 @@ static bool dispPrvTurnOn(uint_fast8_t depth, bool firstTime)
 
 	if (!dispPrvLcdInit(depth))
 	{
-
 		printf("DISP INIT FAIL\n");
 		return false;
 	}
 
 	if (firstTime)
 	{
-
 		// fill the whole screen with blackness (no matter the current bit depth)
 		dispPrvLcdSetDrawArea(0, 0, mPhyWidth, mPhyHeight);
 		for (i = 0; i < mPhyWidth * mPhyHeight * 2; i++)

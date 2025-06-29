@@ -18,7 +18,8 @@ static ShellInterface_t s_intf = {
   .printf = printf,
   .putc = putc,
   .flush = fflush,
-  .getc = getc
+  .getc = getc,
+  .onexit = NULL
 };
 // clang-format on
 
@@ -216,6 +217,10 @@ void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
         call_shell_function((const char **)&argv_buffer[0], argument_count);
     if (status) {
       s_intf.printf("Error! Status = %d\n", status);
+    }
+    /* do additional work on exit, if requested */
+    if (s_intf.onexit != NULL) {
+      s_intf.onexit();
     }
   }
 }

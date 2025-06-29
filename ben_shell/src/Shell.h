@@ -9,6 +9,7 @@ typedef int (*fn_printf_t)(const char*, ...);
 typedef int (*fn_putc_t)(int, FILE*);
 typedef int (*fn_flush_t)(FILE*);
 typedef int (*fn_getc_t)(FILE*);
+typedef void (*fn_onexit_t)(void);
 
 typedef struct {
   const char *id;
@@ -20,6 +21,7 @@ typedef struct {
   fn_putc_t putc;
   fn_flush_t flush;
   fn_getc_t getc;
+  fn_onexit_t onexit;
 } ShellInterface_t;
 
 #ifdef __cplusplus

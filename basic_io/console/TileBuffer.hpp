@@ -5,34 +5,35 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace
-{
+#include "TileDef.h"
 
-    /**
-     * @param screen_width_in_pixels Number of pixels per row of the display.
-     * @param bits_per_pixel Duh
-     * @return Number of characters (or CharType) per row of the display.
-     */
-    template <class CharType>
-    constexpr size_t to_character_width(const size_t screen_width_in_pixels, const size_t bits_per_pixel)
-    {
-        return screen_width_in_pixels * bits_per_pixel / CharType::width_pixels;
-    }
-    /**
-     * @param screen_height_in_pixels Number of pixels per column of the display.
-     * @param bits_per_pixel Duh
-     * @return Number of characters (or CharType) per column of the display.
-     */
-    template <class CharType>
-    constexpr size_t to_character_height(const size_t screen_height_in_pixels, const size_t bits_per_pixel)
-    {
-        return screen_height_in_pixels * bits_per_pixel / CharType::height_pixels;
-    }
-    constexpr size_t compute_video_buffer_length(size_t width, size_t height, size_t bits_per_pixel)
-    {
-        return width * height * bits_per_pixel / 8;
-    }
+namespace {
+
+/**
+ * @param screen_width_in_pixels Number of pixels per row of the display.
+ * @param bits_per_pixel Duh
+ * @return Number of characters (or CharType) per row of the display.
+ */
+template <class CharType>
+constexpr size_t to_character_width(const size_t screen_width_in_pixels,
+                                    const size_t bits_per_pixel) {
+  return screen_width_in_pixels * bits_per_pixel / CharType::width_pixels;
 }
+/**
+ * @param screen_height_in_pixels Number of pixels per column of the display.
+ * @param bits_per_pixel Duh
+ * @return Number of characters (or CharType) per column of the display.
+ */
+template <class CharType>
+constexpr size_t to_character_height(const size_t screen_height_in_pixels,
+                                     const size_t bits_per_pixel) {
+  return screen_height_in_pixels * bits_per_pixel / CharType::height_pixels;
+}
+constexpr size_t compute_video_buffer_length(size_t width, size_t height,
+                                             size_t bits_per_pixel) {
+  return width * height * bits_per_pixel / 8;
+}
+} // namespace
 
 #if 0 // TODO not yet
 template <class font_type, class tiled_buffer_device>
@@ -213,86 +214,121 @@ private:
 };
 #endif
 
-template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP>
-class TileBuffer
-{
+template <size_t WIDTH_IN_PIXELS, size_t HEIGHT_IN_PIXELS, size_t BPP,
+          size_t BUFLEN>
+class TileBuffer {
 public:
-    using buffer_type = std::array<uint8_t, compute_video_buffer_length(WIDTH_IN_PIXELS, HEIGHT_IN_PIXELS, BPP)>;
+  static_assert(WIDTH_IN_PIXELS * HEIGHT_IN_PIXELS * BPP <= BUFLEN * 8U,
+                "TileBuffer misconfiguration: video buffer too small");
 
-    explicit TileBuffer(buffer_type &buf) : video_buf{buf} {}
+  using buffer_type = std::array<uint8_t, BUFLEN>;
 
-    template <class TileT>
-    [[nodiscard]] static constexpr size_t max_tiles_per_row()
-    {
-        return to_character_width<TileT>(WIDTH_IN_PIXELS, BPP);
-    }
-    template <class TileT>
-    [[nodiscard]] static constexpr size_t max_tiles_per_column()
-    {
-        return to_character_height<TileT>(HEIGHT_IN_PIXELS, BPP);
-    }
+  explicit TileBuffer(buffer_type &buf) : video_buf{buf} {}
 
-    // start with our customization point method of choice, plain ol' ADL!
-    /**
-     * @param video_buf Whatever the video buffer data structure is.  This will be the default implementation?
-     * @param tile The tile to print
-     * @param x Column, in characters, in native screen display orientation
-     * @param y Row, in characters, in native screen display orientation
-     */
-    template <class TileT>
-    friend constexpr void draw(TileBuffer &video_buf, const TileT &tile, uint32_t x, uint32_t y)
-    {
-        constexpr auto BITS_PER_BYTE{8};
-        constexpr auto COLUMN_INCREMENT{TileT::width_pixels * BPP / BITS_PER_BYTE};
-        constexpr auto TILE_ELEMENT_ROW_INCREMENT{video_buf.template max_tiles_per_row<TileT>()};
-        constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * TileT::height_pixels};
-        for (uint32_t idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0; ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii)
-        {
-            video_buf.video_buf[idx] = tile[ii];
-        }
-    }
+  template <class TileT>
+  [[nodiscard]] static constexpr size_t max_tiles_per_row() {
+    return to_character_width<TileT>(WIDTH_IN_PIXELS, BPP);
+  }
+  template <class TileT>
+  [[nodiscard]] static constexpr size_t max_tiles_per_column() {
+    return to_character_height<TileT>(HEIGHT_IN_PIXELS, BPP);
+  }
 
-    friend constexpr void clear(TileBuffer &video_buf)
-    {
-        for (uint32_t idx = 0; idx < size(video_buf.video_buf); ++idx)
-        {
-            video_buf.video_buf[idx] = uint8_t{255}; // TODO really need to abstract what is "white" and "black" for the display
-        }
+  // start with our customization point method of choice, plain ol' ADL!
+  /**
+   * @param video_buf Whatever the video buffer data structure is.  This will be
+   * the default implementation?
+   * @param tile The tile to print
+   * @param x Column, in characters, in native screen display orientation
+   * @param y Row, in characters, in native screen display orientation
+   */
+  template <class TileT>
+  friend constexpr void draw(TileBuffer &video_buf, const TileT &tile,
+                             uint32_t x, uint32_t y) {
+    constexpr auto BITS_PER_BYTE{8};
+    constexpr auto COLUMN_INCREMENT{TileT::width_pixels * BPP / BITS_PER_BYTE};
+    constexpr auto TILE_ELEMENT_ROW_INCREMENT{
+        video_buf.template max_tiles_per_row<TileT>()};
+    constexpr auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT *
+                                 TileT::height_pixels};
+    for (uint32_t idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0;
+         ii < size(tile); idx += TILE_ELEMENT_ROW_INCREMENT, ++ii) {
+      video_buf.video_buf[idx] = tile[ii];
     }
+  }
+  /**
+   * @param video_buf Whatever the video buffer data structure is.  This will be
+   * the default implementation?
+   * @param tile The tile to print
+   * @param x Column, in characters, in native screen display orientation
+   * @param y Row, in characters, in native screen display orientation
+   */
+  friend constexpr void draw(TileBuffer &video_buf, const Tile &tile,
+                             uint32_t x, uint32_t y) {
+#if 0
+    constexpr auto BITS_PER_BYTE{8};
+    const auto COLUMN_INCREMENT{tile.side_length * BPP / BITS_PER_BYTE};
+    const auto TILE_ELEMENT_ROW_INCREMENT{WIDTH_IN_PIXELS * BPP /
+                                          tile.side_length};
+    const auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * tile.side_length};
+    const auto DATA_SIZE{tile.side_length * tile.side_length *
+                         screen::bitsizeof(tile.format) / 8};
+    for (uint32_t idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0;
+         ii < DATA_SIZE; idx += TILE_ELEMENT_ROW_INCREMENT, ++ii) {
+      video_buf.video_buf[idx] = tile.data[ii];
+    }
+#else
+    for (size_t yy = 0; yy < tile.side_length; ++yy) {
+      for (size_t xx = 0; xx < tile.side_length; ++xx) {
+        const size_t idx{((yy + y) * WIDTH_IN_PIXELS + (xx + x)) * 2};
+        const size_t idx2{(yy * tile.side_length + xx) * 2};
+        video_buf.video_buf[idx] = tile.data[idx2];
+        video_buf.video_buf[idx + 1] = tile.data[idx2 + 1];
+      }
+    }
+#endif
+  }
 
-    friend constexpr void scroll_left(TileBuffer &video_buf, size_t count)
-    {
-        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
-        const auto lookahead{count};
-        for (uint32_t rowidx = 0; rowidx < size(video_buf.video_buf); rowidx += width)
-        {
-            for (uint32_t idx = lookahead; idx < width; ++idx)
-            {
-                video_buf.video_buf[idx - lookahead + rowidx] = video_buf.video_buf[idx + rowidx];
-            }
-            for (uint32_t idx = width - lookahead; idx < width; ++idx)
-            {
-                video_buf.video_buf[idx + rowidx] = 255; // TODO really need to abstract what is "white" and "black" for the display
-            }
-        }
+  friend constexpr void clear(TileBuffer &video_buf) {
+    for (uint32_t idx = 0; idx < size(video_buf.video_buf); ++idx) {
+      video_buf.video_buf[idx] =
+          uint8_t{255}; // TODO really need to abstract what is "white" and
+                        // "black" for the display
     }
+  }
 
-    friend constexpr void scroll_up(TileBuffer &video_buf, size_t count)
-    {
-        constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
-        const auto lookahead{width * count};
-        for (uint32_t idx = lookahead; idx < size(video_buf.video_buf); ++idx)
-        {
-            video_buf.video_buf[idx - lookahead] = video_buf.video_buf[idx];
-        }
-        for (uint32_t idx = size(video_buf.video_buf) - lookahead; idx < size(video_buf.video_buf); ++idx)
-        {
-            video_buf.video_buf[idx] = 255; // TODO really need to abstract what is "white" and "black" for the display
-        }
+  friend constexpr void scroll_left(TileBuffer &video_buf, size_t count) {
+    constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+    const auto lookahead{count};
+    for (uint32_t rowidx = 0; rowidx < size(video_buf.video_buf);
+         rowidx += width) {
+      for (uint32_t idx = lookahead; idx < width; ++idx) {
+        video_buf.video_buf[idx - lookahead + rowidx] =
+            video_buf.video_buf[idx + rowidx];
+      }
+      for (uint32_t idx = width - lookahead; idx < width; ++idx) {
+        video_buf.video_buf[idx + rowidx] =
+            255; // TODO really need to abstract what is "white" and "black" for
+                 // the display
+      }
     }
+  }
+
+  friend constexpr void scroll_up(TileBuffer &video_buf, size_t count) {
+    constexpr auto width{WIDTH_IN_PIXELS * BPP / 8};
+    const auto lookahead{width * count};
+    for (uint32_t idx = lookahead; idx < size(video_buf.video_buf); ++idx) {
+      video_buf.video_buf[idx - lookahead] = video_buf.video_buf[idx];
+    }
+    for (uint32_t idx = size(video_buf.video_buf) - lookahead;
+         idx < size(video_buf.video_buf); ++idx) {
+      video_buf.video_buf[idx] = 255; // TODO really need to abstract what is
+                                      // "white" and "black" for the display
+    }
+  }
 
 private:
-    buffer_type &video_buf;
+  buffer_type &video_buf;
 };
 
 #endif

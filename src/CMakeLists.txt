@@ -14,6 +14,7 @@ target_link_options(${PROJECT_NAME} PRIVATE -flto)
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     pico_stdlib 
     pico_multicore
+    pico_rand
     basic_io
     ben_shell
 )

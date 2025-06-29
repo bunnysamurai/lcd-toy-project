@@ -14,13 +14,14 @@
 
 namespace {
 
-inline constexpr uint8_t BPP{1};
+inline constexpr screen::Format CONSOLE_FORMAT{screen::Format::GREY1};
+inline constexpr uint8_t TEXTBPP{screen::bitsizeof(CONSOLE_FORMAT)};
+inline constexpr screen::Format COLOR_FORMAT{screen::Format::RGB565};
+inline constexpr uint8_t COLORBPP{screen::bitsizeof(COLOR_FORMAT)};
 inline constexpr uint32_t DISPLAY_WIDTH{screen::PHYSICAL_SIZE.width};
 inline constexpr uint32_t DISPLAY_HEIGHT{screen::PHYSICAL_SIZE.height};
-inline constexpr size_t BUFLEN{DISPLAY_WIDTH * DISPLAY_HEIGHT * BPP / 8};
-// pixels per byte is a function of bpp
-// need to convert from number of pixels to number of bits, then to number of
-// bytes.
+inline constexpr size_t BUFLEN{DISPLAY_WIDTH * DISPLAY_HEIGHT *
+                               MAX_SUPPORTED_BPP / 8};
 
 template <class T, class U>
 constexpr void init_to_all_val(T &buf, const U &val) {
@@ -36,11 +37,24 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer() {
 }
 
 auto frame_buffer{init_the_buffer()};
-TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, BPP> tile_buf{frame_buffer};
-TextOut<decltype(tile_buf)> wrt{tile_buf};
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, TEXTBPP, BUFLEN> tile_buf_1bpp{
+    frame_buffer};
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 2, BUFLEN> tile_buf_2bpp{
+    frame_buffer};
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 4, BUFLEN> tile_buf_4bpp{
+    frame_buffer};
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 8, BUFLEN> tile_buf_8bpp{
+    frame_buffer};
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, COLORBPP, BUFLEN> tile_buf_16bpp{
+    frame_buffer};
+
+TextOut<decltype(tile_buf_1bpp)> wrt{tile_buf_1bpp};
 
 /* callbacks for stdio_driver_t */
 void my_out_chars(const char *buf, int len) {
+  if (screen::get_format() != screen::Format::GREY1) {
+    return;
+  }
   for (int ii = 0; ii < len; ++ii) {
     putc(wrt, buf[ii]);
   }
@@ -73,7 +87,7 @@ namespace bsio {
 bool init() {
   const bool status{screen::init(
       std::data(frame_buffer), {.row = 0, .column = 0},
-      {.width = DISPLAY_WIDTH, .height = DISPLAY_HEIGHT}, {.bpp = BPP})};
+      {.width = DISPLAY_WIDTH, .height = DISPLAY_HEIGHT}, CONSOLE_FORMAT)};
   if (!status) {
     return status;
   }
@@ -81,6 +95,32 @@ bool init() {
   return status;
 }
 
-void clear_screen() { clear(wrt); }
+void clear_console() { clear(wrt); }
+
+void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {
+  if (screen::get_format() != tile.format) {
+    return;
+  }
+
+  switch (tile.format) {
+  case screen::Format::GREY1:
+    draw(tile_buf_1bpp, tile, xpos, ypos);
+    break;
+  case screen::Format::GREY2:
+    draw(tile_buf_2bpp, tile, xpos, ypos);
+    break;
+  case screen::Format::GREY4:
+    draw(tile_buf_4bpp, tile, xpos, ypos);
+    break;
+  case screen::Format::RGB565_LUT8:
+    draw(tile_buf_8bpp, tile, xpos, ypos);
+    break;
+  case screen::Format::RGB565:
+    draw(tile_buf_16bpp, tile, xpos, ypos);
+    break;
+  }
+}
+
+uint8_t *get_video_buffer() { return std::data(frame_buffer); }
 
 } // namespace bsio

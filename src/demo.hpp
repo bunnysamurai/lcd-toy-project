@@ -3,7 +3,9 @@
 
 namespace demo {
 
-void run_animation();
+void run_text_animation();
+
+void run_color_rando_art();
 
 } // namespace demo
 #endif

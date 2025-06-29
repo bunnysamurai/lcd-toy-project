@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <limits>
 
 #include "pico/multicore.h"
@@ -9,6 +10,7 @@
 #include "Shell.h"
 #include "bsio.hpp"
 #include "demo.hpp"
+#include "screen/screen.hpp"
 #include "status_utilities.hpp"
 
 int mywrap_putchar(int c, FILE *) { return stdio_putchar(c); }
@@ -17,18 +19,64 @@ int mywrap_flush(FILE *) {
   return 0;
 }
 int mywrap_getchar(FILE *) { return stdio_getchar(); }
+void restore_to_1bpp() {
+  screen::set_format(screen::Format::GREY1);
+  bsio::clear_console();
+}
 
+int ShellCmd_Screen(int argc, const char *argv[]) {
+  if (argc > 1) {
+    if (!strcmp("help", argv[1])) {
+      printf("  %s [format | size]\n", argv[0]);
+    }
+    if (!strcmp("format", argv[1])) {
+      const auto fmt{screen::get_format()};
+      switch (fmt) {
+      case screen::Format::GREY1:
+        printf("GREY1\n");
+        break;
+      case screen::Format::GREY2:
+        printf("GREY2\n");
+        break;
+      case screen::Format::GREY4:
+        printf("GREY4\n");
+        break;
+      case screen::Format::RGB565_LUT8:
+        printf("RGB565_LUT8\n");
+        break;
+      case screen::Format::RGB565:
+        printf("RGB565\n");
+        break;
+      }
+    }
+    if (!strcmp("size", argv[1])) {
+      const auto dims{screen::get_virtual_screen_size()};
+      printf("%dx%d\n", dims.width, dims.height);
+    }
+  }
+  return 0;
+}
 int ShellCmd_Demo(int argc, const char *argv[]) {
-  multicore_launch_core1([] { demo::run_animation(); });
+  if (argc == 2 && !strcmp("help", argv[1])) {
+    printf("%s [text | rando]\n", argv[0]);
+    return 0;
+  }
+  if (argc > 1 && !strcmp("text", argv[1])) {
+    multicore_launch_core1([] { demo::run_text_animation(); });
+  } else if (argc < 2 || (argc > 1 && !strcmp("rando", argv[1]))) {
+    multicore_launch_core1([] { demo::run_color_rando_art(); });
+  } else {
+    return 0;
+  }
   while (EOF == stdio_getchar()) {
     /* spin */
   }
   multicore_reset_core1();
-  bsio::clear_screen();
+  bsio::clear_console();
   return 0;
 }
 static int ShellCmd_Clear(int, const char *[]) {
-  bsio::clear_screen();
+  bsio::clear_console();
   return 0;
 }
 
@@ -49,6 +97,7 @@ int main() {
   ShellFunction_t additional_cmds[] = {
       {.id = "clear", .callback = ShellCmd_Clear},
       {.id = "demo", .callback = ShellCmd_Demo},
+      {.id = "screen", .callback = ShellCmd_Screen},
   };
   const int ADDITIONAL_CMDS_LENGTH =
       sizeof(additional_cmds) / sizeof(ShellFunction_t);
@@ -59,7 +108,8 @@ int main() {
   const ShellInterface_t my_interface{.printf = stdio_printf,
                                       .putc = mywrap_putchar,
                                       .flush = mywrap_flush,
-                                      .getc = mywrap_getchar};
+                                      .getc = mywrap_getchar,
+                                      .onexit = restore_to_1bpp};
   Shell_RegisterInterface(my_interface);
 
   /* launch the shell... does not return */
