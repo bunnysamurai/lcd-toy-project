@@ -66,13 +66,13 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
   } else if (argc < 2 || (argc > 1 && !strcmp("rando", argv[1]))) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
   } else {
+    printf("%s [text | rando]\n", argv[0]);
     return 0;
   }
   while (EOF == stdio_getchar()) {
     /* spin */
   }
   multicore_reset_core1();
-  bsio::clear_console();
   return 0;
 }
 static int ShellCmd_Clear(int, const char *[]) {
@@ -84,9 +84,6 @@ int main() {
   if (!bsio::init()) {
     BlinkStatus{BlinkStatus::Milliseconds{250}}.blink_forever();
   }
-
-  // start by running the demo
-  ShellCmd_Demo(0, nullptr);
 
   static constexpr uint SHELL_BUFFER_LEN{64U};
   static constexpr uint ARGV_LEN{32U};
@@ -111,6 +108,11 @@ int main() {
                                       .getc = mywrap_getchar,
                                       .onexit = restore_to_1bpp};
   Shell_RegisterInterface(my_interface);
+
+  // start by running the demo
+  ShellCmd_Demo(0, nullptr);
+  // restore back to 1bpp, which is required by the shell
+  restore_to_1bpp();
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);

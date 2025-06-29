@@ -135,10 +135,7 @@ int Shell_RegisterCommand(ShellFunction_t command) {
 }
 
 void Shell_RegisterInterface(ShellInterface_t intf) {
-  s_intf.printf = intf.printf;
-  s_intf.putc = intf.putc;
-  s_intf.flush = intf.flush;
-  s_intf.getc = intf.getc;
+  s_intf = intf;
 }
 
 void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
@@ -215,12 +212,12 @@ void ShellTask(char *shell_buffer, size_t shell_buffer_len, char **argv_buffer,
                         &argument_count);
     int status =
         call_shell_function((const char **)&argv_buffer[0], argument_count);
-    if (status) {
-      s_intf.printf("Error! Status = %d\n", status);
-    }
     /* do additional work on exit, if requested */
     if (s_intf.onexit != NULL) {
       s_intf.onexit();
+    }
+    if (status) {
+      s_intf.printf("Error! Status = %d\n", status);
     }
   }
 }

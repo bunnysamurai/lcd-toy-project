@@ -6,7 +6,7 @@
 
 #include "console/TextOut.hpp"
 #include "console/TileBuffer.hpp"
-#include "keyboard/TinyUsbKeyboard.hpp"
+#include "keyboard/keyboard.hpp"
 #include "screen/screen.hpp"
 
 #include "pico/stdio.h"
