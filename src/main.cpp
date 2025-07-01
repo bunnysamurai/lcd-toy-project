@@ -98,28 +98,34 @@ int main() {
   static char
       *argument_values[ARGV_LEN]; /* list of pointers into shell_buffer */
 
-  ShellFunction_t additional_cmds[] = {
-      {.id = "clear", .callback = ShellCmd_Clear},
-      {.id = "demo", .callback = ShellCmd_Demo},
-      {.id = "screen", .callback = ShellCmd_Screen},
-  };
-  const int ADDITIONAL_CMDS_LENGTH =
-      sizeof(additional_cmds) / sizeof(ShellFunction_t);
-  for (int ii = 0; ii < ADDITIONAL_CMDS_LENGTH; ++ii) {
-    Shell_RegisterCommand(additional_cmds[ii]);
+  {
+    ShellFunction_t additional_cmds[] = {
+        {.id = "clear", .callback = ShellCmd_Clear},
+        {.id = "demo", .callback = ShellCmd_Demo},
+        {.id = "screen", .callback = ShellCmd_Screen},
+    };
+    const int ADDITIONAL_CMDS_LENGTH =
+        sizeof(additional_cmds) / sizeof(ShellFunction_t);
+    for (int ii = 0; ii < ADDITIONAL_CMDS_LENGTH; ++ii) {
+      Shell_RegisterCommand(additional_cmds[ii]);
+    }
   }
 
-  const ShellInterface_t my_interface{
-      .printf = stdio_printf,
-      .putc = mywrap_putchar,
-      .flush = mywrap_flush,
-      .getc = mywrap_getchar,
-  };
-  Shell_RegisterInterface(my_interface);
+  {
+    const ShellInterface_t my_interface{
+        .printf = stdio_printf,
+        .putc = mywrap_putchar,
+        .flush = mywrap_flush,
+        .getc = mywrap_getchar,
+    };
+    Shell_RegisterInterface(my_interface);
+  }
 
   // start by running the demo
-  const char *argvs[2] = {"demo", "touch"};
-  ShellCmd_Demo(2, argvs);
+  {
+    const char *argvs[2] = {"demo", "touch"};
+    ShellCmd_Demo(2, argvs);
+  }
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);
