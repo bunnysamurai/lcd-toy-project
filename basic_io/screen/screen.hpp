@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "pico/time.h"
+
 #include "screen_def.h"
 
 namespace screen {
@@ -23,5 +25,25 @@ void set_virtual_screen_size(Position new_topleft,
 [[nodiscard]] constexpr Dimensions get_physical_screen_size() noexcept {
   return PHYSICAL_SIZE;
 }
+
+struct TouchReport {
+  int x;
+  int y;
+  bool pen_up; // indicate whether someone is touching the display or not
+  absolute_time_t timestamp;
+};
+/** @brief Get lateset touch report.
+ *
+ *  Check the timestamp, as these may be stale.
+ *
+ *  Once called, will emtpy the underlying ring buffer (it's only 1 element in size).
+ *
+ * @param[out] out The latest report.  Don't use if return is false.
+ *
+ * @return True if a new report is availble, false otherwise.
+ */
+[[nodiscard]] bool get_touch_report(TouchReport& out);
+
+
 } // namespace screen
 #endif

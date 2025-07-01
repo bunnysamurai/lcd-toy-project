@@ -63,8 +63,10 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
   }
   if (argc > 1 && !strcmp("text", argv[1])) {
     multicore_launch_core1([] { demo::run_text_animation(); });
-  } else if (argc < 2 || (argc > 1 && !strcmp("rando", argv[1]))) {
+  } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
+  } else if (argc < 2 || (argc > 1 && !strcmp("touch", argv[1]))) {
+    multicore_launch_core1([] { demo::run_touch_demo(); });
   } else {
     printf("%s [text | rando]\n", argv[0]);
     return 0;
@@ -73,6 +75,7 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
     /* spin */
   }
   multicore_reset_core1();
+  restore_to_1bpp();
   return 0;
 }
 static int ShellCmd_Clear(int, const char *[]) {
@@ -102,17 +105,16 @@ int main() {
     Shell_RegisterCommand(additional_cmds[ii]);
   }
 
-  const ShellInterface_t my_interface{.printf = stdio_printf,
-                                      .putc = mywrap_putchar,
-                                      .flush = mywrap_flush,
-                                      .getc = mywrap_getchar,
-                                      .onexit = restore_to_1bpp};
+  const ShellInterface_t my_interface{
+      .printf = stdio_printf,
+      .putc = mywrap_putchar,
+      .flush = mywrap_flush,
+      .getc = mywrap_getchar,
+  };
   Shell_RegisterInterface(my_interface);
 
   // start by running the demo
   ShellCmd_Demo(0, nullptr);
-  // restore back to 1bpp, which is required by the shell
-  restore_to_1bpp();
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);

@@ -3,13 +3,19 @@
 #include "screen_def.h"
 
 // TODO consider not using the Pico SDK?
+#include "pico/printf.h"
 #include "pico/stdlib.h"
 
 #include "waveshare_driver/dispWaveshareLcd.h"
 #include "waveshare_driver/pinout.h"
 
+#include "embp/circular_array.hpp"
+
 namespace screen {
 namespace {
+
+TouchReport s_latest_touch_report;
+
 void setup_for_input(uint id) noexcept {
   gpio_init(id);
   gpio_set_dir(id, false);
@@ -24,6 +30,7 @@ range_check_dimensions(Dimensions testdim) noexcept {
   return testdim.width <= PHYSICAL_SIZE.width &&
          testdim.height <= PHYSICAL_SIZE.height;
 }
+
 } // namespace
 
 void set_format(Format fmt) noexcept { dispSetDepth(bitsizeof(fmt)); }
@@ -85,6 +92,42 @@ bool init(const uint8_t *video_buf, [[maybe_unused]] Position virtual_topleft,
 
 void set_video_buffer(const uint8_t *buffer) noexcept {
   dispSetVideoBuffer(buffer);
+}
+
+static embp::circular_array<TouchReport, 1> s_touch_ring(1);
+[[nodiscard]] bool get_touch_report(TouchReport &out) {
+
+  if (s_touch_ring.empty()) {
+    return false;
+  }
+  out = s_touch_ring.front();
+  s_touch_ring.pop_front();
+  return true;
+}
+
+/** @brief Hook into DmitryGR's Waveshare LCD/touchscreen driver
+ *
+ * This function get's called periodically within an interrupt.
+ * So, you know, don't tarry.
+ *
+ * Now that I understand how the touch driver works, here's what
+ * you need to know.
+ *
+ * This callback ONLY gets called when someone is pushing the screen.
+ * So it seems that when this happens, we push the latest active sample
+ * into a ring buffer with a timestamp.
+ *
+ * @param x Column location of next sample, negative on pen up
+ * @param y Row location of next sample, negative on pen up
+ */
+extern "C" {
+void dispExtTouchReport(int16_t x, int16_t y) {
+  const auto report{TouchReport{.x = x,
+                                .y = y,
+                                .pen_up = x < 0 || y < 0,
+                                .timestamp = get_absolute_time()}};
+  s_touch_ring.push_back(report);
+}
 }
 
 } // namespace screen

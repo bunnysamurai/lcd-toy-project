@@ -52,6 +52,15 @@ enum struct Color {
   return 0;
 }
 
+void fill_routine(const Tile &tile) {
+  const auto dims{screen::get_virtual_screen_size()};
+  for (size_t yy = 0; yy < dims.height; yy += tile.side_length) {
+    for (size_t xx = 0; xx < dims.width; xx += tile.side_length) {
+      bsio::draw_tile(xx, yy, tile);
+    }
+  }
+}
+
 template <size_t N>
 [[nodiscard]] constexpr std::array<uint8_t, N> fill_with(Color clr) noexcept {
   std::array<uint8_t, N> result;
@@ -148,6 +157,42 @@ void run_text_animation() {
     sleep_ms(100);
     printf("Bad batch file or command\n");
     sleep_ms(200);
+  }
+}
+
+enum struct TouchMachine { WAIT, PEN_DOWN, PEN_UP };
+
+void run_touch_demo() {
+  /* sample about every 10 ms?
+   * we should really setup a timer for this... */
+  static constexpr auto TOUCH_POLL_INTERVAL_MS{10};
+
+  screen::TouchReport touch;
+  screen::TouchReport prv_touch;
+  TouchMachine state{TouchMachine::WAIT};
+  while (true) {
+    switch (state) {
+    case TouchMachine::WAIT:
+      if (screen::get_touch_report(touch) && !touch.pen_up) {
+        bsio::clear_console();
+        state = TouchMachine::PEN_DOWN;
+        prv_touch = touch;
+      }
+      break;
+    case TouchMachine::PEN_DOWN:
+      if (screen::get_touch_report(touch)) {
+        if (touch.pen_up) {
+          state = TouchMachine::PEN_UP;
+        } else {
+          prv_touch = touch;
+        }
+      }
+      break;
+    case TouchMachine::PEN_UP:
+      printf("Touch ended at {%d, %d}\n", prv_touch.x, prv_touch.y);
+      state = TouchMachine::WAIT;
+    }
+    sleep_ms(TOUCH_POLL_INTERVAL_MS);
   }
 }
 

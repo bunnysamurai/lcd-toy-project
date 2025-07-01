@@ -50,6 +50,7 @@ static uint32_t mPhyHeight;
 static uint32_t mVirtWidth;
 static uint32_t mVirtHeight;
 
+
 // these manual spi pieces are only used at start-up. We could use the SPI unit, but why bother?
 
 static uint8_t spiBit(uint8_t bit)
@@ -332,7 +333,7 @@ static void dispPrvPioSm2touchDmaConfigure(void)
 	dma_hw->ints0 = 1 << 5;
 	dma_hw->inte0 |= 1 << 5;
 	// NVIC_EnableIRQ(DMA0_IRQn);
-	// irq_set_enabled(DMA_IRQ_0, true);
+	irq_set_enabled(DMA_IRQ_0, true);
 }
 
 static void dispPrvPioProgram421bpp(uint_fast8_t bpp)
@@ -790,14 +791,12 @@ static void dispPrvPenHandle(int16_t x, int16_t y)
 	}
 	else if (mFirstCollected < FIRST_TOSS)
 	{ // start toss
-
 		mFirstCollected++;
 	}
 	else
 	{
 		if (mLastCollected == LAST_TOSS)
 		{
-
 			dispExtTouchReport(avgX / LAST_TOSS, avgY / LAST_TOSS);
 			avgX -= buf[mArrPtr][0];
 			avgY -= buf[mArrPtr][1];
@@ -812,7 +811,8 @@ static void dispPrvPenHandle(int16_t x, int16_t y)
 	}
 }
 
-void __attribute__((used)) DMA0_IRQHandler(void)
+// void __attribute__((used)) DMA0_IRQHandler(void) // when using CMSIS
+static void __attribute__((used)) IRQTouchHandler(void)
 {
 	uint32_t sample[3], zThresh = 0xf40;
 	static bool wasDown = false;
@@ -830,6 +830,11 @@ void __attribute__((used)) DMA0_IRQHandler(void)
 		wasDown = false;
 		dispPrvPenHandle(-1, -1);
 	}
+}
+
+static void register_touch_handler()
+{
+	irq_set_exclusive_handler(DMA_IRQ_0, IRQTouchHandler);
 }
 
 static bool dispPrvTurnOff(void)
@@ -984,6 +989,7 @@ const uint8_t *dispGetVideoBuffer()
 
 bool dispInit(const uint8_t *framebuffer, uint8_t depth, DispDimensions_t virtual_size, DispDimensions_t physical_size)
 {
+	register_touch_handler();
 	dispSetPhysicalDimensions(physical_size);
 	dispSetVirtualDimensions(virtual_size);
 	dispSetVideoBuffer(framebuffer);
