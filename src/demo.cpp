@@ -15,6 +15,8 @@
 #include "console/TileDef.h"
 #include "screen/screen.hpp"
 
+// #define PRINT_DEBUG
+
 namespace demo {
 
 enum struct Color {
@@ -101,7 +103,7 @@ constexpr Tile emerald{.side_length = 8,
                        .data = std::data(emerald_data)};
 
 void run_color_rando_art() {
-  static constexpr std::array<Tile, 4> tilelist{gold, green, green, gold};
+  static constexpr std::array<Tile, 4> tilelist{gold, green, gold, gold};
   const auto dims{screen::get_virtual_screen_size()};
 
   auto &&random_routine{[&]() {
@@ -116,13 +118,6 @@ void run_color_rando_art() {
         bsio::draw_tile(xx, dims.height - yy - rtile.side_length, rtile);
         bsio::draw_tile(dims.width - xx - rtile.side_length,
                         dims.height - yy - rtile.side_length, rtile);
-      }
-    }
-  }};
-  auto &&fill_routine{[&](const Tile &tile) {
-    for (size_t yy = 0; yy < dims.height; yy += tile.side_length) {
-      for (size_t xx = 0; xx < dims.width; xx += tile.side_length) {
-        bsio::draw_tile(xx, yy, tile);
       }
     }
   }};
@@ -162,11 +157,123 @@ void run_text_animation() {
 
 enum struct TouchMachine { WAIT, PEN_DOWN, PEN_UP };
 
+namespace {
+
+void initialize_cool_touch_demo() {
+  bsio::clear_console();
+#ifndef PRINT_DEBUG
+  sleep_ms(1);
+  screen::set_format(screen::Format::RGB565);
+  sleep_ms(1);
+  fill_routine(emerald);
+#endif
+}
+
+[[nodiscard]] constexpr screen::TouchReport
+to_pixelspace(screen::TouchReport rawloc) noexcept {
+  /*
+   * Screen is 320 columns and 240 rows
+   * Translation for our rotated text console is:
+   *  bottom row is x~=250
+   *  top row is x~=3600
+   *  left col is y~=350
+   *  right col is y~=3850
+   * For the native pixel display (i.e. our tiler):
+   *  col 0 is x~=250
+   *  col 239 is x~=3600
+   *  row 0 is y~=350
+   *  row 319 is y~=3850
+   *
+   * need to solve the linear system:
+   *  y = mx + b
+   * for both row and col:
+   *  col = m_col * rawloc.x + b_col
+   *  row = m_row * rawloc.y + b_row
+   *
+   * for col:
+   * |  0  |   | 250   1  |   | m_col |
+   * | 239 | = | 3600  1  | * | b_col |
+   * for row:
+   * |  0  |   | 350   1  |   | m_row |
+   * | 319 | = | 3850  1  | * | b_row |
+   *
+   * using octave-cli ( via A\b ), yields:
+   *  m_col = 0.071343
+   *  b_col = -17.836
+   *  m_row = 0.091143
+   *  b_row = -31.9
+   * we don't have a floating point unit, so fixed
+   * point it is!
+   */
+  constexpr int32_t M_COL_S_24_8{18};
+  constexpr int32_t B_COL_S_24_8{-4548};
+
+  constexpr int32_t M_ROW_S_24_8{23};
+  constexpr int32_t B_ROW_S_24_8{-8166};
+
+  auto &&zclamp{[](int16_t val, int16_t hi) -> int16_t {
+    if (val < 0) {
+      return 0;
+    }
+    if (val > hi) {
+      return hi;
+    }
+    return val;
+  }};
+
+  const auto raw_x{
+      (M_COL_S_24_8 * static_cast<int32_t>(rawloc.x) + B_COL_S_24_8) >> 8};
+  const auto raw_y{
+      (M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8) >> 8};
+
+#ifdef PRINT_DEBUG
+  printf("stg1 raw_y = %d\n", M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y));
+  printf("stg2 raw_y = %d\n",
+         M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8);
+  printf("stg3 raw_y = %d\n",
+         (M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8) >> 8);
+#endif
+  return screen::TouchReport{.x = zclamp(raw_x, 239),
+                             .y = zclamp(raw_y, 319),
+                             .pen_up = rawloc.pen_up,
+                             .timestamp = rawloc.timestamp};
+}
+
+void undo_cool_touch_action(screen::TouchReport touch_loc) {
+#ifdef PRINT_DEBUG
+  printf("undo_cool_touch_action got %d, %d\n", touch_loc.x, touch_loc.y);
+#endif
+  if (touch_loc.x < 0 || touch_loc.y < 0) {
+    return;
+  }
+  touch_loc = to_pixelspace(touch_loc);
+#ifdef PRINT_DEBUG
+  printf("  in pixels: {%d, %d}\n", touch_loc.x, touch_loc.y);
+#endif
+  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, emerald);
+}
+
+void take_cool_touch_action(screen::TouchReport touch_loc) {
+#ifdef PRINT_DEBUG
+  printf("take_cool_touch_action got %d, %d\n", touch_loc.x, touch_loc.y);
+#endif
+  touch_loc = to_pixelspace(touch_loc);
+#ifdef PRINT_DEBUG
+  printf("  in pixels: {%d, %d}\n", touch_loc.x, touch_loc.y);
+#endif
+  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, gold);
+}
+
+} // namespace
+
 void run_touch_demo() {
   /* sample about every 10 ms?
    * we should really setup a timer for this... */
   static constexpr auto TOUCH_POLL_INTERVAL_MS{10};
 
+  initialize_cool_touch_demo();
+
+  screen::TouchReport touch_to_undo{.x = -1};
   screen::TouchReport touch;
   screen::TouchReport prv_touch;
   TouchMachine state{TouchMachine::WAIT};
@@ -174,7 +281,9 @@ void run_touch_demo() {
     switch (state) {
     case TouchMachine::WAIT:
       if (screen::get_touch_report(touch) && !touch.pen_up) {
+#ifdef PRINT_DEBUG
         bsio::clear_console();
+#endif
         state = TouchMachine::PEN_DOWN;
         prv_touch = touch;
       }
@@ -189,8 +298,13 @@ void run_touch_demo() {
       }
       break;
     case TouchMachine::PEN_UP:
-      printf("Touch ended at {%d, %d}\n", prv_touch.x, prv_touch.y);
+      undo_cool_touch_action(touch_to_undo);
+#ifdef PRINT_DEBUG
+      printf("Pen up at {%d, %d}\n", prv_touch.x, prv_touch.y);
+#endif
+      take_cool_touch_action(prv_touch);
       state = TouchMachine::WAIT;
+      touch_to_undo = prv_touch;
     }
     sleep_ms(TOUCH_POLL_INTERVAL_MS);
   }

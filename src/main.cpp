@@ -53,22 +53,26 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
       const auto dims{screen::get_virtual_screen_size()};
       printf("%dx%d\n", dims.width, dims.height);
     }
+    if (!strcmp("calibrate", argv[1])) {
+      printf("STUB: run touch screen calibration routine\n");
+    }
   }
   return 0;
 }
 int ShellCmd_Demo(int argc, const char *argv[]) {
   if (argc == 2 && !strcmp("help", argv[1])) {
-    printf("%s [text | rando]\n", argv[0]);
+    printf("%s [text | rando | touch]\n", argv[0]);
     return 0;
   }
   if (argc > 1 && !strcmp("text", argv[1])) {
     multicore_launch_core1([] { demo::run_text_animation(); });
   } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
-  } else if (argc < 2 || (argc > 1 && !strcmp("touch", argv[1]))) {
+  } else if (argc > 1 && !strcmp("touch", argv[1])) {
+    bsio::clear_console();
     multicore_launch_core1([] { demo::run_touch_demo(); });
   } else {
-    printf("%s [text | rando]\n", argv[0]);
+    printf("%s [text | rando | touch]\n", argv[0]);
     return 0;
   }
   while (EOF == stdio_getchar()) {
@@ -114,7 +118,8 @@ int main() {
   Shell_RegisterInterface(my_interface);
 
   // start by running the demo
-  ShellCmd_Demo(0, nullptr);
+  const char *argvs[2] = {"demo", "touch"};
+  ShellCmd_Demo(2, argvs);
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);
