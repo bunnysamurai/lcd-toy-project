@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "TileDef.h"
+#include "details/tile_blitting.hpp"
 
 namespace {
 
@@ -259,34 +260,36 @@ public:
   /**
    * @param video_buf Whatever the video buffer data structure is.  This will be
    * the default implementation?
+   *
+   * This is hot-path stuff, for sure.
+   * Keep an eye on possible optimizations.
+   *
    * @param tile The tile to print
    * @param x Column, in characters, in native screen display orientation
    * @param y Row, in characters, in native screen display orientation
    */
-  friend constexpr void draw(TileBuffer &video_buf, const Tile &tile,
-                             uint32_t x, uint32_t y) {
-#if 0
-    constexpr auto BITS_PER_BYTE{8};
-    const auto COLUMN_INCREMENT{tile.side_length * BPP / BITS_PER_BYTE};
-    const auto TILE_ELEMENT_ROW_INCREMENT{WIDTH_IN_PIXELS * BPP /
-                                          tile.side_length};
-    const auto ROW_INCREMENT{TILE_ELEMENT_ROW_INCREMENT * tile.side_length};
-    const auto DATA_SIZE{tile.side_length * tile.side_length *
-                         screen::bitsizeof(tile.format) / 8};
-    for (uint32_t idx = y * ROW_INCREMENT + x * COLUMN_INCREMENT, ii = 0;
-         ii < DATA_SIZE; idx += TILE_ELEMENT_ROW_INCREMENT, ++ii) {
-      video_buf.video_buf[idx] = tile.data[ii];
-    }
-#else
-    for (size_t yy = 0; yy < tile.side_length; ++yy) {
-      for (size_t xx = 0; xx < tile.side_length; ++xx) {
-        const size_t idx{((yy + y) * WIDTH_IN_PIXELS + (xx + x)) * 2};
-        const size_t idx2{(yy * tile.side_length + xx) * 2};
-        video_buf.video_buf[idx] = tile.data[idx2];
-        video_buf.video_buf[idx + 1] = tile.data[idx2 + 1];
+  friend constexpr void draw(TileBuffer &video_buf, Tile tile, uint32_t x,
+                             uint32_t y) {
+    if (bitsizeof(tile.format) == BPP) {
+      switch (BPP) {
+      // case 1:
+      //   tile::blit_1bpp();
+      // case 2:
+      //   tile::blit_2bpp();
+      case 4:
+        tile::blit_4bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x, y,
+                        tile);
+      case 8:
+        tile::blit_8bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x, y,
+                        tile);
+      case 16:
+        tile::blit_16bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x, y,
+                         tile);
+        break;
+      default:
+        break;
       }
     }
-#endif
   }
 
   friend constexpr void clear(TileBuffer &video_buf) {

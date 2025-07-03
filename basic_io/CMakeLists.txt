@@ -4,6 +4,7 @@ project(basic_io)
 
 add_library(basic_io 
     bsio.cpp
+    console/details/tile_blitting.cpp
 )
 target_link_libraries(basic_io PUBLIC 
     bsio_screen

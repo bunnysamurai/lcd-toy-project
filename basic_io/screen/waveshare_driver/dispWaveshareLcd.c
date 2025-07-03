@@ -38,6 +38,14 @@
 #define DEFINE_PIO_INSTRS
 #include "pioAsm.h"
 
+// #define TOUCH_ZTHRESH (0xf40)
+// #define FIRST_TOSS (20) // first this many points are tossed
+// #define LAST_TOSS (8)   // then this many are averaged (and dropped at end)
+#define LAST_TOSS_MAX (64)
+uint32_t TOUCH_ZTHRESH = 0xf40;
+uint8_t FIRST_TOSS = 20; // first this many points are tossed
+uint8_t LAST_TOSS = 8;   // then this many are averaged (and dropped at end)
+
 // #define PRINT_DEBUG
 
 #if MAX_SUPPORTED_BPP >= 8
@@ -100,34 +108,35 @@ static void lcdPrvWriteData(uint8_t val) {
   lcdPrvWriteByte(val);
 }
 
+// clang-format off
 /*
 1,2,4 BPP:
 
         idea: use multiple state machines to make up for lack of regs. DMA
-between them problem is that we want backpressure both ways (either stalls if
-channel is not ready) this cannot be done with JUST DMA so we also use IRQs.
-consumer sends an IRQ to producer  to produce a sample DMA is driven by
-producer. this way producer will halt if consumer not ready (due to irq) but
-will also halt due to lack of input data lack of data will halt consumer. one
-nit is that we need to PRIME this to avoid stalls. we send one irq manually at
-start
+        between them problem is that we want backpressure both ways (either stalls if
+        channel is not ready) this cannot be done with JUST DMA so we also use IRQs.
+        consumer sends an IRQ to producer  to produce a sample DMA is driven by
+        producer. this way producer will halt if consumer not ready (due to irq) but
+        will also halt due to lack of input data lack of data will halt consumer. one
+        nit is that we need to PRIME this to avoid stalls. we send one irq manually at
+        start
 
         touch and screen share the same SPI bus. they work at different speeds.
-our sending SM will occasionally (4-5 times per screen) stop, deselect the
-                screen and give time to another SM to go sample the touch panel.
-we do this signalling using an IRQ as well
+        our sending SM will occasionally (4-5 times per screen) stop, deselect the
+        screen and give time to another SM to go sample the touch panel.
+        we do this signalling using an IRQ as well
 
         screen is configured in RGB444 mode where it literally takes 4 bits of
-red then 4 of green, then 4 of blue for each pixel. it still needs complete
-bytes though so we cannot send an odd number of bits per nCS period.
+        red then 4 of green, then 4 of blue for each pixel. it still needs complete
+        bytes though so we cannot send an odd number of bits per nCS period.
 
         SM0: expands data (on demand) we feed screen data to this one. autopush
-at 12 bits more: out bpp -> Y mov y, y, invert			//we want 0 =
-white, but lcd uses 0 = black set 12 / bpp - 1 -> X		//replicate
-"bpp" bits of y 3 times for 4bpp, 6 for 2bpp, 12 for 1bpp. this wors becuase for
-4 BPP y is the sample and we want that to go into R, G, B. for 2bpp, screen is
-still in RGB444 mode, so to upcovert from 2bpp to 4bpp we duplicate the sample.
-this is correct!. same applies to 1bpp again: in X, bpp goto again if X--
+        at 12 bits more: out bpp -> Y mov y, y, invert			//we want 0 =
+        white, but lcd uses 0 = black set 12 / bpp - 1 -> X		//replicate
+        "bpp" bits of y 3 times for 4bpp, 6 for 2bpp, 12 for 1bpp. this wors becuase for
+        4 BPP y is the sample and we want that to go into R, G, B. for 2bpp, screen is
+        still in RGB444 mode, so to upcovert from 2bpp to 4bpp we duplicate the sample.
+        this is correct!. same applies to 1bpp again: in X, bpp goto again if X--
 
                 wait irq 4
                 jump more, if osr_not_empty
@@ -136,16 +145,15 @@ this is correct!. same applies to 1bpp again: in X, bpp goto again if X--
         [!!!] at setup time, we signal irq once ourselves to prime the system
 
         SM1: sends data and times touch sampling, side set controls CS and CLK,
-with enable. FED data from the above. each sample of 12 bits in a word bit
-reversded, right aligned, ready to be shifted out to the right in correct order
+        with enable. FED data from the above. each sample of 12 bits in a word bit
+        reversded, right aligned, ready to be shifted out to the right in correct order
         setup:
                 // X <- num pixels to do minus 1 90xa01 for us
                 set x, 0x0a, ncs low
                 in x, 4
                 in NULL, 8
                 mov isr -> x
-                jump $+1, if x--  (x needs to be odd so that we send an even
-number of pixels which makes it an integer number of bytes)
+                jump $+1, if x--  (x needs to be odd so that we send an even number of pixels which makes it an integer number of bytes)
 
         pull_n_go:
                 signal irq 4
@@ -156,15 +164,13 @@ number of pixels which makes it an integer number of bytes)
                 jump more, if y--, CLK HI
                 jump pull_n_go, if x--, CLK LO
 
-                irq send 5, ncs high, wait for ack			//give
-touch time to sample irq wait t					//wait for touch
-to be done
-
+                irq send 5, ncs high, wait for ack			//give touch time to sample irq wait t
+                                              					//wait for touch to be done
                 jmp setup
 
                 it is important to note that there is a footnote that WAIT gets
-RE_EXECUTED while waiting, which means a non-optional sideset will get
-re-xecuted too. this is why i had to make side-set optional here
+                RE_EXECUTED while waiting, which means a non-optional sideset will get
+                re-xecuted too. this is why i had to make side-set optional here
 
         SM2 handles touch
 
@@ -174,21 +180,21 @@ re-xecuted too. this is why i had to make side-set optional here
 
 
                 WE CAN DO:
-                TX		cmdZcmdZ             cmdYcmdY cmdXcmdX BUSY
-X                    X                    X RX		         DDDDDDDDDDDD
-DDDDDDDDDDDD         DDDDDDDDDDDD
+                TX		cmdZcmdZ             cmdYcmdY             cmdXcmdX 
+                BUSY  X                    X                    X 
+                RX		DDDDDDDDDDDD         DDDDDDDDDDDD         DDDDDDDDDDDD
 
                 input shift data left
                 output shift data left, command left justified, autopull at 21
-bits, autopush at 21 bits DMA in the command words !!!: cmdx, cmdy, cmdx DMA out
-the tree samples each in a word 63 clock ticks total
+                bits, autopush at 21 bits DMA in the command words !!!: cmdx, cmdy, cmdx DMA out
+                the tree samples each in a word 63 clock ticks total
 
                 remembee that side set takes place on the first cycle of any
-instruction, even if it stalls or has a wait wait takes place AFTER instruction
-(even if it already stalls)
+                instruction, even if it stalls or has a wait 
+                wait takes place AFTER instruction (even if it already stalls)
 
                 side set controls nCS, out controls mosi, in is from miso, SET
-controls nCS
+                controls nCS
 
                 start:
                         irq wait 5
@@ -210,21 +216,20 @@ controls nCS
                 51 clock tick total
 
                 ---------------------------------------------??????    output
-data (51 bits total, issued as 3x17 bit words)
+                data (51 bits total, issued as 3x17 bit words)
                 110100000000000100100000000000110000000000000000000
                 CMDCMDCM       CMDCMDCM       CMDCMDCM
-                                B              B              B
-                                 DATADATADATA   DATADATADATA   DATADATADATA
+                B              B              B
+                DATADATADATA   DATADATADATA   DATADATADATA
                 ******---------------------------------------------	input
-samples (4x15, first pre-stuffed with 9 bits and entirely ignored)
+                samples (4x15, first pre-stuffed with 9 bits and entirely ignored)
 
                 SEND DATA:
                         01000000000001011
                         00110000000000010
                         00000000000000000
 
-                we pre-set X to the number of bits we'll do before starting the
-SM, then:
+                we pre-set X to the number of bits we'll do before starting the SM, then:
 
                 mov x -> y
                 in 9 zeroes
@@ -238,16 +243,16 @@ SM, then:
                 send irq 5
 
         there is one more complication. the touch chip lowers nPENIRQ while
-sampling, and also randomly at other times, so using it as a CPU irq is no good
-- we just analize the data in an irq handler - it is fast
+        sampling, and also randomly at other times, so using it as a CPU irq is no good
+        - we just analize the data in an irq handler - it is fast
 
 8BPP:
         screen is configured for RGB565, the CLUT is full of RGB565 entries MUST
-be512-byte aligned. Why? Because of how we do things
+        be512-byte aligned. Why? Because of how we do things
 
         SM0 is preconfigured to have (clut_address >> 9) in register X. it input
-screen data one word (4 pixels) at a time and outputs ... RAM addresses of CLUT
-entries that each pixel needs. This is simple:
+        screen data one word (4 pixels) at a time and outputs ... RAM addresses of CLUT
+        entries that each pixel needs. This is simple:
 
         loop:
                 out 8 bits -> Y
@@ -258,11 +263,11 @@ entries that each pixel needs. This is simple:
                 goto loop
 
         this will produce a 32-bt value per pixel. our consumer DMA reads one
-sample, triggers the second channel and writes this value as its "read_address"
-reg its "write_address_ is SM1's input. transfer size is a word. This means that
-SM1 gets 16-bit data as input and can just shift it out. This is why CLUT needs
-to be 512-byte aligned PIO lacks ability to ADD, we just place those values
-there.
+        sample, triggers the second channel and writes this value as its "read_address"
+        reg its "write_address_ is SM1's input. transfer size is a word. This means that
+        SM1 gets 16-bit data as input and can just shift it out. This is why CLUT needs
+        to be 512-byte aligned PIO lacks ability to ADD, we just place those values
+        there.
 
         SM1 juts shifts out 16 bits at a time, leftward,s
 
@@ -271,9 +276,10 @@ there.
 16BPP:
 
         things are simple here. screen is configured for RGB565, we DMA data
-here as halfwords and shift them to the left (MSB first). bus replication makes
-it work. touch is done the same way as in all cases
+        here as halfwords and shift them to the left (MSB first). bus replication makes
+        it work. touch is done the same way as in all cases
 */
+// clang-format on
 
 static uint_fast8_t dispPrvPioSm2touchProgram(uint_fast8_t pc) {
   uint_fast8_t lblOuter, lblDoIO;
@@ -833,9 +839,8 @@ static void dispPrvPioProgram16bpp(void) {
 #endif
 }
 
-static void
-dipPrvPinsSetup(bool forPio) // uses SM0. only safe while SM0 is stopped
-{
+// uses SM0. only safe while SM0 is stopped
+static void dipPrvPinsSetup(bool forPio) {
   const uint8_t mPinsForDir[] = {PIN_SPI_CLK, PIN_SPI_MOSI, PIN_LCD_CS,
                                  PIN_TOUCH_CS}; // first in others out
   uint_fast8_t j;
@@ -1010,11 +1015,8 @@ static void dispPrvTouchRead(uint32_t *dstP) {
 }
 
 static void dispPrvPenHandle(int16_t x, int16_t y) {
-#define FIRST_TOSS 20 // first this many points are tossed
-#define LAST_TOSS 8   // then this many are averaged (and dropped at end)
-
   static uint8_t mFirstCollected, mLastCollected, mArrPtr;
-  static uint16_t buf[LAST_TOSS][2];
+  static uint16_t buf[LAST_TOSS_MAX][2];
   static uint32_t avgX, avgY;
 
   if (x < 0 || y < 0) { // pen is up
@@ -1051,9 +1053,8 @@ static void dispPrvPenHandle(int16_t x, int16_t y) {
   }
 }
 
-// void __attribute__((used)) DMA0_IRQHandler(void) // when using CMSIS
 static void __attribute__((used)) IRQTouchHandler(void) {
-  uint32_t sample[3], zThresh = 0xf40;
+  uint32_t sample[3], zThresh = TOUCH_ZTHRESH;
   static bool wasDown = false;
 
   dma_hw->ints0 = 1 << 5;
@@ -1068,7 +1069,7 @@ static void __attribute__((used)) IRQTouchHandler(void) {
   }
 }
 
-static void register_touch_handler() {
+static void dispPrvSetTouchIRQHandler() {
   irq_set_exclusive_handler(DMA_IRQ_0, IRQTouchHandler);
 }
 
@@ -1209,9 +1210,21 @@ void dispSetVideoBuffer(const uint8_t *framebuffer) {
 }
 const uint8_t *dispGetVideoBuffer() { return (const uint8_t *)mFb; }
 
+void dispConfigureTouch(dispTouchCfg_t cfg) {
+  /* this doesn't seem thread-safe... */
+  TOUCH_ZTHRESH = cfg.touch_zthresh;
+  FIRST_TOSS = cfg.first_toss;
+  LAST_TOSS = cfg.last_toss > LAST_TOSS_MAX ? LAST_TOSS_MAX : cfg.last_toss;
+}
+void dispGetTouchConfiguration(dispTouchCfg_t *cfg) {
+  cfg->touch_zthresh = TOUCH_ZTHRESH;
+  cfg->first_toss = FIRST_TOSS;
+  cfg->last_toss = LAST_TOSS;
+}
+
 bool dispInit(const uint8_t *framebuffer, uint8_t depth,
               DispDimensions_t virtual_size, DispDimensions_t physical_size) {
-  register_touch_handler();
+  dispPrvSetTouchIRQHandler();
   dispSetPhysicalDimensions(physical_size);
   dispSetVirtualDimensions(virtual_size);
   dispSetVideoBuffer(framebuffer);

@@ -261,15 +261,16 @@ void take_cool_touch_action(screen::TouchReport touch_loc) {
 #ifdef PRINT_DEBUG
   printf("  in pixels: {%d, %d}\n", touch_loc.x, touch_loc.y);
 #endif
-  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, gold);
+  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, red);
 }
 
 } // namespace
 
-void run_touch_demo() {
+void run_touch_demo(TouchConfig cfg) {
   /* sample about every 10 ms?
    * we should really setup a timer for this... */
-  static constexpr auto TOUCH_POLL_INTERVAL_MS{10};
+  const auto TOUCH_POLL_INTERVAL_MS{cfg.touch_poll_interval_ms};
+  dispConfigureTouch(cfg.touchcfg);
 
   initialize_cool_touch_demo();
 
