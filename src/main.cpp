@@ -59,6 +59,10 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
   }
   return 0;
 }
+
+static demo::TouchConfig s_cfg;
+static void run_touch_demo_impl() { demo::run_touch_demo(s_cfg); }
+
 int ShellCmd_Demo(int argc, const char *argv[]) {
   if (argc == 2 && !strcmp("help", argv[1])) {
     printf("%s [text | rando | touch]\n", argv[0]);
@@ -70,7 +74,15 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
   } else if (argc > 1 && !strcmp("touch", argv[1])) {
     bsio::clear_console();
-    multicore_launch_core1([] { demo::run_touch_demo(); });
+    if (argc != 5) {
+      multicore_launch_core1([] { demo::run_touch_demo(); });
+    } else {
+      s_cfg = {.touch_poll_interval_ms{10},
+               .touchcfg = {.touch_zthresh = atoi(argv[2]),
+                            .first_toss = atoi(argv[3]),
+                            .last_toss = atoi(argv[4])}};
+      multicore_launch_core1(run_touch_demo_impl);
+    }
   } else {
     printf("%s [text | rando | touch]\n", argv[0]);
     return 0;
