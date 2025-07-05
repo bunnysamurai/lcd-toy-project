@@ -1,6 +1,7 @@
 #include "demo.hpp"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -14,8 +15,6 @@
 
 #include "console/TileDef.h"
 #include "screen/screen.hpp"
-
-// #define PRINT_DEBUG
 
 namespace demo {
 
@@ -161,12 +160,8 @@ namespace {
 
 void initialize_cool_touch_demo() {
   bsio::clear_console();
-#ifndef PRINT_DEBUG
-  sleep_ms(1);
   screen::set_format(screen::Format::RGB565);
-  sleep_ms(1);
   fill_routine(emerald);
-#endif
 }
 
 [[nodiscard]] constexpr screen::TouchReport
@@ -226,46 +221,34 @@ to_pixelspace(screen::TouchReport rawloc) noexcept {
   const auto raw_y{
       (M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8) >> 8};
 
-#ifdef PRINT_DEBUG
-  printf("stg1 raw_y = %d\n", M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y));
-  printf("stg2 raw_y = %d\n",
-         M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8);
-  printf("stg3 raw_y = %d\n",
-         (M_ROW_S_24_8 * static_cast<int32_t>(rawloc.y) + B_ROW_S_24_8) >> 8);
-#endif
-  return screen::TouchReport{.x = zclamp(raw_x, 239),
-                             .y = zclamp(raw_y, 319),
+  const auto dims{screen::get_virtual_screen_size()};
+  return screen::TouchReport{.x = zclamp(raw_x, dims.width - 1),
+                             .y = zclamp(raw_y, dims.height - 1),
                              .pen_up = rawloc.pen_up,
                              .timestamp = rawloc.timestamp};
 }
 
 void undo_cool_touch_action(screen::TouchReport touch_loc) {
-#ifdef PRINT_DEBUG
-  printf("undo_cool_touch_action got %d, %d\n", touch_loc.x, touch_loc.y);
-#endif
   if (touch_loc.x < 0 || touch_loc.y < 0) {
     return;
   }
   touch_loc = to_pixelspace(touch_loc);
-#ifdef PRINT_DEBUG
-  printf("  in pixels: {%d, %d}\n", touch_loc.x, touch_loc.y);
-#endif
-  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, emerald);
+  const auto dims{screen::get_virtual_screen_size()};
+  bsio::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
+                  emerald);
 }
 
 void take_cool_touch_action(screen::TouchReport touch_loc) {
-#ifdef PRINT_DEBUG
-  printf("take_cool_touch_action got %d, %d\n", touch_loc.x, touch_loc.y);
-#endif
   touch_loc = to_pixelspace(touch_loc);
-#ifdef PRINT_DEBUG
-  printf("  in pixels: {%d, %d}\n", touch_loc.x, touch_loc.y);
-#endif
-  bsio::draw_tile(239 - touch_loc.x, 319 - touch_loc.y, red);
+  const auto dims{screen::get_virtual_screen_size()};
+  bsio::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
+                  red);
 }
 
 } // namespace
 
+static constexpr int64_t DOUBLE_TAP_PERIOD_THRESHOLD_US{550 *
+                                                        1000}; /* 100 ms? */
 void run_touch_demo(TouchConfig cfg) {
   /* sample about every 10 ms?
    * we should really setup a timer for this... */
@@ -274,7 +257,9 @@ void run_touch_demo(TouchConfig cfg) {
 
   initialize_cool_touch_demo();
 
-  screen::TouchReport touch_to_undo{.x = -1};
+  // screen::TouchReport touch_to_undo{.x = -1};
+  absolute_time_t time_since_last_pen_up{0};
+  screen::TouchReport touch_since_last_pen_up{};
   screen::TouchReport touch;
   screen::TouchReport prv_touch;
   TouchMachine state{TouchMachine::WAIT};
@@ -282,9 +267,6 @@ void run_touch_demo(TouchConfig cfg) {
     switch (state) {
     case TouchMachine::WAIT:
       if (screen::get_touch_report(touch) && !touch.pen_up) {
-#ifdef PRINT_DEBUG
-        bsio::clear_console();
-#endif
         state = TouchMachine::PEN_DOWN;
         prv_touch = touch;
       }
@@ -295,17 +277,26 @@ void run_touch_demo(TouchConfig cfg) {
           state = TouchMachine::PEN_UP;
         } else {
           prv_touch = touch;
+          take_cool_touch_action(prv_touch);
         }
       }
       break;
     case TouchMachine::PEN_UP:
-      undo_cool_touch_action(touch_to_undo);
-#ifdef PRINT_DEBUG
-      printf("Pen up at {%d, %d}\n", prv_touch.x, prv_touch.y);
-#endif
-      take_cool_touch_action(prv_touch);
+      const auto now{get_absolute_time()};
+      const auto timediff{absolute_time_diff_us(time_since_last_pen_up, now)};
+      if (timediff < DOUBLE_TAP_PERIOD_THRESHOLD_US &&
+          // timediff > DOUBLE_TAP_PERIOD_THRESHOLD_US / 2 &&
+          std::abs(touch_since_last_pen_up.x - prv_touch.x) < 30 &&
+          std::abs(touch_since_last_pen_up.y - prv_touch.y) < 30) {
+        fill_routine(emerald);
+      } else {
+        // undo_cool_touch_action(touch_to_undo);
+        take_cool_touch_action(prv_touch);
+      }
+      time_since_last_pen_up = now;
+      touch_since_last_pen_up = prv_touch;
       state = TouchMachine::WAIT;
-      touch_to_undo = prv_touch;
+      // touch_to_undo = prv_touch;
     }
     sleep_ms(TOUCH_POLL_INTERVAL_MS);
   }

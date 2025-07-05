@@ -38,13 +38,10 @@
 #define DEFINE_PIO_INSTRS
 #include "pioAsm.h"
 
-// #define TOUCH_ZTHRESH (0xf40)
-// #define FIRST_TOSS (20) // first this many points are tossed
-// #define LAST_TOSS (8)   // then this many are averaged (and dropped at end)
 #define LAST_TOSS_MAX (64)
-uint32_t TOUCH_ZTHRESH = 0xf40;
-uint8_t FIRST_TOSS = 20; // first this many points are tossed
-uint8_t LAST_TOSS = 8;   // then this many are averaged (and dropped at end)
+uint32_t TOUCH_ZTHRESH = 0xfa0;
+uint8_t FIRST_TOSS = 10; // first this many points are tossed
+uint8_t LAST_TOSS = 1;   // then this many are averaged (and dropped at end)
 
 // #define PRINT_DEBUG
 
