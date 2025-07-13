@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "screen/screen_def.h"
+#include "screen/screen.hpp"
 
 struct Tile {
   uint8_t side_length;

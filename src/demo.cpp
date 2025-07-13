@@ -162,9 +162,10 @@ void initialize_cool_touch_demo() {
   bsio::clear_console();
   screen::set_format(screen::Format::RGB565);
   fill_routine(emerald);
+  sleep_ms(1000000);
 }
 
-[[nodiscard]] constexpr screen::TouchReport
+[[nodiscard]] screen::TouchReport
 to_pixelspace(screen::TouchReport rawloc) noexcept {
   /*
    * Screen is 320 columns and 240 rows

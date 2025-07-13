@@ -7,6 +7,7 @@ add_library(basic_io
     console/details/tile_blitting.cpp
 )
 target_link_libraries(basic_io PUBLIC 
+    pico_stdio
     bsio_screen
     bsio_keyboard
 )

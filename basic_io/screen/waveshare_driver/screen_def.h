@@ -5,16 +5,7 @@
 #include <cstdint>
 
 namespace screen {
-struct Position {
-  uint32_t row;
-  uint32_t column;
-};
-struct Dimensions {
-  uint32_t width;
-  uint32_t height;
-};
 
-#ifdef WAVESHARE_240P
 enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
 
 [[nodiscard]] constexpr size_t bitsizeof(Format fmt) {
@@ -32,8 +23,9 @@ enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
   }
   return 0U;
 }
-constexpr Dimensions PHYSICAL_SIZE{.width = 240, .height = 320};
-#endif
+constexpr uint32_t PHYSICAL_WIDTH_PIXELS{240U};
+constexpr uint32_t PHYSICAL_HEIGHT_PIXELS{320U};
+
 } // namespace screen
 
 #endif

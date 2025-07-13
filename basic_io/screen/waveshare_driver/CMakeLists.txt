@@ -9,11 +9,11 @@ project(waveshare_driver)
 # boilerplate, always after project()
 pico_sdk_init()
 
-add_library(waveshare_driver STATIC dispWaveshareLcd.c)
-target_compile_options(${PROJECT_NAME} PUBLIC -O3)
-target_link_options(${PROJECT_NAME} PUBLIC -flto)
+add_library(${PROJECT_NAME}_clib STATIC dispWaveshareLcd.c)
+target_compile_options(${PROJECT_NAME}_clib PUBLIC -O3)
+target_link_options(${PROJECT_NAME}_clib PUBLIC -flto)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC 
+target_link_libraries(${PROJECT_NAME}_clib PUBLIC 
     pico_stdlib 
     hardware_dma 
     hardware_pio 
@@ -23,3 +23,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     pico_printf
 )
 
+add_library(${PROJECT_NAME} STATIC screen_impl.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    ${PROJECT_NAME}_clib
+    embp
+)
+
+    

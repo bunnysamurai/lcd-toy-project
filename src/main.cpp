@@ -135,7 +135,7 @@ int main() {
 
   // start by running the demo
   {
-    const char *argvs[2] = {"demo", "touch"};
+    const char *argvs[2] = {"demo", "text"};
     ShellCmd_Demo(2, argvs);
   }
 

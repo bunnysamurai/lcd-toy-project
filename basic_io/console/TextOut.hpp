@@ -4,6 +4,7 @@
 #include "glyphs/letters.hpp"
 #include <array>
 #include <cstddef>
+#include "bsio.hpp"
 
 // helpers?
 
@@ -20,7 +21,10 @@ constexpr bool check_if_tab(const char c) { return c == '\t'; }
 constexpr bool check_if_null(const char ch) { return ch == '\0'; }
 constexpr bool check_if_backspace(const char ch) { return ch == 0x08; }
 
-/**
+
+
+
+/** @brief An old, complicated, not-well-thought-out way of doing things
  *
  */
 template <class buffer_type> class TextOut {
@@ -190,6 +194,15 @@ private:
     }
   }
 
+  [[nodiscard]] constexpr size_t column_pix() noexcept {
+    constexpr auto letter_width_pix{glyphs::tile::width()};
+    return column * letter_width_pix;
+  }
+  [[nodiscard]] constexpr size_t line_pix() noexcept {
+    constexpr auto letter_height_pix{glyphs::tile::height()};
+    return line * letter_height_pix;
+  }
+
 public:
   constexpr explicit TextOut(buffer_type &buf)
       : column{START_COLUMN}, line{START_LINE}, buffer{buf} {}
@@ -236,38 +249,38 @@ public:
 
   friend constexpr void putc(TextOut &dev, char c) {
     if (check_if_printable(c)) {
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(c)), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii(c)),
+           dev.column_pix(), dev.line_pix());
       dev.increment_column();
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii('_')),
+           dev.column_pix(), dev.line_pix());
       return;
     }
     if (check_if_newline(c)) {
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii(' ')),
+           dev.column_pix(), dev.line_pix());
       dev.jump_to_new_row();
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii('_')),
+           dev.column_pix(), dev.line_pix());
       return;
     }
     if (check_if_tab(c)) {
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii(' ')),
+           dev.column_pix(), dev.line_pix());
       dev.increment_column();
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii(' ')),
+           dev.column_pix(), dev.line_pix());
       dev.increment_column();
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii('_')),
+           dev.column_pix(), dev.line_pix());
       return;
     }
     if (check_if_backspace(c)) {
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii(' ')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii(' ')),
+           dev.column_pix(), dev.line_pix());
       dev.decrement_column();
-      draw(dev.buffer, dev.adjust_tile(glyphs::decode_ascii('_')), dev.column,
-           dev.line);
+      draw(dev.buffer, dev.adjust_tile(glyphs::tile::decode_ascii('_')),
+           dev.column_pix(), dev.line_pix());
     }
   }
 };
