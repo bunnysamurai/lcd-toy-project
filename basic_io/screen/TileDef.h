@@ -3,12 +3,16 @@
 
 #include <cstdint>
 
-#include "../screen/screen.hpp"
+#include "screen_def.h"
+
+namespace screen {
 
 struct Tile {
   uint8_t side_length;
-  screen::Format format;
+  Format format;
   const uint8_t *data;
 };
+
+} // namespace screen
 
 #endif

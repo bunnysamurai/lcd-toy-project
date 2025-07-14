@@ -1,26 +1,18 @@
-#if !defined(SCREEN_H)
-#define SCREEN_H
+#if !defined(SCREEN_HPP)
+#define SCREEN_HPP
 
 #include <cstdint>
 
-#include "pico/time.h"
-
-#if defined(WAVESHARE_240P)
-#include "waveshare_driver/screen_def.h"
-#endif
+#include "TileDef.h"
+#include "screen_def.h"
 
 namespace screen {
-struct Position {
-  uint32_t row;
-  uint32_t column;
-};
-struct Dimensions {
-  uint32_t width;
-  uint32_t height;
-};
 
-[[nodiscard]] bool init(const uint8_t *video_buf, Position virtual_topleft,
-                        Dimensions virtual_size, Format format) noexcept;
+/* =====================================================================================
+ */
+
+[[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
+                        Format format) noexcept;
 
 [[nodiscard]] const uint8_t *get_video_buffer() noexcept;
 void set_video_buffer(const uint8_t *buffer) noexcept;
@@ -32,16 +24,11 @@ void set_format(Format) noexcept;
 void set_virtual_screen_size(Position new_topleft,
                              Dimensions new_size) noexcept;
 
-[[nodiscard]] constexpr Dimensions get_physical_screen_size() noexcept {
-  return {.width = PHYSICAL_WIDTH_PIXELS, .height = PHYSICAL_HEIGHT_PIXELS};
-}
+[[nodiscard]] Dimensions get_physical_screen_size() noexcept;
 
-struct TouchReport {
-  int x;
-  int y;
-  bool pen_up; // indicate whether someone is touching the display or not
-  absolute_time_t timestamp;
-};
+/* =====================================================================================
+ */
+
 /** @brief Get lateset touch report.
  *
  *  Check the timestamp, as these may be stale.
@@ -54,6 +41,41 @@ struct TouchReport {
  * @return True if a new report is availble, false otherwise.
  */
 [[nodiscard]] bool get_touch_report(TouchReport &out);
+
+/* =====================================================================================
+ */
+
+/** @brief Switch to video-buffer mode
+ * The most basic interface, you can gain access to the raw video buffer.
+ * It also has one bell, a convenience function to blit-in a Tile
+ */
+void clear_screen();
+void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
+
+/** @brief Switch to text-only mode
+ *
+ * Think of this as a specialized version of video mode.
+ */
+bool set_console_mode();
+
+/** @brief Sets screen to black.
+ */
+void clear_console();
+
+/** @brief Console size, in characters
+ *
+ * @return The maximum number of characters (width) and lines (height) of the
+ * console.
+ */
+[[nodiscard]] Dimensions get_console_width_and_height() noexcept;
+
+void draw_letter(uint32_t column, uint32_t line, char c);
+
+/** @brief Scroll the text on the screen
+ *
+ * @param lines + if scroll upwards, - if scroll downwards
+ */
+void scroll_up(int lines);
 
 } // namespace screen
 #endif

@@ -4,7 +4,25 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "pico/time.h"
+
 namespace screen {
+
+struct Position {
+  uint32_t row;
+  uint32_t column;
+};
+struct Dimensions {
+  uint32_t width;
+  uint32_t height;
+};
+
+struct TouchReport {
+  int x;
+  int y;
+  bool pen_up; // indicate whether someone is touching the display or not
+  absolute_time_t timestamp;
+};
 
 enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
 
@@ -23,8 +41,6 @@ enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
   }
   return 0U;
 }
-constexpr uint32_t PHYSICAL_WIDTH_PIXELS{240U};
-constexpr uint32_t PHYSICAL_HEIGHT_PIXELS{320U};
 
 } // namespace screen
 

@@ -19,10 +19,10 @@ int mywrap_flush(FILE *) {
   return 0;
 }
 int mywrap_getchar(FILE *) { return stdio_getchar(); }
-void restore_to_1bpp() {
-  screen::set_format(screen::Format::GREY1);
-  bsio::clear_console();
-}
+// void restore_to_1bpp() {
+//   screen::set_format(screen::Format::GREY1);
+//   screen::clear_console();
+// }
 
 int ShellCmd_Screen(int argc, const char *argv[]) {
   if (argc > 1) {
@@ -73,7 +73,7 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
   } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
   } else if (argc > 1 && !strcmp("touch", argv[1])) {
-    bsio::clear_console();
+    // screen::clear_screen();
     if (argc != 5) {
       multicore_launch_core1([] { demo::run_touch_demo(); });
     } else {
@@ -91,11 +91,12 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
     /* spin */
   }
   multicore_reset_core1();
-  restore_to_1bpp();
+  screen::set_console_mode();
+  // restore_to_1bpp();
   return 0;
 }
 static int ShellCmd_Clear(int, const char *[]) {
-  bsio::clear_console();
+  screen::clear_console();
   return 0;
 }
 

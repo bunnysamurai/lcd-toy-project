@@ -5,8 +5,7 @@
 
 #include "pico/time.h"
 
-#include "../screen.hpp"
-#include "screen_def.h"
+#include "../screen_def.h"
 
 namespace screen_impl {
 

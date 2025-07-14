@@ -13,7 +13,7 @@
 
 #include "bsio.hpp"
 
-#include "console/TileDef.h"
+#include "screen/TileDef.h"
 #include "screen/screen.hpp"
 
 namespace demo {
@@ -53,11 +53,11 @@ enum struct Color {
   return 0;
 }
 
-void fill_routine(const Tile &tile) {
+void fill_routine(const screen::Tile &tile) {
   const auto dims{screen::get_virtual_screen_size()};
   for (size_t yy = 0; yy < dims.height; yy += tile.side_length) {
     for (size_t xx = 0; xx < dims.width; xx += tile.side_length) {
-      bsio::draw_tile(xx, yy, tile);
+      screen::draw_tile(xx, yy, tile);
     }
   }
 }
@@ -82,27 +82,28 @@ constexpr auto red_data{fill_with<8 * 8 * 2>(Color::RED)};
 constexpr auto green_data{fill_with<8 * 8 * 2>(Color::GREEN)};
 constexpr auto blue_data{fill_with<8 * 8 * 2>(Color::BLUE)};
 
-constexpr Tile blue{.side_length = 8,
-                    .format = screen::Format::RGB565,
-                    .data = std::data(blue_data)};
-constexpr Tile green{.side_length = 8,
-                     .format = screen::Format::RGB565,
-                     .data = std::data(green_data)};
-constexpr Tile red{.side_length = 8,
-                   .format = screen::Format::RGB565,
-                   .data = std::data(red_data)};
-constexpr Tile magenta{.side_length = 8,
-                       .format = screen::Format::RGB565,
-                       .data = std::data(magenta_data)};
-constexpr Tile gold{.side_length = 8,
-                    .format = screen::Format::RGB565,
-                    .data = std::data(gold_data)};
-constexpr Tile emerald{.side_length = 8,
-                       .format = screen::Format::RGB565,
-                       .data = std::data(emerald_data)};
+constexpr screen::Tile blue{.side_length = 8,
+                            .format = screen::Format::RGB565,
+                            .data = std::data(blue_data)};
+constexpr screen::Tile green{.side_length = 8,
+                             .format = screen::Format::RGB565,
+                             .data = std::data(green_data)};
+constexpr screen::Tile red{.side_length = 8,
+                           .format = screen::Format::RGB565,
+                           .data = std::data(red_data)};
+constexpr screen::Tile magenta{.side_length = 8,
+                               .format = screen::Format::RGB565,
+                               .data = std::data(magenta_data)};
+constexpr screen::Tile gold{.side_length = 8,
+                            .format = screen::Format::RGB565,
+                            .data = std::data(gold_data)};
+constexpr screen::Tile emerald{.side_length = 8,
+                               .format = screen::Format::RGB565,
+                               .data = std::data(emerald_data)};
 
 void run_color_rando_art() {
-  static constexpr std::array<Tile, 4> tilelist{gold, green, gold, gold};
+  static constexpr std::array<screen::Tile, 4> tilelist{gold, green, gold,
+                                                        gold};
   const auto dims{screen::get_virtual_screen_size()};
 
   auto &&random_routine{[&]() {
@@ -112,16 +113,16 @@ void run_color_rando_art() {
            xx += tilelist[0].side_length) {
         const auto r{get_rand_32() & 0b11};
         const auto &rtile{tilelist[r]};
-        bsio::draw_tile(xx, yy, rtile);
-        bsio::draw_tile(dims.width - xx - rtile.side_length, yy, rtile);
-        bsio::draw_tile(xx, dims.height - yy - rtile.side_length, rtile);
-        bsio::draw_tile(dims.width - xx - rtile.side_length,
-                        dims.height - yy - rtile.side_length, rtile);
+        screen::draw_tile(xx, yy, rtile);
+        screen::draw_tile(dims.width - xx - rtile.side_length, yy, rtile);
+        screen::draw_tile(xx, dims.height - yy - rtile.side_length, rtile);
+        screen::draw_tile(dims.width - xx - rtile.side_length,
+                          dims.height - yy - rtile.side_length, rtile);
       }
     }
   }};
 
-  bsio::clear_console();
+  screen::clear_screen();
   screen::set_format(screen::Format::RGB565);
   fill_routine(emerald);
   while (true) {
@@ -131,7 +132,7 @@ void run_color_rando_art() {
 }
 
 void run_text_animation() {
-  bsio::clear_console();
+  screen::set_console_mode();
   printf("+------------------+\n");
   printf("| Meven 2040 Demo! |\n");
   printf("+------------------+\n");
@@ -159,7 +160,7 @@ enum struct TouchMachine { WAIT, PEN_DOWN, PEN_UP };
 namespace {
 
 void initialize_cool_touch_demo() {
-  bsio::clear_console();
+  screen::clear_screen();
   screen::set_format(screen::Format::RGB565);
   fill_routine(emerald);
   sleep_ms(1000000);
@@ -235,14 +236,14 @@ void undo_cool_touch_action(screen::TouchReport touch_loc) {
   }
   touch_loc = to_pixelspace(touch_loc);
   const auto dims{screen::get_virtual_screen_size()};
-  bsio::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
+  screen::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
                   emerald);
 }
 
 void take_cool_touch_action(screen::TouchReport touch_loc) {
   touch_loc = to_pixelspace(touch_loc);
   const auto dims{screen::get_virtual_screen_size()};
-  bsio::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
+  screen::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
                   red);
 }
 

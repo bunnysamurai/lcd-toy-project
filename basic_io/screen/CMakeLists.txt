@@ -4,7 +4,10 @@ project(bsio_screen)
 set(SCREEN_CONFIG "waveshare240p" CACHE STRING "Only 'waveshare240p' right meow" FORCE)
 set_property(CACHE SCREEN_CONFIG PROPERTY STRINGS "waveshare240p")
 
-add_library(${PROJECT_NAME} STATIC screen.cpp)
+add_library(${PROJECT_NAME} STATIC 
+    screen.cpp
+    tile_blitting.cpp
+)
 target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 target_link_options(${PROJECT_NAME} PUBLIC -flto)
 target_link_libraries(${PROJECT_NAME} PUBLIC 

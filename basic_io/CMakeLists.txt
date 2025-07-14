@@ -4,7 +4,7 @@ project(basic_io)
 
 add_library(basic_io 
     bsio.cpp
-    console/details/tile_blitting.cpp
+    TextConsole.cpp
 )
 target_link_libraries(basic_io PUBLIC 
     pico_stdio
@@ -17,3 +17,4 @@ target_include_directories(basic_io PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(keyboard)
 add_subdirectory(screen)
+# add_subdirectory(console)

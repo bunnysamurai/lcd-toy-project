@@ -1,13 +1,12 @@
 #include "screen_impl.hpp"
 
-#include "screen_def.h"
-
 // TODO consider not using the Pico SDK?
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
 #include "dispWaveshareLcd.h"
 #include "pinout.h"
+#include "screensize.h"
 
 #include "embp/circular_array.hpp"
 
@@ -27,8 +26,8 @@ void setup_for_output(uint id) noexcept {
 
 [[nodiscard]] constexpr bool
 range_check_dimensions(Dimensions testdim) noexcept {
-  return testdim.width <= screen::PHYSICAL_WIDTH_PIXELS &&
-         testdim.height <= screen::PHYSICAL_HEIGHT_PIXELS;
+  return testdim.width <= PHYSICAL_WIDTH_PIXELS &&
+         testdim.height <= PHYSICAL_HEIGHT_PIXELS;
 }
 
 } // namespace
@@ -80,11 +79,10 @@ bool init(const uint8_t *video_buf, [[maybe_unused]] Position virtual_topleft,
   setup_for_input(PIN_SPI_MISO);
   setup_for_output(PIN_LCD_BL);
 
-  status &=
-      dispInit(video_buf, bitsizeof(format),
-               {.width = virtual_size.width, .height = virtual_size.height},
-               {.width = screen::PHYSICAL_WIDTH_PIXELS,
-                .height = screen::PHYSICAL_HEIGHT_PIXELS});
+  status &= dispInit(
+      video_buf, bitsizeof(format),
+      {.width = virtual_size.width, .height = virtual_size.height},
+      {.width = PHYSICAL_WIDTH_PIXELS, .height = PHYSICAL_HEIGHT_PIXELS});
 
   gpio_put(PIN_LCD_BL, true);
 

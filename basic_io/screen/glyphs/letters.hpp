@@ -8,7 +8,7 @@
 
 #include "bit_manip.hpp"
 #include "../TileDef.h"
-#include "../../screen/screen.hpp"
+#include "../screen_def.h"
 
 namespace glyphs {
 struct LetterType {
@@ -1300,7 +1300,7 @@ namespace tile {
  * @return Reference to the equivalent LetterType, defaulting to something if
  * unprintable (i.e. command code). Behaviour undefined if char is not printable
  */
-[[nodiscard]] inline Tile decode_ascii(char c) noexcept {
+[[nodiscard]] inline screen::Tile decode_ascii(char c) noexcept {
   const auto &letter{glyphs::decode_ascii(c)};
 
   return {.side_length = letter.width_pixels,
