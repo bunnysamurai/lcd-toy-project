@@ -190,8 +190,10 @@ void scroll_up(int lines) {
   auto *vbuf{std::data(frame_buffer)};
   const auto dims{screen::get_console_width_and_height()};
   const auto scroll_height_pix{glyphs::tile::height()};
+  const auto width_pix{dims.width * glyphs::tile::width()};
+  const auto pitch_pix{scroll_height_pix * width_pix};
 
-  if (lines <= 0 ) {
+  if (lines <= 0) {
     return;
   }
 
@@ -199,15 +201,21 @@ void scroll_up(int lines) {
     clear_console();
   }
 
-  for (int line = lines; line < dims.height - 1; ++line) {
-    const auto width_pix{dims.width * glyphs::tile::width()};
-    const auto idx{(line * scroll_height_pix) * width_pix};
-    const auto prev_idx{((line - lines) * scroll_height_pix) * width_pix};
+  int line = lines;
+  for (; line < dims.height - lines; ++line) {
+    const auto idx{line * pitch_pix};
+    const auto prev_idx{idx - pitch_pix};
 
     /* TODO inner loop could be optimized?  The lines should be far enough apart
      * that overlap isn't possible... Better measure! */
-    for (int xx = 0; xx < width_pix; ++xx) {
+    for (int xx = 0; xx < pitch_pix; ++xx) {
       vbuf[prev_idx + xx] = vbuf[idx + xx];
+    }
+  }
+
+  if (line == dims.height - lines) {
+    for (int col = 0; col < width_pix; ++col) {
+      draw_letter(col, line, ' ');
     }
   }
 }
