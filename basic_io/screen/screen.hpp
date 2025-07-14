@@ -10,7 +10,6 @@ namespace screen {
 
 /* =====================================================================================
  */
-
 [[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
                         Format format) noexcept;
 

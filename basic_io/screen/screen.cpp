@@ -169,7 +169,6 @@ void draw_letter(uint32_t column, uint32_t line, char c) {
 }
 
 void scroll_up(int lines) {
-  const auto scroll_height_pix{glyphs::tile::height()};
 
   /*
    *  | text .... |
@@ -188,13 +187,14 @@ void scroll_up(int lines) {
    * then repeat until we get to the last line,
    * which we just set to whitespace */
 
-  auto *vbuf{screen::get_video_buffer()};
+  auto *vbuf{std::data(frame_buffer)};
   const auto dims{screen::get_console_width_and_height()};
+  const auto scroll_height_pix{glyphs::tile::height()};
 
   for (int line = 1; line < dims.height; ++line) {
     const auto width_pix{dims.width * glyphs::tile::width()};
     const auto idx{(line * scroll_height_pix) * width_pix};
-    const auto previdx{((line - 1) * scroll_height_pix) * width_pix};
+    const auto prev_idx{((line - 1) * scroll_height_pix) * width_pix};
 
     /* TODO inner loop could be optimized?  The lines should be far enough apart
      * that overlap isn't possible... Better measure! */
@@ -203,5 +203,4 @@ void scroll_up(int lines) {
     }
   }
 }
-
 } // namespace screen
