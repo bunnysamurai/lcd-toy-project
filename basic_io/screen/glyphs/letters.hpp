@@ -1147,8 +1147,8 @@ struct LetterType {
 
 constexpr auto init_letter_list() {
   constexpr auto one_bpp_transfer{[](auto lt) -> LetterType {
-    return rotate(reverse(invert(std::move(lt))));
-    //  return reverse(invert(std::move(lt)));
+    // return rotate(reverse(invert(std::move(lt))));
+     return reverse(invert(std::move(lt)));
   }};
   constexpr auto num{
       [](const char ch) { return static_cast<size_t>(ch) - 32; }};

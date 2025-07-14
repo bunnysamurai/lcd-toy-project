@@ -52,7 +52,10 @@ void stdio_init_mine() {
 namespace bsio {
 
 bool init() {
-  screen::set_console_mode();
+  if(!screen::set_console_mode())
+  {
+    return false;
+  }
   stdio_init_mine();
   return true;
 }

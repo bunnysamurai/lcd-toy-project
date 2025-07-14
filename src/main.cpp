@@ -91,8 +91,9 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
     /* spin */
   }
   multicore_reset_core1();
-  screen::set_console_mode();
-  // restore_to_1bpp();
+  if (!screen::set_console_mode()) {
+    return -1;
+  }
   return 0;
 }
 static int ShellCmd_Clear(int, const char *[]) {

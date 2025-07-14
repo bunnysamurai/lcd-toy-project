@@ -1,4 +1,5 @@
 #include "screen.hpp"
+#include "screen_def.h"
 
 #include <array>
 #include <cstddef>
@@ -23,6 +24,8 @@ inline constexpr uint32_t DISPLAY_WIDTH{screen_impl::PHYSICAL_WIDTH_PIXELS};
 inline constexpr uint32_t DISPLAY_HEIGHT{screen_impl::PHYSICAL_HEIGHT_PIXELS};
 inline constexpr size_t BUFLEN{DISPLAY_WIDTH * DISPLAY_HEIGHT *
                                MAX_SUPPORTED_BPP / 8};
+
+bool g_video_is_initd{false};
 
 template <class T, class U>
 constexpr void init_to_all_val(T &buf, const U &val) {
@@ -75,10 +78,17 @@ const uint8_t *get_video_buffer() noexcept {
   return screen_impl::get_video_buffer();
 }
 
-bool init([[maybe_unused]] Position virtual_topleft, Dimensions virtual_size,
+bool init(Position virtual_topleft, Dimensions virtual_size,
           Format format) noexcept {
-  return screen_impl::init(std::data(frame_buffer), virtual_topleft,
-                           virtual_size, format);
+  /* check if we are already init'd */
+  if (!g_video_is_initd) {
+    g_video_is_initd = true;
+    return screen_impl::init(std::data(frame_buffer), virtual_topleft,
+                             virtual_size, format);
+  }
+  set_format(format);
+  set_virtual_screen_size(virtual_topleft, virtual_size);
+  return true;
 }
 
 void set_video_buffer(const uint8_t *buffer) noexcept {
@@ -138,7 +148,7 @@ static constexpr ConsoleConfig g_console_cfg{
     .char_width = glyphs::tile::width(),
     .char_height = glyphs::tile::height()};
 
-bool set_console_mode() {
+bool set_console_mode() noexcept {
   const bool status{init({.row = 0, .column = 0}, get_physical_screen_size(),
                          screen::Format::GREY1)};
   if (!status) {
@@ -169,7 +179,6 @@ void draw_letter(uint32_t column, uint32_t line, char c) {
 }
 
 void scroll_up(int lines) {
-
   /*
    *  | text .... |
    *  | test .... |
@@ -185,13 +194,20 @@ void scroll_up(int lines) {
 
   /* so, we start at the second line and copy it to the first
    * then repeat until we get to the last line,
-   * which we just set to whitespace */
+   * which we just set to whitespace
+   * I also assume we are in 1bpp mode.  If not, we exit early.  A future
+   * feature.
+   */
 
   auto *vbuf{std::data(frame_buffer)};
   const auto dims{screen::get_console_width_and_height()};
   const auto scroll_height_pix{glyphs::tile::height()};
-  const auto width_pix{dims.width * glyphs::tile::width()};
+  const auto width_pix{screen::get_virtual_screen_size().width};
   const auto pitch_pix{scroll_height_pix * width_pix};
+
+  if (screen::get_format() != screen::Format::GREY1) {
+    return;
+  }
 
   if (lines <= 0) {
     return;
@@ -202,18 +218,19 @@ void scroll_up(int lines) {
   }
 
   int line = lines;
-  for (; line < dims.height - lines; ++line) {
+  for (; line < dims.height; ++line) {
     const auto idx{line * pitch_pix};
-    const auto prev_idx{idx - pitch_pix};
+    const auto prev_idx{idx - (pitch_pix * lines)};
 
     /* TODO inner loop could be optimized?  The lines should be far enough apart
      * that overlap isn't possible... Better measure! */
-    for (int xx = 0; xx < pitch_pix; ++xx) {
-      vbuf[prev_idx + xx] = vbuf[idx + xx];
+    for (int xx = 0; xx < pitch_pix; xx += 8) {
+      vbuf[(prev_idx + xx) >> 3] = vbuf[(idx + xx) >> 3];
     }
   }
 
-  if (line == dims.height - lines) {
+  line = dims.height - lines;
+  for (; line < dims.height; ++line) {
     for (int col = 0; col < width_pix; ++col) {
       draw_letter(col, line, ' ');
     }

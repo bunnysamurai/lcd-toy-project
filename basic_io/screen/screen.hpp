@@ -55,7 +55,7 @@ void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
  *
  * Think of this as a specialized version of video mode.
  */
-bool set_console_mode();
+[[nodiscard]] bool set_console_mode() noexcept;
 
 /** @brief Sets screen to black.
  */
