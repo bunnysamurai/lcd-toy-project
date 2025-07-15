@@ -26,13 +26,19 @@ void setup_for_output(uint id) noexcept {
 
 [[nodiscard]] constexpr bool
 range_check_dimensions(Dimensions testdim) noexcept {
-  return testdim.width <= PHYSICAL_WIDTH_PIXELS &&
-         testdim.height <= PHYSICAL_HEIGHT_PIXELS;
+  return testdim.width <= screen_impl::PHYSICAL_WIDTH_PIXELS &&
+         testdim.height <= screen_impl::PHYSICAL_HEIGHT_PIXELS;
 }
 
 } // namespace
 
-void set_format(Format fmt) noexcept { dispSetDepth(bitsizeof(fmt)); }
+void set_format(Format fmt) noexcept {
+  if (fmt == Format::RGB565) {
+    dispSetDepth(16);
+    return;
+  }
+  dispSetDepth(screen::bitsizeof(fmt));
+}
 
 Format get_format() noexcept {
   const auto bpp = dispGetDepth();
@@ -79,10 +85,11 @@ bool init(const uint8_t *video_buf, [[maybe_unused]] Position virtual_topleft,
   setup_for_input(PIN_SPI_MISO);
   setup_for_output(PIN_LCD_BL);
 
-  status &= dispInit(
-      video_buf, bitsizeof(format),
-      {.width = virtual_size.width, .height = virtual_size.height},
-      {.width = PHYSICAL_WIDTH_PIXELS, .height = PHYSICAL_HEIGHT_PIXELS});
+  status &=
+      dispInit(video_buf, screen::bitsizeof(format),
+               {.width = virtual_size.width, .height = virtual_size.height},
+               {.width = screen_impl::PHYSICAL_WIDTH_PIXELS,
+                .height = screen_impl::PHYSICAL_HEIGHT_PIXELS});
 
   gpio_put(PIN_LCD_BL, true);
 

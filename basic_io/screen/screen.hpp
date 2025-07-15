@@ -13,7 +13,9 @@ namespace screen {
 [[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
                         Format format) noexcept;
 
-[[nodiscard]] const uint8_t *get_video_buffer() noexcept;
+[[nodiscard]] uint32_t get_buf_len();
+
+[[nodiscard]] uint8_t *get_video_buffer() noexcept;
 void set_video_buffer(const uint8_t *buffer) noexcept;
 
 [[nodiscard]] Format get_format() noexcept;
@@ -50,6 +52,7 @@ void set_virtual_screen_size(Position new_topleft,
  */
 void clear_screen();
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
+void fill_screen(uint32_t raw_value); /* does not take bpp into account, so be aware */
 
 /** @brief Switch to text-only mode
  *

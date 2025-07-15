@@ -11,8 +11,6 @@
 #include "pico/stdio.h"
 #include "pico/time.h"
 
-#include "bsio.hpp"
-
 #include "screen/TileDef.h"
 #include "screen/screen.hpp"
 
@@ -64,6 +62,7 @@ void fill_routine(const screen::Tile &tile) {
 
 template <size_t N>
 [[nodiscard]] constexpr std::array<uint8_t, N> fill_with(Color clr) noexcept {
+  static_assert((N & 0x1) == 0);
   std::array<uint8_t, N> result;
   for (size_t idx{0}; idx < N; idx += 2) {
     const uint16_t bytes{to_rgb565(clr)};
@@ -124,15 +123,19 @@ void run_color_rando_art() {
 
   screen::clear_screen();
   screen::set_format(screen::Format::RGB565);
-  fill_routine(emerald);
-  while (true) {
-    random_routine();
-    sleep_ms(2000);
-  }
+  // screen::draw_tile(0, 0, magenta);
+
+  // fill_routine(emerald);
+  // while (true) {
+    // random_routine();
+    // sleep_ms(2000);
+  // }
 }
 
 void run_text_animation() {
-  screen::set_console_mode();
+  if (!screen::set_console_mode()) {
+    return;
+  }
   printf("+------------------+\n");
   printf("| Meven 2040 Demo! |\n");
   printf("+------------------+\n");
@@ -241,14 +244,14 @@ void undo_cool_touch_action(screen::TouchReport touch_loc) {
   touch_loc = to_pixelspace(touch_loc);
   const auto dims{screen::get_virtual_screen_size()};
   screen::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
-                  emerald);
+                    emerald);
 }
 
 void take_cool_touch_action(screen::TouchReport touch_loc) {
   touch_loc = to_pixelspace(touch_loc);
   const auto dims{screen::get_virtual_screen_size()};
   screen::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
-                  red);
+                    red);
 }
 
 } // namespace

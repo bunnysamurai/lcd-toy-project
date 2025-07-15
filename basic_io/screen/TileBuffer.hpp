@@ -64,36 +64,34 @@ public:
    * Keep an eye on possible optimizations.
    *
    * @param tile The tile to print
-   * @param x Column, in characters, in native screen display orientation
-   * @param y Row, in characters, in native screen display orientation
+   * @param x Column, in pixels, in native screen display orientation
+   * @param y Row, in pixels, in native screen display orientation
    */
-  friend constexpr void draw(TileBuffer &video_buf, screen::Tile tile, uint32_t x,
-                             uint32_t y) {
-    // const uint32_t x_char{x * tile.side_length};
-    // const uint32_t y_char{y * tile.side_length};
+  friend constexpr void draw(TileBuffer &video_buf, screen::Tile tile,
+                             uint32_t x, uint32_t y) {
     const uint32_t x_char{x};
     const uint32_t y_char{y};
     if (bitsizeof(tile.format) == BPP) {
       switch (BPP) {
       case 1:
-        screen::blit_1bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x_char,
-                        y_char, tile);
+        screen::blit_1bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS,
+                          x_char, y_char, tile);
         break;
       case 2:
-        screen::blit_2bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x_char,
-                        y_char, tile);
+        screen::blit_2bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS,
+                          x_char, y_char, tile);
         break;
       case 4:
-        screen::blit_4bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x_char,
-                        y_char, tile);
+        screen::blit_4bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS,
+                          x_char, y_char, tile);
         break;
       case 8:
-        screen::blit_8bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS, x_char,
-                        y_char, tile);
+        screen::blit_8bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS,
+                          x_char, y_char, tile);
         break;
       case 16:
         screen::blit_16bpp(std::data(video_buf.video_buf), WIDTH_IN_PIXELS,
-                         x_char, y_char, tile);
+                           x_char, y_char, tile);
         break;
       default:
         break;

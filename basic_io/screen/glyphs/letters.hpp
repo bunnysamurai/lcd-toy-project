@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <optional>
 
-#include "bit_manip.hpp"
 #include "../TileDef.h"
 #include "../screen_def.h"
+#include "bit_manip.hpp"
 
 namespace glyphs {
 struct LetterType {
@@ -1147,8 +1147,7 @@ struct LetterType {
 
 constexpr auto init_letter_list() {
   constexpr auto one_bpp_transfer{[](auto lt) -> LetterType {
-    // return rotate(reverse(invert(std::move(lt))));
-     return reverse(invert(std::move(lt)));
+    return reverse(std::move(lt));
   }};
   constexpr auto num{
       [](const char ch) { return static_cast<size_t>(ch) - 32; }};

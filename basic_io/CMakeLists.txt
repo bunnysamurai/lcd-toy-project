@@ -8,13 +8,13 @@ add_library(basic_io
 )
 target_link_libraries(basic_io PUBLIC 
     pico_stdio
+    pico_stdio_usb
     bsio_screen
-    bsio_keyboard
+    # bsio_keyboard
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_include_directories(basic_io PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-add_subdirectory(keyboard)
+# add_subdirectory(keyboard)
 add_subdirectory(screen)
-# add_subdirectory(console)

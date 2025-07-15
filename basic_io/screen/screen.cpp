@@ -42,7 +42,7 @@ constexpr std::array<uint8_t, BUFLEN> init_the_buffer() {
 
 auto frame_buffer{init_the_buffer()};
 
-TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, TEXTBPP, BUFLEN> tile_buf_1bpp{
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 1, BUFLEN> tile_buf_1bpp{
     frame_buffer};
 TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 2, BUFLEN> tile_buf_2bpp{
     frame_buffer};
@@ -50,11 +50,13 @@ TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 4, BUFLEN> tile_buf_4bpp{
     frame_buffer};
 TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 8, BUFLEN> tile_buf_8bpp{
     frame_buffer};
-TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, COLORBPP, BUFLEN> tile_buf_16bpp{
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 16, BUFLEN> tile_buf_16bpp{
     frame_buffer};
 } // namespace
 
 namespace screen {
+
+uint32_t get_buf_len() { return BUFLEN; }
 
 void set_format(Format fmt) noexcept { screen_impl::set_format(fmt); }
 
@@ -74,9 +76,7 @@ void set_virtual_screen_size([[maybe_unused]] Position new_topleft,
           .height = screen_impl::PHYSICAL_HEIGHT_PIXELS};
 }
 
-const uint8_t *get_video_buffer() noexcept {
-  return screen_impl::get_video_buffer();
-}
+uint8_t *get_video_buffer() noexcept { return std::data(frame_buffer); }
 
 bool init(Position virtual_topleft, Dimensions virtual_size,
           Format format) noexcept {
@@ -103,10 +103,8 @@ void set_video_buffer(const uint8_t *buffer) noexcept {
 /*                  Video-Only Mode                            */
 /* =========================================================== */
 void clear_screen() {
-  /* just set all bytes to 0 */
-  for (auto &pix : frame_buffer) {
-    pix = 0U;
-  }
+  /* 255-as-black appears to be screen specific? */
+  fill_screen(255U);
 }
 
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {
@@ -130,6 +128,11 @@ void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {
   case screen::Format::RGB565:
     draw(tile_buf_16bpp, tile, xpos, ypos);
     break;
+  }
+}
+void fill_screen(uint32_t raw_value) {
+  for (auto &pix : frame_buffer) {
+    pix = static_cast<uint8_t>(raw_value);
   }
 }
 

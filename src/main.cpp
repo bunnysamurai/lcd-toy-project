@@ -2,6 +2,7 @@
 #include <array>
 #include <cstring>
 #include <limits>
+#include <string>
 
 #include "pico/multicore.h"
 #include "pico/printf.h"
@@ -27,26 +28,58 @@ int mywrap_getchar(FILE *) { return stdio_getchar(); }
 int ShellCmd_Screen(int argc, const char *argv[]) {
   if (argc > 1) {
     if (!strcmp("help", argv[1])) {
-      printf("  %s [format | size]\n", argv[0]);
+      printf("  %s [format | size | buflen | clear | fill]\n", argv[0]);
+      printf("screen format FORMAT will set the format\n");
+      printf("Valid arguments are {1, 2, 4, 8, 16}\n");
+      printf("screen fill U8 will fill the video buffer with this raw value\n");
+    }
+    if(!strcmp("clear", argv[1])){
+      screen::clear_screen();
+    }
+    if (!strcmp("buflen", argv[1])) {
+      printf("%d\n", screen::get_buf_len());
     }
     if (!strcmp("format", argv[1])) {
-      const auto fmt{screen::get_format()};
-      switch (fmt) {
-      case screen::Format::GREY1:
-        printf("GREY1\n");
-        break;
-      case screen::Format::GREY2:
-        printf("GREY2\n");
-        break;
-      case screen::Format::GREY4:
-        printf("GREY4\n");
-        break;
-      case screen::Format::RGB565_LUT8:
-        printf("RGB565_LUT8\n");
-        break;
-      case screen::Format::RGB565:
-        printf("RGB565\n");
-        break;
+      if (argc == 2) {
+        const auto fmt{screen::get_format()};
+        switch (fmt) {
+        case screen::Format::GREY1:
+          printf("GREY1\n");
+          break;
+        case screen::Format::GREY2:
+          printf("GREY2\n");
+          break;
+        case screen::Format::GREY4:
+          printf("GREY4\n");
+          break;
+        case screen::Format::RGB565_LUT8:
+          printf("RGB565_LUT8\n");
+          break;
+        case screen::Format::RGB565:
+          printf("RGB565\n");
+          break;
+        }
+      } else {
+        const auto bpp{std::stoi(argv[2])};
+        switch (bpp) {
+        case 1:
+          screen::set_format(screen::Format::GREY1);
+          break;
+        case 2:
+          screen::set_format(screen::Format::GREY2);
+          break;
+        case 4:
+          screen::set_format(screen::Format::GREY4);
+          break;
+        case 8:
+          screen::set_format(screen::Format::RGB565_LUT8);
+          break;
+        case 16:
+          screen::set_format(screen::Format::RGB565);
+          break;
+        default:
+          printf("Format %d unsupported\n", bpp);
+        }
       }
     }
     if (!strcmp("size", argv[1])) {
@@ -55,6 +88,14 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
     }
     if (!strcmp("calibrate", argv[1])) {
       printf("STUB: run touch screen calibration routine\n");
+    }
+  }
+  if(argc > 2)
+  {
+    if(!strcmp("fill", argv[1]))
+    {
+      const auto fill_value{ std::stoi(argv[2])};
+      screen::fill_screen(fill_value);
     }
   }
   return 0;
@@ -73,7 +114,7 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
   } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
   } else if (argc > 1 && !strcmp("touch", argv[1])) {
-    // screen::clear_screen();
+    screen::clear_screen();
     if (argc != 5) {
       multicore_launch_core1([] { demo::run_touch_demo(); });
     } else {
@@ -137,7 +178,7 @@ int main() {
 
   // start by running the demo
   {
-    const char *argvs[2] = {"demo", "text"};
+    const char *argvs[2] = {"demo", "touch"};
     ShellCmd_Demo(2, argvs);
   }
 

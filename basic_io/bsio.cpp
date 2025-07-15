@@ -12,6 +12,7 @@
 
 #include "pico/stdio.h"
 #include "pico/stdio/driver.h"
+#include "pico/stdio_usb.h"
 
 namespace {
 
@@ -52,11 +53,12 @@ void stdio_init_mine() {
 namespace bsio {
 
 bool init() {
+  stdio_usb_init();
   if(!screen::set_console_mode())
   {
     return false;
   }
-  stdio_init_mine();
+  // stdio_init_mine();
   return true;
 }
 
