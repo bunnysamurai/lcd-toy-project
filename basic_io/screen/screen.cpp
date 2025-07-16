@@ -104,7 +104,7 @@ void set_video_buffer(const uint8_t *buffer) noexcept {
 /* =========================================================== */
 void clear_screen() {
   /* 255-as-black appears to be screen specific? */
-  fill_screen(255U);
+  fill_screen(0U);
 }
 
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {

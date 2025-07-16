@@ -20,21 +20,20 @@ int mywrap_flush(FILE *) {
   return 0;
 }
 int mywrap_getchar(FILE *) { return stdio_getchar(); }
-// void restore_to_1bpp() {
-//   screen::set_format(screen::Format::GREY1);
-//   screen::clear_console();
-// }
 
 int ShellCmd_Screen(int argc, const char *argv[]) {
   if (argc > 1) {
     if (!strcmp("help", argv[1])) {
-      printf("  %s [format | size | buflen | clear | fill]\n", argv[0]);
-      printf("screen format FORMAT will set the format\n");
-      printf("Valid arguments are {1, 2, 4, 8, 16}\n");
-      printf("screen fill U8 will fill the video buffer with this raw value\n");
+      /* clang-format off */
+      printf("  %s [format | size | buflen | clear | fill | calibrate | touch]\n\n", argv[0]);
+      printf("  %s format FORMAT will set the format\n", argv[0]);
+      printf("    Valid arguments are {1, 2, 4, 8, 16}\n");
+      printf("  %s fill U8\n    will fill the video buffer with this raw value\n", argv[0]);
+      printf("  %s touch ZTHRESH FIRST_TOSS LAST_TOSS\n", argv[0]);
+      /* clang-format on */
     }
-    if(!strcmp("clear", argv[1])){
-      screen::clear_screen();
+    if (!strcmp("clear", argv[1])) {
+      screen::clear_console();
     }
     if (!strcmp("buflen", argv[1])) {
       printf("%d\n", screen::get_buf_len());
@@ -90,12 +89,19 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
       printf("STUB: run touch screen calibration routine\n");
     }
   }
-  if(argc > 2)
-  {
-    if(!strcmp("fill", argv[1]))
-    {
-      const auto fill_value{ std::stoi(argv[2])};
+  if (argc > 2) {
+    if (!strcmp("fill", argv[1])) {
+      const auto fill_value{std::stoi(argv[2])};
       screen::fill_screen(fill_value);
+    }
+  }
+  if (argc > 4) {
+    if (!strcmp("touch", argv[1])) {
+      const auto zthresh{static_cast<uint32_t>(std::stoi(argv[2]))};
+      const auto ftoss{static_cast<uint8_t>(std::stoi(argv[3]))};
+      const auto ltoss{static_cast<uint8_t>(std::stoi(argv[4]))};
+      dispConfigureTouch(dispTouchCfg_t{
+          .touch_zthresh = zthresh, .first_toss = ftoss, .last_toss = ltoss});
     }
   }
   return 0;
@@ -178,7 +184,7 @@ int main() {
 
   // start by running the demo
   {
-    const char *argvs[2] = {"demo", "touch"};
+    const char *argvs[2] = {"demo", "text"};
     ShellCmd_Demo(2, argvs);
   }
 

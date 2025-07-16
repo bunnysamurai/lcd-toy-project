@@ -51,7 +51,7 @@ enum struct Color {
   return 0;
 }
 
-void fill_routine(const screen::Tile &tile) {
+void fill_routine(const screen::Tile &tile) noexcept {
   const auto dims{screen::get_virtual_screen_size()};
   for (size_t yy = 0; yy < dims.height; yy += tile.side_length) {
     for (size_t xx = 0; xx < dims.width; xx += tile.side_length) {
@@ -100,7 +100,7 @@ constexpr screen::Tile emerald{.side_length = 8,
                                .format = screen::Format::RGB565,
                                .data = std::data(emerald_data)};
 
-void run_color_rando_art() {
+void run_color_rando_art() noexcept {
   static constexpr std::array<screen::Tile, 4> tilelist{gold, green, gold,
                                                         gold};
   const auto dims{screen::get_virtual_screen_size()};
@@ -123,16 +123,15 @@ void run_color_rando_art() {
 
   screen::clear_screen();
   screen::set_format(screen::Format::RGB565);
-  // screen::draw_tile(0, 0, magenta);
 
-  // fill_routine(emerald);
-  // while (true) {
-    // random_routine();
-    // sleep_ms(2000);
-  // }
+  fill_routine(emerald);
+  while (true) {
+    random_routine();
+    sleep_ms(2000);
+  }
 }
 
-void run_text_animation() {
+void run_text_animation() noexcept {
   if (!screen::set_console_mode()) {
     return;
   }
@@ -166,7 +165,7 @@ enum struct TouchMachine { WAIT, PEN_DOWN, PEN_UP };
 
 namespace {
 
-void initialize_cool_touch_demo() {
+void initialize_cool_touch_demo() noexcept {
   screen::clear_screen();
   screen::set_format(screen::Format::RGB565);
   fill_routine(emerald);
@@ -237,7 +236,7 @@ to_pixelspace(screen::TouchReport rawloc) noexcept {
                              .timestamp = rawloc.timestamp};
 }
 
-void undo_cool_touch_action(screen::TouchReport touch_loc) {
+void undo_cool_touch_action(screen::TouchReport touch_loc) noexcept {
   if (touch_loc.x < 0 || touch_loc.y < 0) {
     return;
   }
@@ -247,7 +246,7 @@ void undo_cool_touch_action(screen::TouchReport touch_loc) {
                     emerald);
 }
 
-void take_cool_touch_action(screen::TouchReport touch_loc) {
+void take_cool_touch_action(screen::TouchReport touch_loc) noexcept {
   touch_loc = to_pixelspace(touch_loc);
   const auto dims{screen::get_virtual_screen_size()};
   screen::draw_tile(dims.width - touch_loc.x - 1, dims.height - touch_loc.y - 1,
@@ -258,7 +257,7 @@ void take_cool_touch_action(screen::TouchReport touch_loc) {
 
 static constexpr int64_t DOUBLE_TAP_PERIOD_THRESHOLD_US{550 *
                                                         1000}; /* 100 ms? */
-void run_touch_demo(TouchConfig cfg) {
+void run_touch_demo(TouchConfig cfg) noexcept {
   /* sample about every 10 ms?
    * we should really setup a timer for this... */
   const auto TOUCH_POLL_INTERVAL_MS{cfg.touch_poll_interval_ms};

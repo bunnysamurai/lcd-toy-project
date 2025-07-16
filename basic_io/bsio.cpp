@@ -1,21 +1,22 @@
 #include "bsio.hpp"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
 #include "TextConsole.hpp"
-#include "screen/TileBuffer.hpp"
-// #include "console/glyphs/letters.hpp"
 #include "keyboard/keyboard.hpp"
+#include "screen/TileBuffer.hpp"
 #include "screen/screen.hpp"
 
 #include "pico/stdio.h"
 #include "pico/stdio/driver.h"
+#if defined(BUILD_WITH_STDIO_USB)
 #include "pico/stdio_usb.h"
+#endif
 
 namespace {
 
+#if !defined(BUILD_WITH_STDIO_USB)
 screen::TextConsole wrt;
 
 /* callbacks for stdio_driver_t */
@@ -47,18 +48,21 @@ void stdio_init_mine() {
                                      .in_chars = my_in_chars};
   stdio_set_driver_enabled(&my_driver, true);
 }
+#endif
 
 } // namespace
 
 namespace bsio {
 
 bool init() {
-  stdio_usb_init();
-  if(!screen::set_console_mode())
-  {
+  if (!screen::set_console_mode()) {
     return false;
   }
-  // stdio_init_mine();
+#if defined(BUILD_WITH_STDIO_USB)
+  stdio_usb_init();
+#else
+  stdio_init_mine();
+#endif
   return true;
 }
 

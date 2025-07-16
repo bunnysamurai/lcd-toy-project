@@ -1145,10 +1145,9 @@ struct LetterType {
     }
 // clang-format on
 
-constexpr auto init_letter_list() {
-  constexpr auto one_bpp_transfer{[](auto lt) -> LetterType {
-    return reverse(std::move(lt));
-  }};
+constexpr auto init_letter_list() noexcept {
+  constexpr auto one_bpp_transfer{
+      [](auto lt) -> LetterType { return reverse(std::move(lt)); }};
   constexpr auto num{
       [](const char ch) { return static_cast<size_t>(ch) - 32; }};
   static_assert(num(' ') == 0, "charcter SP is not at 32?");
@@ -1264,7 +1263,7 @@ constexpr auto g_letter_list{
     init_letter_list()}; // TODO here we could specify exactly where this
                          // lives in memory
 
-constexpr int decode(const char ch) { return ch - 32; }
+constexpr int decode(const char ch) noexcept { return ch - 32; }
 
 } // namespace
 /**

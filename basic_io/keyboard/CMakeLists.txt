@@ -8,7 +8,7 @@ target_compile_options(bsio_keyboard PRIVATE -O3)
 target_link_options(bsio_keyboard PRIVATE -flto)
 
 # here we define our keyboard impl
-message("keyboard config is ${KEYBOARD_CONFIG}")
+message(STATUS "Keyboard configured for ${KEYBOARD_CONFIG}")
 if( KEYBOARD_CONFIG STREQUAL "tinyusb" )
     target_compile_definitions(bsio_keyboard PUBLIC 
         -DTINYUSB_BASICKEYBOARD

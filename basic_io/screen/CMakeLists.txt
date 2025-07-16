@@ -15,6 +15,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     embp
 )
 
+message(STATUS "Screen configured for ${SCREEN_CONFIG}")
+
 if( SCREEN_CONFIG STREQUAL "waveshare240p" )
     add_subdirectory(waveshare_driver)
     target_link_libraries(${PROJECT_NAME} PUBLIC waveshare_driver)
@@ -24,7 +26,7 @@ if( SCREEN_CONFIG STREQUAL "waveshare240p" )
         -DWAVESHARE_240P
         -DMAX_SUPPORTED_BPP=16
     )
-    target_compile_definitions(waveshare_driver PUBLIC
+    target_compile_definitions(waveshare_driver_clib PUBLIC
         -DWAVESHARE_240P
         -DMAX_SUPPORTED_BPP=16
     )

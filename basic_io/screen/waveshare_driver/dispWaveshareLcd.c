@@ -43,7 +43,7 @@ uint32_t TOUCH_ZTHRESH = 0xfa0;
 uint8_t FIRST_TOSS = 10; // first this many points are tossed
 uint8_t LAST_TOSS = 1;   // then this many are averaged (and dropped at end)
 
-//#define PRINT_DEBUG
+// #define PRINT_DEBUG
 
 #if MAX_SUPPORTED_BPP >= 8
 static uint16_t
