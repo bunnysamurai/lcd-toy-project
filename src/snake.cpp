@@ -3,16 +3,24 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "pico/time.h"
+
 #include "screen/TileDef.h"
 #include "screen/screen.hpp"
 
+#include "embp/circular_array.hpp"
+
 #include "snake_tiles_constexpr.hpp"
 
-namespace snake {
-struct BorderTile;
-}
-
 namespace {
+
+using grid_t = uint8_t;
+using pix_t = uint16_t;
+
+/* Some game configurations */
+// constexpr auto GAME_LOOP_MS{50};
+constexpr auto GAME_TICK_US{100000U};
+// constexpr auto APPLE_GROWTH_TICKS{3};
 
 /* These abstractions should help with pixel->tile grid location
  * Observed behaviour of RattleRace(r) is that the snake moves on a fixed
@@ -23,37 +31,134 @@ namespace {
  */
 
 struct ScreenLocation {
-  uint16_t x;
-  uint16_t y;
+  pix_t x;
+  pix_t y;
 };
 
 struct GridLocation {
-  uint16_t x;
-  uint16_t y;
+  grid_t x;
+  grid_t y;
 };
 
 struct TileTransform {
-  uint16_t off;
-  uint16_t scale;
+  pix_t off;
+  pix_t scale;
 };
 
 struct TileGridCfg {
   TileTransform xdimension;
   TileTransform ydimension;
 
-  uint16_t grid_width;
-  uint16_t grid_height;
+  grid_t grid_width;
+  grid_t grid_height;
+};
+
+/* clang-format off */
+/* the snake state:
+ *    grid location of the head
+ *    direction the head is pointed
+ *    length of the body
+ *    ring buffer of direction vectors, to build the snake body with
+ *
+ * snake behaviours:
+ *    head always moves forward on every game tick, in the direction the head is pointed
+ *    tail moves back along the body, 
+ *      unless an apple was eaten, in which case it will remain stationary for N game ticks
+ *
+ */
+/* clang-format on */
+enum struct Direction : uint8_t { UP, RIGHT, DOWN, LEFT };
+
+struct SnakeState {
+  GridLocation head;
+  Direction head_dir;
+  embp::circular_array<Direction, 255U> body_vec;
 };
 
 TileGridCfg g_tile_grid;
+SnakeState g_snake_state;
 
 [[nodiscard]] ScreenLocation to_pixel_xy(GridLocation grid_xy) noexcept {
   /* TODO consider adding range checks here?  Or should it go somewhere else? */
-  return {.x = static_cast<uint16_t>(grid_xy.x * g_tile_grid.xdimension.scale +
-                                     g_tile_grid.xdimension.off),
-          .y = static_cast<uint16_t>(grid_xy.y * g_tile_grid.ydimension.scale +
-                                     g_tile_grid.ydimension.off)};
+  return {.x = static_cast<pix_t>(grid_xy.x * g_tile_grid.xdimension.scale +
+                                  g_tile_grid.xdimension.off),
+          .y = static_cast<pix_t>(grid_xy.y * g_tile_grid.ydimension.scale +
+                                  g_tile_grid.ydimension.off)};
 }
+
+[[nodiscard]] constexpr GridLocation move_point(GridLocation point,
+                                                Direction direction) noexcept {
+  switch (direction) {
+  case Direction::UP:
+    point.y -= 1;
+    break;
+  case Direction::RIGHT:
+    point.x += 1;
+    break;
+  case Direction::DOWN:
+    point.y += 1;
+    break;
+  case Direction::LEFT:
+    point.x -= 1;
+    break;
+  }
+  return point;
+}
+
+[[nodiscard]] constexpr Direction get_opposite(Direction dir) noexcept {
+  return static_cast<Direction>((static_cast<uint8_t>(dir) + 2U) & 0b11);
+}
+
+/** @brief initalize the snake state
+ *
+ *  NOTE: grid needs to be intialized before this function!
+ */
+void init_snake(GridLocation start, Direction dir) {
+  g_snake_state.head = start;
+  g_snake_state.head_dir = dir;
+}
+
+void clear_snake_tail() {
+  /* iterate through the body_vec until the last one, which is the tail */
+  auto head{g_snake_state.head};
+  for (const auto dir : g_snake_state.body_vec) {
+    head = move_point(head, dir);
+  }
+  const auto [pixx, pixy]{to_pixel_xy(head)};
+  screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+}
+
+void update_snake_state(bool growing) {
+  /* head always moves */
+  g_snake_state.head = move_point(g_snake_state.head, g_snake_state.head_dir);
+
+  /* add to the length of the body, in the opposite direction */
+  g_snake_state.body_vec.push_front(get_opposite(g_snake_state.head_dir));
+
+  if (!growing) {
+    /* also pop the tail location */
+    clear_snake_tail();
+    g_snake_state.body_vec.pop_back();
+  }
+}
+
+void draw_snake() {
+
+  /* for right now, we'll just draw green squares */
+
+  /* draw the head */
+  auto head{g_snake_state.head};
+  const auto [pixx, pixy]{to_pixel_xy(head)};
+  screen::draw_tile(pixx, pixy, snake::SnakeTile);
+
+  /* iterate through the body_vec to draw the rest */
+  for (const auto dir : g_snake_state.body_vec) {
+    head = move_point(head, dir);
+    const auto [pixx, pixy]{to_pixel_xy(head)};
+    screen::draw_tile(pixx, pixy, snake::SnakeTile);
+  }
+}
+
 void configure_tile_grid() {
   const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
 
@@ -80,13 +185,13 @@ void draw_border() {
 
   /* top and bottom borders */
   {
-    uint16_t gy = 0;
-    for (uint16_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
+    grid_t gy = 0;
+    for (grid_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
       screen::draw_tile(xx, yy, snake::BorderTile);
     }
     gy = g_tile_grid.grid_height - 1;
-    for (uint16_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
+    for (grid_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
       screen::draw_tile(xx, yy, snake::BorderTile);
     }
@@ -94,18 +199,17 @@ void draw_border() {
 
   /* left and right borders */
   {
-    uint16_t gx = 0;
-    for (uint16_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
+    grid_t gx = 0;
+    for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
       screen::draw_tile(xx, yy, snake::BorderTile);
     }
     gx = g_tile_grid.grid_width - 1;
-    for (uint16_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
+    for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
       screen::draw_tile(xx, yy, snake::BorderTile);
     }
   }
-
 }
 
 void init_the_screen() {
@@ -125,6 +229,28 @@ void init_the_screen() {
 
 namespace snake {
 
-void run() { init_the_screen(); }
+void run() {
+  init_the_screen();
+  init_snake({.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+              .y = static_cast<grid_t>(g_tile_grid.grid_height)},
+             Direction::UP);
+
+  uint8_t growing{2};
+  absolute_time_t last_time{get_absolute_time()};
+  /* game loop! */
+  while (true) {
+    const auto now{get_absolute_time()};
+    if (absolute_time_diff_us(last_time, now) > GAME_TICK_US) {
+      last_time = now;
+      update_snake_state(growing > 0);
+
+      if (growing > 0) {
+        --growing;
+      }
+
+      draw_snake();
+    }
+  }
+};
 
 } // namespace snake
