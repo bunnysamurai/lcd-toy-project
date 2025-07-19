@@ -7,7 +7,7 @@
 namespace keyboard {
 
 #ifdef TINYUSB_BASICKEYBOARD
-[[nodiscard]] char wait_key(duration timeout, result_t &err) noexcept {
+[[nodiscard]] int wait_key(duration timeout, result_t &err) noexcept {
   return keyboard::bsp::tinyusb::wait_key(timeout, err);
 }
 #endif

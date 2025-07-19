@@ -1,17 +1,19 @@
 #include "TinyUsbKeyboard.hpp"
 #include "tusb.h"
 
+#include "pico/time.h"
+
 namespace keyboard::bsp::tinyusb {
 
 class BasicKeyboard final {
 public:
   BasicKeyboard() noexcept;
-  [[nodiscard]] char wait_key(duration timeout, result_t &err) noexcept;
+  [[nodiscard]] int wait_key(duration timeout, result_t &err) noexcept;
 
-  void push_char(char) noexcept;
+  void push_char(int) noexcept;
 
 private:
-  char current_char;
+  int current_char;
   bool received{false};
 };
 } // namespace keyboard::bsp::tinyusb
@@ -271,25 +273,43 @@ namespace keyboard::bsp::tinyusb {
 
 BasicKeyboard::BasicKeyboard() noexcept { tusb_init(); }
 
-[[nodiscard]] char BasicKeyboard::wait_key(duration timeout,
-                                           result_t &err) noexcept {
-  err = result_t::SUCCESS;
-  for (;;) {
-    tuh_task();
-    if (received) {
-      received = false;
-      return current_char;
+[[nodiscard]] int BasicKeyboard::wait_key(duration timeout,
+                                          result_t &err) noexcept {
+  if (timeout == duration{0}) {
+    err = result_t::SUCCESS;
+    for (;;) {
+      tuh_task();
+      if (received) {
+        received = false;
+        return current_char;
+      }
     }
+  } else {
+    const auto start{get_absolute_time()};
+    err = result_t::SUCCESS;
+    for (;;) {
+      const std::chrono::microseconds time_passed{
+          absolute_time_diff_us(start, get_absolute_time())};
+      if (time_passed > timeout) {
+        break;
+      }
+      tuh_task();
+      if (received) {
+        received = false;
+        return current_char;
+      }
+    }
+    err = result_t::ERROR_TIMEOUT;
+    return '\0';
   }
-  err = result_t::ERROR_TIMEOUT;
 }
 
-void BasicKeyboard::push_char(char c) noexcept {
+void BasicKeyboard::push_char(int c) noexcept {
   current_char = c;
   received = true;
 }
 
-[[nodiscard]] char wait_key(duration timeout, result_t &error) noexcept {
+[[nodiscard]] int wait_key(duration timeout, result_t &error) noexcept {
   return g_tinyusb_key.wait_key(timeout, error);
 }
 } // namespace keyboard::bsp::tinyusb

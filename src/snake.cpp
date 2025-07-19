@@ -1,11 +1,13 @@
 #include "snake.hpp"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
 
 #include "pico/time.h"
 
+#include "keyboard/keyboard.hpp"
 #include "screen/TileDef.h"
 #include "screen/screen.hpp"
 
@@ -19,10 +21,11 @@ using grid_t = uint8_t;
 using pix_t = uint16_t;
 
 /* Some game configurations */
-// constexpr auto GAME_LOOP_MS{50};
+constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
+    1}; /* basically how often we poll for input */
 constexpr auto GAME_TICK_US{200000U};
 constexpr auto APPLE_GROWTH_TICKS{3U};
-constexpr auto NUMBER_OF_APPLES{1U};
+constexpr auto NUMBER_OF_APPLES{10U};
 
 /* These abstractions should help with pixel->tile grid location
  * Observed behaviour of RattleRace(r) is that the snake moves on a fixed
@@ -129,6 +132,14 @@ SnakeState g_snake_state;
   return static_cast<Direction>((static_cast<uint8_t>(dir) + 2U) & 0b11);
 }
 
+/* ========================================================== */
+/*     ____  _   _    _        _        _    _  _______ _     */
+/*    / ___|| \ | |  / \      / \      / \  | |/ / ____| |    */
+/*    \___ \|  \| | / _ \    / _ \    / _ \ | ' /|  _| | |    */
+/*     ___) | |\  |/ ___ \  / ___ \  / ___ \| . \| |___|_|    */
+/*    |____/|_| \_/_/   \_\/_/   \_\/_/   \_\_|\_\_____(_)    */
+/*                                                            */
+/* ========================================================== */
 /** @brief initalize the snake state
  *
  *  NOTE: grid needs to be intialized before this function!
@@ -189,25 +200,47 @@ void draw_snake() {
   impl_draw_along_the_body(snake::SnakeTile);
 }
 
+void change_snake_direction(int key_pressed) {
+  /*
+   *  validate the character pressed
+   *  convert character to Direction
+   *  verify Direction is a valid option
+   *    if so, update the snake's direction
+   */
+}
+/* ================================================================= */
+/*    ____      _     _    ___     ____                _             */
+/*   / ___|_ __(_) __| |  ( _ )   | __ )  ___  _ __ __| | ___ _ __   */
+/*  | |  _| '__| |/ _` |  / _ \/\ |  _ \ / _ \| '__/ _` |/ _ \ '__|  */
+/*  | |_| | |  | | (_| | | (_>  < | |_) | (_) | | | (_| |  __/ |     */
+/*   \____|_|  |_|\__,_|  \___/\/ |____/ \___/|_|  \__,_|\___|_|     */
+/*                                                                   */
+/* ================================================================= */
 void configure_tile_grid() {
   const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
 
-  /* ... */
+  /*
+   * We use the bottom 3/4 of the available display for the play area.
+   * Because sure, why not?
+   */
+  const auto screen_pix_y_off{24};
+  const auto screen_pix_height{display_dims.height - screen_pix_y_off};
+
   /* for now, I'll assume the shape of the border tile drives the grid
    * requirements */
 
   const auto grid_scale{snake::BorderTile.side_length};
   const auto grid_width{display_dims.width / grid_scale};
-  const auto grid_height{display_dims.height / grid_scale};
+  const auto grid_height{screen_pix_height / grid_scale};
   const auto grid_xoff{(display_dims.width % grid_scale) >> 1};
-  const auto grid_yoff{(display_dims.height % grid_scale) >> 1};
+  const auto grid_yoff{(screen_pix_height % grid_scale) >> 1};
 
   g_tile_grid.grid_width = grid_width;
   g_tile_grid.grid_height = grid_height;
   g_tile_grid.xdimension.scale = grid_scale;
   g_tile_grid.xdimension.off = grid_xoff;
   g_tile_grid.ydimension.scale = grid_scale;
-  g_tile_grid.ydimension.off = grid_yoff;
+  g_tile_grid.ydimension.off = screen_pix_y_off + grid_yoff;
 }
 
 void draw_border() {
@@ -260,14 +293,24 @@ void init_the_screen() noexcept {
   draw_border();
 }
 
-/* Now, the apple stuff */
+/* ===================================================== */
+/*      _                _         ____           _      */
+/*     / \   _ __  _ __ | | ___   / ___|__ _ _ __| |_    */
+/*    / _ \ | '_ \| '_ \| |/ _ \ | |   / _` | '__| __|   */
+/*   / ___ \| |_) | |_) | |  __/ | |__| (_| | |  | |_    */
+/*  /_/   \_\ .__/| .__/|_|\___|  \____\__,_|_|   \__|   */
+/*          |_|   |_|                                    */
+/* ===================================================== */
 embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
-void init_level() noexcept {
+void init_apples() noexcept {
   /* just places an apple somewhere */
-  g_apple_locations.resize(1);
+  g_apple_locations.resize(3);
   g_apple_locations[0] = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
-                          .y =
-                              static_cast<grid_t>(g_tile_grid.grid_height / 3)};
+                          .y = static_cast<grid_t>(18)};
+  g_apple_locations[1] = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+                          .y = static_cast<grid_t>(20)};
+  g_apple_locations[2] = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+                          .y = static_cast<grid_t>(22)};
 
   /* and draw the apples */
   for (const auto apple : g_apple_locations) {
@@ -291,8 +334,16 @@ bool check_for_apple_collision(uint32_t &collided_apple_index) {
   return false;
 }
 
-/* Collision Logic */
+/* ================================================================= */
+/*   ____      _ _ _     _               _                _          */
+/*  / ___|___ | | (_)___(_) ___  _ __   | |    ___   __ _(_) ___     */
+/* | |   / _ \| | | / __| |/ _ \| '_ \  | |   / _ \ / _` | |/ __|    */
+/* | |__| (_) | | | \__ \ | (_) | | | | | |__| (_) | (_| | | (__     */
+/*  \____\___/|_|_|_|___/_|\___/|_| |_| |_____\___/ \__, |_|\___|    */
+/*                                                  |___/            */
+/* ================================================================= */
 enum struct Collision { NONE, BORDER, APPLE };
+uint32_t g_collided_apple;
 [[nodiscard]] Collision check_for_collisions() noexcept {
   /* if head is on the border, whoops! Game over. */
   if (g_snake_state.head.x < 1 ||
@@ -302,10 +353,8 @@ enum struct Collision { NONE, BORDER, APPLE };
     return Collision::BORDER;
   }
 
-  /* if head is on an apple, remove the apple and return APPLE_GROWTH_TICKS */
-  uint32_t apple_idx;
-  if (check_for_apple_collision(apple_idx)) {
-    remove_apple(apple_idx);
+  /* if head is on an apple, yum! Remove the apple. */
+  if (check_for_apple_collision(g_collided_apple)) {
     return Collision::APPLE;
   }
 
@@ -314,6 +363,15 @@ enum struct Collision { NONE, BORDER, APPLE };
 
 } // namespace
 
+/* ==================================================================== */
+/*    __  __       _         ____            _                          */
+/*   |  \/  | __ _(_)_ __   | __ ) _   _ ___(_)_ __   ___  ___ ___      */
+/*   | |\/| |/ _` | | '_ \  |  _ \| | | / __| | '_ \ / _ \/ __/ __|     */
+/*   | |  | | (_| | | | | | | |_) | |_| \__ \ | | | |  __/\__ \__ \     */
+/*   |_|  |_|\__,_|_|_| |_| |____/ \__,_|___/_|_| |_|\___||___/___/     */
+/*                                                                      */
+/*                                                  figlet -f standard  */
+/* ==================================================================== */
 namespace snake {
 
 void run() {
@@ -330,10 +388,20 @@ void run() {
   while (true) {
     uint8_t lives{3};
     init_snake(SNAKE_START, SNAKE_DIR);
-    init_level(); /* just places an apple somewhere */
+    init_apples(); /* just places an apple somewhere */
     while (lives > 0) {
       const auto now{get_absolute_time()};
-      if (absolute_time_diff_us(last_time, now) > GAME_TICK_US) {
+
+      /* process user input*/
+      keyboard::result_t key_status;
+      const int key_pressed{keyboard::wait_key(KEYBOARD_POLL_MS, key_status)};
+      if (key_status == keyboard::result_t::SUCCESS) {
+        change_snake_direction(key_pressed);
+      }
+
+      /* update screen with current game state */
+      if (absolute_time_diff_us(last_time, now) > GAME_TICK_US ||
+          key_status == keyboard::result_t::SUCCESS) {
         last_time = now;
 
         update_snake_state(growing > 0);
@@ -345,6 +413,7 @@ void run() {
         const Collision collision{check_for_collisions()};
         switch (collision) {
         case Collision::APPLE:
+          remove_apple(g_collided_apple);
           growing += APPLE_GROWTH_TICKS;
           break;
         case Collision::BORDER:

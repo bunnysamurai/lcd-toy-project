@@ -1,5 +1,6 @@
 #include "bsio.hpp"
 #include <array>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 
@@ -33,7 +34,7 @@ int my_in_chars(char *buf, int len) {
   /* we block until we get all the keys! */
   keyboard::result_t err;
   for (int ii = 0; ii < len; ++ii) {
-    const char c{keyboard::wait_key(std::chrono::milliseconds{1}, err)};
+    const char c{keyboard::wait_key(std::chrono::microseconds{100}, err)};
     if (err != keyboard::result_t::SUCCESS) {
       return ii;
     }
