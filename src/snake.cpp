@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 
 #include "pico/time.h"
 
@@ -19,8 +20,9 @@ using pix_t = uint16_t;
 
 /* Some game configurations */
 // constexpr auto GAME_LOOP_MS{50};
-constexpr auto GAME_TICK_US{100000U};
-// constexpr auto APPLE_GROWTH_TICKS{3};
+constexpr auto GAME_TICK_US{200000U};
+constexpr auto APPLE_GROWTH_TICKS{3U};
+constexpr auto NUMBER_OF_APPLES{1U};
 
 /* These abstractions should help with pixel->tile grid location
  * Observed behaviour of RattleRace(r) is that the snake moves on a fixed
@@ -39,6 +41,11 @@ struct GridLocation {
   grid_t x;
   grid_t y;
 };
+
+[[nodiscard]] constexpr bool operator==(GridLocation lhs,
+                                        GridLocation rhs) noexcept {
+  return lhs.x == rhs.x && lhs.y == rhs.y;
+}
 
 struct TileTransform {
   pix_t off;
@@ -86,6 +93,13 @@ SnakeState g_snake_state;
                                   g_tile_grid.ydimension.off)};
 }
 
+/** @brief Advances a GridLocation in a given Direction
+ *
+ * @param point Grid Point
+ * @param direction Up, Down, Left, or Right
+ *
+ * @return A new GridLocation, advanced in the specified direction.
+ */
 [[nodiscard]] constexpr GridLocation move_point(GridLocation point,
                                                 Direction direction) noexcept {
   switch (direction) {
@@ -105,6 +119,12 @@ SnakeState g_snake_state;
   return point;
 }
 
+/** @brief Converts a Direction to it's 4-way opposite.
+ *
+ * @param dir A direction, Up, Down, Left or Right
+ *
+ * @return A direction opposite of dir, Down, Up, Right or Left
+ */
 [[nodiscard]] constexpr Direction get_opposite(Direction dir) noexcept {
   return static_cast<Direction>((static_cast<uint8_t>(dir) + 2U) & 0b11);
 }
@@ -116,6 +136,7 @@ SnakeState g_snake_state;
 void init_snake(GridLocation start, Direction dir) {
   g_snake_state.head = start;
   g_snake_state.head_dir = dir;
+  g_snake_state.body_vec.clear();
 }
 
 void clear_snake_tail() {
@@ -142,21 +163,30 @@ void update_snake_state(bool growing) {
   }
 }
 
-void draw_snake() {
-
-  /* for right now, we'll just draw green squares */
-
+void impl_draw_head(const screen::Tile &tile) {
   /* draw the head */
   auto head{g_snake_state.head};
   const auto [pixx, pixy]{to_pixel_xy(head)};
-  screen::draw_tile(pixx, pixy, snake::SnakeTile);
+  screen::draw_tile(pixx, pixy, tile);
+}
 
+void impl_draw_along_the_body(const screen::Tile &tile) {
+
+  auto head{g_snake_state.head};
   /* iterate through the body_vec to draw the rest */
   for (const auto dir : g_snake_state.body_vec) {
     head = move_point(head, dir);
     const auto [pixx, pixy]{to_pixel_xy(head)};
-    screen::draw_tile(pixx, pixy, snake::SnakeTile);
+    screen::draw_tile(pixx, pixy, tile);
   }
+}
+
+void cleanup_the_body() { impl_draw_along_the_body(snake::BackgroundTile); }
+
+void draw_snake() {
+  /* for right now, we'll just draw green squares */
+  impl_draw_head(snake::SnakeTile);
+  impl_draw_along_the_body(snake::SnakeTile);
 }
 
 void configure_tile_grid() {
@@ -211,8 +241,12 @@ void draw_border() {
     }
   }
 }
+void hack_draw_border_start(GridLocation loc) noexcept {
+  const auto [xx, yy]{to_pixel_xy(loc)};
+  screen::draw_tile(xx, yy, snake::BorderTile);
+}
 
-void init_the_screen() {
+void init_the_screen() noexcept {
   /* introspect, then configure the tile grid */
   configure_tile_grid();
 
@@ -225,30 +259,108 @@ void init_the_screen() {
   /* we setup a blue border */
   draw_border();
 }
+
+/* Now, the apple stuff */
+embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
+void init_level() noexcept {
+  /* just places an apple somewhere */
+  g_apple_locations.resize(1);
+  g_apple_locations[0] = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+                          .y =
+                              static_cast<grid_t>(g_tile_grid.grid_height / 3)};
+
+  /* and draw the apples */
+  for (const auto apple : g_apple_locations) {
+    const auto [xx, yy]{to_pixel_xy(apple)};
+    screen::draw_tile(xx, yy, snake::AppleTile);
+  }
+}
+void remove_apple(uint32_t apple_idx) {
+  const auto itr{std::next(g_apple_locations.begin(), apple_idx)};
+  g_apple_locations.erase(itr);
+}
+bool check_for_apple_collision(uint32_t &collided_apple_index) {
+  uint32_t idx{0};
+  for (const auto apple : g_apple_locations) {
+    if (apple == g_snake_state.head) {
+      collided_apple_index = idx;
+      return true;
+    }
+    ++idx;
+  }
+  return false;
+}
+
+/* Collision Logic */
+enum struct Collision { NONE, BORDER, APPLE };
+[[nodiscard]] Collision check_for_collisions() noexcept {
+  /* if head is on the border, whoops! Game over. */
+  if (g_snake_state.head.x < 1 ||
+      g_snake_state.head.x > g_tile_grid.grid_width - 1 ||
+      g_snake_state.head.y < 1 ||
+      g_snake_state.head.y > g_tile_grid.grid_height - 1) {
+    return Collision::BORDER;
+  }
+
+  /* if head is on an apple, remove the apple and return APPLE_GROWTH_TICKS */
+  uint32_t apple_idx;
+  if (check_for_apple_collision(apple_idx)) {
+    remove_apple(apple_idx);
+    return Collision::APPLE;
+  }
+
+  return Collision::NONE;
+}
+
 } // namespace
 
 namespace snake {
 
 void run() {
   init_the_screen();
-  init_snake({.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
-              .y = static_cast<grid_t>(g_tile_grid.grid_height)},
-             Direction::UP);
+
+  const GridLocation SNAKE_START{
+      .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+      .y = static_cast<grid_t>(g_tile_grid.grid_height)};
+  const Direction SNAKE_DIR{Direction::UP};
 
   uint8_t growing{2};
   absolute_time_t last_time{get_absolute_time()};
   /* game loop! */
   while (true) {
-    const auto now{get_absolute_time()};
-    if (absolute_time_diff_us(last_time, now) > GAME_TICK_US) {
-      last_time = now;
-      update_snake_state(growing > 0);
+    uint8_t lives{3};
+    init_snake(SNAKE_START, SNAKE_DIR);
+    init_level(); /* just places an apple somewhere */
+    while (lives > 0) {
+      const auto now{get_absolute_time()};
+      if (absolute_time_diff_us(last_time, now) > GAME_TICK_US) {
+        last_time = now;
 
-      if (growing > 0) {
-        --growing;
+        update_snake_state(growing > 0);
+
+        if (growing > 0) {
+          --growing;
+        }
+
+        const Collision collision{check_for_collisions()};
+        switch (collision) {
+        case Collision::APPLE:
+          growing += APPLE_GROWTH_TICKS;
+          break;
+        case Collision::BORDER:
+          growing = 2;
+          cleanup_the_body();
+          --lives;
+          init_snake(SNAKE_START, SNAKE_DIR);
+          continue;
+        case Collision::NONE:
+          /* nothing to do */
+          break;
+        }
+
+        hack_draw_border_start(move_point(SNAKE_START, SNAKE_DIR));
+        draw_snake();
       }
-
-      draw_snake();
     }
   }
 };

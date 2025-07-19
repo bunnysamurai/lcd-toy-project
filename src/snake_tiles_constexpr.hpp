@@ -27,6 +27,16 @@ inline constexpr screen::Tile SnakeTile{.side_length = SnakeTile_SideLength,
                                         .format = screen::Format::RGB565,
                                         .data = std::data(Snake_Tile_Data)};
 
+inline constexpr size_t AppleTile_SideLength{BorderTile_SideLength};
+inline constexpr auto Apple_Tile_Data{
+    constexpr_screen::fill_with_rgb565<AppleTile_SideLength *
+                                       AppleTile_SideLength * 2>(
+        constexpr_screen::Color::RED)};
+
+inline constexpr screen::Tile AppleTile{.side_length = AppleTile_SideLength,
+                                        .format = screen::Format::RGB565,
+                                        .data = std::data(Apple_Tile_Data)};
+
 inline constexpr size_t BackgroundTile_SideLength{BorderTile_SideLength};
 inline constexpr auto Background_Tile_Data{
     constexpr_screen::fill_with_rgb565<BackgroundTile_SideLength *
