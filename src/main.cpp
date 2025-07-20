@@ -12,8 +12,8 @@
 #include "bsio.hpp"
 #include "demo.hpp"
 #include "screen/screen.hpp"
-#include "status_utilities.hpp"
 #include "snake.hpp"
+#include "status_utilities.hpp"
 
 int mywrap_putchar(int c, FILE *) { return stdio_putchar(c); }
 int mywrap_flush(FILE *) {
@@ -166,6 +166,15 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
   return 0;
 }
 
+int ShellCmd_Snake(int argc, const char *argv[]) {
+  snake::run();
+  if(!screen::set_console_mode())
+  {
+    return -1;
+  }
+  return 0;
+}
+
 static demo::TouchConfig s_cfg;
 static void run_touch_demo_impl() { demo::run_touch_demo(s_cfg); }
 
@@ -178,8 +187,6 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
     multicore_launch_core1([] { demo::run_text_animation(); });
   } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
-  } else if (argc > 1 && !strcmp("snake", argv[1])) {
-    multicore_launch_core1([] { snake::run(); });
   } else if (argc > 1 && !strcmp("touch", argv[1])) {
     screen::clear_screen();
     if (argc != 5) {
@@ -225,6 +232,7 @@ int main() {
         {.id = "clear", .callback = ShellCmd_Clear},
         {.id = "demo", .callback = ShellCmd_Demo},
         {.id = "screen", .callback = ShellCmd_Screen},
+        {.id = "snake", .callback = ShellCmd_Snake},
     };
     const int ADDITIONAL_CMDS_LENGTH =
         sizeof(additional_cmds) / sizeof(ShellFunction_t);
@@ -245,7 +253,7 @@ int main() {
 
   // start by running the demo
   {
-    const char *argvs[2] = {"demo", "snake"};
+    const char *argvs[2] = {"demo", "rando"};
     ShellCmd_Demo(2, argvs);
   }
 
