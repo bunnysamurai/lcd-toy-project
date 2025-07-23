@@ -27,7 +27,6 @@ using grid_t = uint8_t;
 using pix_t = uint16_t;
 
 /* Some game configurations */
-constexpr uint32_t TITLE_BORDER_HEIGHT{24};
 constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
     1}; /* basically how often we poll for input */
 constexpr auto GAME_TICK_US{200000U};
@@ -298,13 +297,17 @@ bool change_snake_direction(int key_pressed) noexcept {
 /*                                                                   */
 /* ================================================================= */
 void update_lives_on_screen(uint8_t lives) noexcept {
+  const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
+  const auto row_start{((display_dims.height - display_dims.width) -
+                        snake::SnakeTile.side_length) >>
+                       1};
+  const auto col_inc{snake::SnakeTile.side_length +
+                     (snake::SnakeTile.side_length >> 1)};
+
   if (lives > 0) {
     --lives;
   }
-  const auto row_start{(TITLE_BORDER_HEIGHT - snake::SnakeTile.side_length) >>
-                       2};
-  const auto col_inc{snake::SnakeTile.side_length +
-                     (snake::SnakeTile.side_length >> 1)};
+
   auto col_start{snake::SnakeTile.side_length >> 1};
   for (int ii = 0; ii < 5; ++ii) {
     screen::draw_tile(col_start + ii * col_inc, row_start,
@@ -320,10 +323,9 @@ void configure_tile_grid() noexcept {
   const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
 
   /*
-   * We use the bottom 3/4 of the available display for the play area.
-   * Because sure, why not?
+   * Play area must be square.  The grid must be 33x33.
    */
-  const auto screen_pix_y_off{TITLE_BORDER_HEIGHT};
+  const auto screen_pix_y_off{display_dims.height - display_dims.width};
   const auto screen_pix_height{display_dims.height - screen_pix_y_off};
 
   /* for now, I'll assume the shape of the border tile drives the grid
@@ -630,10 +632,15 @@ void run() {
           --growing;
         }
 
+        /* handle collision cases */
         Collision collision{check_for_collisions()};
+        /* initial_tick is a hack. We nullify collisions with the border when
+         * the snake first enters the play area */
         if (initial_tick) {
           initial_tick = false;
-          collision = Collision::NONE;
+          if (collision == Collision::BORDER) {
+            collision = Collision::NONE;
+          }
         }
         switch (collision) {
         case Collision::APPLE:
