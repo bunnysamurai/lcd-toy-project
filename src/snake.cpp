@@ -19,12 +19,15 @@
 
 #include "embp/circular_array.hpp"
 
+#include "snake_common.hpp"
+#include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"
 
 namespace {
 
-using grid_t = uint8_t;
-using pix_t = uint16_t;
+using snake::Direction;
+using snake::grid_t;
+using snake::pix_t;
 
 /* Some game configurations */
 constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
@@ -83,12 +86,6 @@ struct TileGridCfg {
  *
  */
 /* clang-format on */
-enum struct Direction : uint8_t {
-  UP = 0x0,
-  RIGHT = 0x1,
-  DOWN = 0x2,
-  LEFT = 0x3
-};
 
 struct SnakeState {
   GridLocation head;
@@ -98,8 +95,8 @@ struct SnakeState {
 
 struct LevelState {
   bool exit_is_open;
-  // bool entrance_is_open;
   GridLocation exit;
+  snake::Level lvl;
 };
 
 TileGridCfg g_tile_grid;
@@ -162,13 +159,65 @@ LevelState g_level;
 /*               |_____\___| \_/ \___|_|                      */
 /*                                                            */
 /* ========================================================== */
-void init_level() noexcept {
+void init_level(snake::Level lvl) noexcept {
   g_level.exit_is_open = false;
-  // g_level.entrance_is_open = true;
   g_level.exit = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
                   .y = 0};
+  g_level.lvl = lvl;
 }
 
+void draw_straight_line(snake::StraightLine line, const screen::Tile &tile) {
+  GridLocation start{.x = line.xs, .y = line.ys};
+  snake::Direction dir{line.dir};
+
+  int8_t xinc{};
+  int8_t yinc{};
+  switch (dir) {
+  case snake::Direction::DOWN:
+    yinc = 1;
+    break;
+  case snake::Direction::UP:
+    yinc = -1;
+    break;
+  case snake::Direction::RIGHT:
+    xinc = 1;
+    break;
+  case snake::Direction::LEFT:
+    xinc = -1;
+    break;
+  }
+
+  int32_t count{line.len};
+  while (count > 0) {
+    const auto [pixx, pixy]{to_pixel_xy(start)};
+    screen::draw_tile(pixx, pixy, tile);
+    --count;
+    start.x += xinc;
+    start.y += yinc;
+  }
+}
+void draw_straight_lines(const uint8_t *p_data, uint32_t len) {
+  auto p_line_data{p_data};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    draw_straight_line(snake::decode_straight_line(p_line_data),
+                       snake::BorderTile);
+    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
+  }
+}
+void draw_this_level(snake::Level lvl) noexcept {
+  const auto *p_structure{lvl.data};
+
+  for (uint32_t ii = 0; ii < lvl.len; ++ii) {
+    switch (p_structure[ii].type) {
+    case snake::StructureType::STRAIGHT_LINE:
+      draw_straight_lines(p_structure[ii].data, p_structure[ii].len);
+      break;
+    default:
+      /* TODO not yet implemented */
+      break;
+    }
+  }
+}
 /* ========================================================== */
 /*     ____  _   _    _        _        _    _  _______ _     */
 /*    / ___|| \ | |  / \      / \      / \  | |/ / ____| |    */
@@ -218,10 +267,71 @@ void impl_draw_head(const screen::Tile &tile) {
   screen::draw_tile(pixx, pixy, tile);
 }
 
-void impl_draw_along_the_body(const screen::Tile &tile) {
+[[nodiscard]] constexpr screen::Tile
+determine_snake_head_tile(Direction head_dir) noexcept {
+  switch (head_dir) {
+  case Direction::UP:
+    return to_snake_tile(snake::SnakeBodyPart::HEAD_UP);
+  case Direction::DOWN:
+    return to_snake_tile(snake::SnakeBodyPart::HEAD_DOWN);
+  case Direction::LEFT:
+    return to_snake_tile(snake::SnakeBodyPart::HEAD_LEFT);
+  case Direction::RIGHT:
+    return to_snake_tile(snake::SnakeBodyPart::HEAD_RIGHT);
+  }
+  return to_snake_tile(
+      snake::SnakeBodyPart::HEAD_RIGHT); /* technically unreachable, if warnings
+                                            are correctly enabled */
+}
 
+[[nodiscard]] constexpr screen::Tile
+determine_snake_tail_tile(Direction dir) noexcept {
+  switch (dir) {
+  case Direction::UP:
+    return to_snake_tile(snake::SnakeBodyPart::TAIL_UP);
+  case Direction::DOWN:
+    return to_snake_tile(snake::SnakeBodyPart::TAIL_DOWN);
+  case Direction::LEFT:
+    return to_snake_tile(snake::SnakeBodyPart::TAIL_LEFT);
+  case Direction::RIGHT:
+    return to_snake_tile(snake::SnakeBodyPart::TAIL_RIGHT);
+  }
+  return to_snake_tile(snake::SnakeBodyPart::TAIL_RIGHT); /* technically
+                                              unreachable, if warnings are
+                                              cranked up high enough */
+}
+
+[[nodiscard]] constexpr screen::Tile
+determine_snake_body_tile(Direction previous, Direction next) noexcept {
+  /* We do end up with a table:
+   *
+   *        | UP  | RIGHT | DOWN | LEFT |
+   *        +-----|-------|------|------+
+   *    UP  | X   | DWRHT | UPDN | DWLF |
+   *  RIGHT | UPL |   X   | DWLF | LFRT |
+   *   DOWN | UPD | UPRHT |  X   | UPLF |
+   *   LEFT | UPR | LFRHT | DWRT |  X   |
+   */
+
+  /* clang-format off */
+  constexpr std::array<snake::SnakeBodyPart, 16> LUT{
+    snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_DOWNRIGHT, snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_DOWNLEFT,
+    snake::SnakeBodyPart::BODY_UPLEFT, snake::SnakeBodyPart::BODY_LEFTRIGHT, snake::SnakeBodyPart::BODY_DOWNLEFT, snake::SnakeBodyPart::BODY_LEFTRIGHT,
+    snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_UPRIGHT, snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_UPLEFT,
+    snake::SnakeBodyPart::BODY_UPRIGHT, snake::SnakeBodyPart::BODY_LEFTRIGHT, snake::SnakeBodyPart::BODY_DOWNRIGHT, snake::SnakeBodyPart::BODY_LEFTRIGHT
+  };
+  /* clang-format on */
+
+  const auto idx{static_cast<uint8_t>(previous) * 4 +
+                 static_cast<uint8_t>(next)};
+
+  return snake::to_snake_tile(LUT[idx]);
+}
+
+void impl_draw_along_the_body(const screen::Tile &tile) noexcept {
   auto head{g_snake_state.head};
   /* iterate through the body_vec to draw the rest */
+  auto itr{g_snake_state.body_vec.begin()};
   for (const auto dir : g_snake_state.body_vec) {
     head = move_point(head, dir);
     const auto [pixx, pixy]{to_pixel_xy(head)};
@@ -229,12 +339,39 @@ void impl_draw_along_the_body(const screen::Tile &tile) {
   }
 }
 
+void impl_draw_the_snake_body() noexcept {
+  /* if the snake is only length 1, this is a special case */
+  if (g_snake_state.body_vec.size() == 0) {
+    return;
+  }
+
+  /* iterate through the body_vec to draw the rest */
+  auto head{g_snake_state.head};
+  auto itr{g_snake_state.body_vec.begin()};
+  while (itr != std::next(g_snake_state.body_vec.end(), -1)) {
+    const auto dir{*itr};
+    const auto nextdir{*(std::next(itr, 1))};
+    const auto tile{determine_snake_body_tile(dir, nextdir)};
+    head = move_point(head, dir);
+    const auto [pixx, pixy]{to_pixel_xy(head)};
+    screen::draw_tile(pixx, pixy, tile);
+    itr++;
+  }
+
+  /* draw the tail */
+  const auto dir{*itr};
+  const auto tile{determine_snake_tail_tile(dir)};
+  head = move_point(head, dir);
+  const auto [pixx, pixy]{to_pixel_xy(head)};
+  screen::draw_tile(pixx, pixy, tile);
+}
+
 void cleanup_the_body() { impl_draw_along_the_body(snake::BackgroundTile); }
 
 void draw_snake() {
   /* for right now, we'll just draw green squares */
-  impl_draw_head(snake::SnakeTile);
-  impl_draw_along_the_body(snake::SnakeTile);
+  impl_draw_head(determine_snake_head_tile(g_snake_state.head_dir));
+  impl_draw_the_snake_body();
 }
 
 /**
@@ -297,24 +434,37 @@ bool change_snake_direction(int key_pressed) noexcept {
 /*                                                                   */
 /* ================================================================= */
 void update_lives_on_screen(uint8_t lives) noexcept {
+  constexpr auto HEADTILE{snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
+  constexpr auto BODYTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::BODY_UPDOWN)};
+  constexpr auto TAILTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::TAIL_DOWN)};
+  static_assert(HEADTILE.side_length == BODYTILE.side_length);
+  static_assert(HEADTILE.side_length == TAILTILE.side_length);
+  constexpr auto TILE_INC{HEADTILE.side_length};
+
   const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
-  const auto row_start{((display_dims.height - display_dims.width) -
-                        snake::SnakeTile.side_length) >>
-                       1};
-  const auto col_inc{snake::SnakeTile.side_length +
-                     (snake::SnakeTile.side_length >> 1)};
+  const auto row_start{
+      ((display_dims.height - display_dims.width) - TILE_INC) >> 1};
+  const auto col_inc{(TILE_INC << 1) - 1};
 
   if (lives > 0) {
     --lives;
   }
 
-  auto col_start{snake::SnakeTile.side_length >> 1};
+  auto col_start{TILE_INC >> 1};
   for (int ii = 0; ii < 5; ++ii) {
+    screen::draw_tile(col_start + ii * col_inc, row_start - TILE_INC,
+                      snake::BackgroundTile);
     screen::draw_tile(col_start + ii * col_inc, row_start,
+                      snake::BackgroundTile);
+    screen::draw_tile(col_start + ii * col_inc, row_start + TILE_INC,
                       snake::BackgroundTile);
   }
   for (; lives > 0; --lives) {
-    screen::draw_tile(col_start, row_start, snake::SnakeTile);
+    screen::draw_tile(col_start, row_start - TILE_INC, HEADTILE);
+    screen::draw_tile(col_start, row_start, BODYTILE);
+    screen::draw_tile(col_start, row_start + TILE_INC, TAILTILE);
     col_start += col_inc;
   }
 }
@@ -422,7 +572,7 @@ void init_apples() noexcept {
   }
 
   /* just places an apple somewhere */
-  g_apple_locations.resize(5);
+  g_apple_locations.resize(NUMBER_OF_APPLES);
   for (auto &apple : g_apple_locations) {
     const uint32_t seed{get_rand_32()};
     const auto xloc{(seed & 0xFFFFU) % (g_tile_grid.grid_width - 2) + 1};
@@ -510,8 +660,60 @@ check_for_apple_collision(uint32_t &collided_apple_index) noexcept {
   return false;
 }
 
-[[nodiscard]] Collision check_for_collisions() noexcept {
+[[nodiscard]] constexpr bool
+check_for_straight_line_collisions(const uint8_t *p_data,
+                                   uint32_t len) noexcept {
+  const GridLocation point{g_snake_state.head};
+  auto p_line_data{p_data};
+  bool status{false};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    const snake::StraightLine linedef{snake::decode_straight_line(p_line_data)};
+    const GridLocation line_start{.x = linedef.xs, .y = linedef.ys};
+    switch (linedef.dir) {
+    case snake::Direction::DOWN:
+      status = point.x == linedef.xs && point.y >= linedef.ys &&
+               point.y < linedef.ys + linedef.len;
+      break;
+    case snake::Direction::RIGHT:
+      status = point.y == linedef.ys && point.x >= linedef.xs &&
+               point.x < linedef.xs + linedef.len;
+      break;
+    case snake::Direction::UP:
+      status = point.x == linedef.xs &&
+               point.y >= linedef.ys - linedef.len + 1 && point.y <= linedef.ys;
+      break;
+    case snake::Direction::LEFT:
+      status = point.y == linedef.ys &&
+               point.x >= linedef.xs - linedef.len + 1 && point.x <= linedef.xs;
+      break;
+    }
+    if (status) {
+      return true;
+    }
+    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
+  }
+  return false;
+}
 
+[[nodiscard]] constexpr bool
+check_for_level_collisions(snake::Level lvl) noexcept {
+  const auto *p_structure{lvl.data};
+  for (uint32_t ii = 0; ii < lvl.len; ++ii) {
+    switch (p_structure[ii].type) {
+    case snake::StructureType::STRAIGHT_LINE:
+      if (check_for_straight_line_collisions(p_structure[ii].data,
+                                             p_structure[ii].len)) {
+        return true;
+      }
+    default:
+      /* TODO implement the rest... */
+      break;
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] Collision check_for_collisions() noexcept {
   /* If head is on the exit, and the door is open, then make like a tree and get
    * outta here. */
   if (g_level.exit_is_open && g_snake_state.head == g_level.exit) {
@@ -522,7 +724,8 @@ check_for_apple_collision(uint32_t &collided_apple_index) noexcept {
   if (g_snake_state.head.x < 1 ||
       g_snake_state.head.x > g_tile_grid.grid_width - 2 ||
       g_snake_state.head.y < 1 ||
-      g_snake_state.head.y > g_tile_grid.grid_height - 2) {
+      g_snake_state.head.y > g_tile_grid.grid_height - 2 ||
+      check_for_level_collisions(g_level.lvl)) {
     return Collision::BORDER;
   }
 
@@ -606,10 +809,12 @@ void run() {
   /* game loop! */
   while (user_desires_play) {
     int8_t lives{3};
-    init_level();
+    init_level(snake::levels[0]);
     init_snake(SNAKE_START, SNAKE_DIR);
     init_apples(); /* just places an apple somewhere */
     update_lives_on_screen(lives);
+    draw_this_level(g_level.lvl);
+    // draw_this_level(snake::levels[0]);
     bool initial_tick{true};
     while (lives > 0) {
       const auto now{get_absolute_time()};

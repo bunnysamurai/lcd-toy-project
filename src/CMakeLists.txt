@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19)
 add_executable(${PROJECT_NAME} 
     main.cpp
     status_utilities.cpp
-    demo.cpp
+    # demo.cpp
     snake.cpp
 )
 
@@ -18,6 +18,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_rand
     basic_io
     ben_shell
+    pico_standard_link
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})
