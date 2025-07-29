@@ -37,6 +37,10 @@ void set_format(Format fmt) noexcept {
     dispSetDepth(16);
     return;
   }
+  if (fmt == Format::RGB565_LUT4) {
+    dispSetDepth(5);
+    return;
+  }
   dispSetDepth(screen::bitsizeof(fmt));
 }
 
@@ -49,6 +53,8 @@ Format get_format() noexcept {
     return Format::GREY2;
   case 4U:
     return Format::GREY4;
+  case 5U:
+    return Format::RGB565_LUT4;
   case 8U:
     return Format::RGB565_LUT8;
   case 16U:
@@ -96,6 +102,13 @@ bool init(const uint8_t *video_buf, [[maybe_unused]] Position virtual_topleft,
   return status;
 }
 
+void init_clut(const Clut *color_lut, uint32_t length) noexcept {
+  static_assert(sizeof(Clut) == sizeof(ClutEntry_t));
+  const auto *p_data{
+      static_cast<const ClutEntry_t *>(static_cast<const void *>(color_lut))};
+  dispSetClut(0, length, p_data);
+}
+
 void set_video_buffer(const uint8_t *buffer) noexcept {
   dispSetVideoBuffer(buffer);
 }
@@ -130,8 +143,8 @@ extern "C" {
 void dispExtTouchReport(int16_t x, int16_t y) {
   const auto report{TouchReport{.x = x,
                                 .y = y,
-                                .pen_up = x < 0 || y < 0,
-                                .timestamp = get_absolute_time()}};
+                                .pen_up = x < 0 || y < 0
+                                /*,.timestamp = get_absolute_time()*/}};
   s_touch_ring.push_back(report);
 }
 }

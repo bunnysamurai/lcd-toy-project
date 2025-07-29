@@ -9,6 +9,7 @@
 
 namespace screen_impl {
 
+using ::screen::Clut;
 using ::screen::Dimensions;
 using ::screen::Format;
 using ::screen::Position;
@@ -16,6 +17,8 @@ using ::screen::TouchReport;
 
 [[nodiscard]] bool init(const uint8_t *video_buf, Position virtual_topleft,
                         Dimensions virtual_size, Format format) noexcept;
+
+void init_clut(const Clut *color_lut, uint32_t length) noexcept;
 
 [[nodiscard]] const uint8_t *get_video_buffer() noexcept;
 void set_video_buffer(const uint8_t *buffer) noexcept;

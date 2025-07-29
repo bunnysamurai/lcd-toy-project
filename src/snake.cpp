@@ -544,7 +544,8 @@ void init_the_screen() noexcept {
   configure_tile_grid();
 
   /* we are a color application */
-  screen::set_format(screen::Format::RGB565);
+  screen::set_format(snake::TILE_FORMAT);
+  screen::init_clut(snake::Palette.data(), snake::Palette.size());
 
   /* we use a black background */
   screen::clear_screen();

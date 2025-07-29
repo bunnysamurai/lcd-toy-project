@@ -10,6 +10,8 @@ namespace screen {
 
 /** @brief blit in tile on a 1bpp buffer
  *
+ * Tile rows must be byte aligned, so pad accordingly.
+ *
  * @param buffer Raw video buffer
  * @param width width of video frame, in pixels
  * @param x Column offset, in pixels, to blit in the tile

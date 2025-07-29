@@ -13,6 +13,8 @@ namespace screen {
 [[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
                         Format format) noexcept;
 
+void init_clut(const Clut* entries, uint32_t length) noexcept;
+
 [[nodiscard]] uint32_t get_buf_len();
 
 [[nodiscard]] uint8_t *get_video_buffer() noexcept;

@@ -35,7 +35,9 @@ void dispExtTouchReport(int16_t x, int16_t y); // negative on pen up
 
 // structs
 typedef struct {
-  uint8_t r, g, b;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
 } ClutEntry_t;
 
 // defined here

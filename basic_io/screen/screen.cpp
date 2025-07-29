@@ -16,6 +16,10 @@
 
 namespace {
 
+/* if you want full resolution, can't go over 4 bits per pixel*/
+inline constexpr size_t CONFIGURED_MAX_BPP{4};
+static_assert(CONFIGURED_MAX_BPP < MAX_SUPPORTED_BPP);
+
 inline constexpr screen::Format CONSOLE_FORMAT{screen::Format::GREY1};
 inline constexpr uint8_t TEXTBPP{screen::bitsizeof(CONSOLE_FORMAT)};
 inline constexpr screen::Format COLOR_FORMAT{screen::Format::RGB565};
@@ -23,7 +27,7 @@ inline constexpr uint8_t COLORBPP{screen::bitsizeof(COLOR_FORMAT)};
 inline constexpr uint32_t DISPLAY_WIDTH{screen_impl::PHYSICAL_WIDTH_PIXELS};
 inline constexpr uint32_t DISPLAY_HEIGHT{screen_impl::PHYSICAL_HEIGHT_PIXELS};
 inline constexpr size_t BUFLEN{DISPLAY_WIDTH * DISPLAY_HEIGHT *
-                               MAX_SUPPORTED_BPP / 8};
+                               CONFIGURED_MAX_BPP / 8};
 
 bool g_video_is_initd{false};
 
@@ -48,9 +52,9 @@ TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 2, BUFLEN> tile_buf_2bpp{
     frame_buffer};
 TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 4, BUFLEN> tile_buf_4bpp{
     frame_buffer};
-TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 8, BUFLEN> tile_buf_8bpp{
+TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT / 2, 8, BUFLEN> tile_buf_8bpp{
     frame_buffer};
-TileBuffer<DISPLAY_WIDTH, DISPLAY_HEIGHT, 16, BUFLEN> tile_buf_16bpp{
+TileBuffer<DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 16, BUFLEN> tile_buf_16bpp{
     frame_buffer};
 } // namespace
 
@@ -91,6 +95,10 @@ bool init(Position virtual_topleft, Dimensions virtual_size,
   return true;
 }
 
+void init_clut(const Clut *entries, uint32_t length) noexcept {
+  screen_impl::init_clut(entries, length);
+}
+
 void set_video_buffer(const uint8_t *buffer) noexcept {
   screen_impl::set_video_buffer(buffer);
 }
@@ -120,6 +128,7 @@ void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {
     draw(tile_buf_2bpp, tile, xpos, ypos);
     break;
   case screen::Format::GREY4:
+  case screen::Format::RGB565_LUT4:
     draw(tile_buf_4bpp, tile, xpos, ypos);
     break;
   case screen::Format::RGB565_LUT8:

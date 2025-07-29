@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "pico/time.h"
+/* #include "pico/time.h" */
 
 namespace screen {
 
@@ -17,14 +17,20 @@ struct Dimensions {
   uint32_t height;
 };
 
+struct Clut{
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+};
+
 struct TouchReport {
   int x;
   int y;
   bool pen_up; // indicate whether someone is touching the display or not
-  absolute_time_t timestamp;
+  /* absolute_time_t timestamp; */
 };
 
-enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
+enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT4, RGB565_LUT8, RGB565 };
 
 [[nodiscard]] constexpr size_t bitsizeof(Format fmt) {
   switch (fmt) {
@@ -33,6 +39,7 @@ enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT8, RGB565 };
   case Format::GREY2:
     return 2U;
   case Format::GREY4:
+  case Format::RGB565_LUT4:
     return 4U;
   case Format::RGB565_LUT8:
     return 8U;

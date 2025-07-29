@@ -573,7 +573,7 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp) {
                             DMA_CH0_CTRL_TRIG_EN_BITS;
 }
 
-static void dispPrvPioProgram8bpp(void) {
+static void dispPrvPioProgramCLUT(uint_fast8_t bpp) {
 #if MAX_SUPPORTED_BPP >= 8
 #ifdef PRINT_DEBUG
   printf("LCD: Running in 8bpp mode");
@@ -587,9 +587,12 @@ static void dispPrvPioProgram8bpp(void) {
   // be clut addr >> 9. input shift shifts right, output shifts right. autopush
   // at 32, autopull at 32 waits for IRQ for pushback from second SM
   sm0StartPC = pc;
-  pio0_hw->instr_mem[pc++] = I_OUT(0, 0, OUT_DST_Y, 8);
+  pio0_hw->instr_mem[pc++] = I_OUT(0, 0, OUT_DST_Y, bpp);
   pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_ZEROES, 1);
-  pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_Y, 8);
+  pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_Y, bpp);
+  if (bpp != 8) {
+    pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_ZEROES, 9 - (bpp + 1));
+  }
   pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_X, 32 - 9);
   pio0_hw->instr_mem[pc++] = I_WAIT(0, 0, 1, WAIT_FOR_IRQ, 4);
   sm0EndPC = pc - 1; // that was the last instr
@@ -886,14 +889,21 @@ static void dispPrvPioSetup(uint_fast8_t bpp) {
   // reset SMs
   pio0_hw->ctrl = (7 << PIO_CTRL_SM_RESTART_LSB);
 
-  mFramebufBytes = mVirtWidth * mVirtHeight * bpp / 8;
+  /* bpp of 5 means 4bits per pixel, CLUT mode */
+  if (bpp == 5) {
+    mFramebufBytes = mVirtWidth * mVirtHeight * (bpp - 1) / 8;
+  } else {
+    mFramebufBytes = mVirtWidth * mVirtHeight * bpp / 8;
+  }
 
   dipPrvPinsSetup(true);
 
-  if (bpp < 8)
+  if (bpp == 5)
+    dispPrvPioProgramCLUT(4);
+  else if (bpp < 8)
     dispPrvPioProgram421bpp(bpp);
   else if (bpp == 8)
-    dispPrvPioProgram8bpp();
+    dispPrvPioProgramCLUT(8);
   else if (bpp == 16)
     dispPrvPioProgram16bpp();
 
@@ -963,7 +973,7 @@ static bool dispPrvLcdInit(uint_fast8_t depth) {
   lcdPrvWriteCmd(0x36);
   lcdPrvWriteData(0x00);
   lcdPrvWriteCmd(0x3a);
-  lcdPrvWriteData(depth >= 8 ? 0x05 : 0x03);
+  lcdPrvWriteData((depth == 5 || depth >= 8) ? 0x05 : 0x03);
 
   for (i = 0; i < sizeof(mInitSeq) / sizeof(*mInitSeq); i++) {
     if (mInitSeq[i] >> 15)

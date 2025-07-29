@@ -3,7 +3,16 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <algorithm>
+#include <array>
+
 #include "TileDef.h"
+
+// #define PRINT_DEBUG
+
+#ifdef PRINT_DEBUG
+#include <iostream>
+#endif
 
 namespace screen {
 
@@ -300,27 +309,76 @@ void blit_4bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
    *    #2 -> the nibbles are NOT the same
    * we are in state #1 if idx is even
    * we are in state #2 otherwise
+   *
+   * Also, I sort of forgot, if tile.side_length is NOT an even multiple of 2,
+   * then we also need to handle the offset
    */
   const bool nibbles_match{0 == (x & 0b1)};
+  const int rem{tile.side_length & 0b1};
+  const int tile_pitch{tile.side_length + rem};
   if (nibbles_match) {
-    for (size_t yy = 0; yy < tile.side_length; ++yy) {
-      for (size_t xx = 0; xx < tile.side_length; xx += 2) {
+#ifdef PRINT_DEBUG
+    std::cerr << "nibbles match\n";
+#endif
+    size_t yy = 0;
+    size_t xx = 0;
+    for (; yy < tile.side_length; ++yy) {
+      for (; xx < tile.side_length - rem; xx += 2) {
         const size_t idx{(yy + y) * width + (xx + x)};
-        const size_t idx2{yy * tile.side_length + xx};
+        const size_t idx2{yy * tile_pitch + xx};
         buffer[idx >> 1] = tile.data[idx2 >> 1];
       }
+      if (rem) {
+#ifdef PRINT_DEBUG
+        std::cerr << "rem is " << rem << '\n';
+#endif
+        const size_t idx{(yy + y) * width + (xx + x + rem)};
+        const size_t idx2{yy * tile_pitch + xx + rem};
+        buffer[idx >> 1] &= 0b11110000;
+        buffer[idx >> 1] |= (tile.data[idx2 >> 1] & 0b00001111);
+      }
+      xx = 0;
     }
   } else {
-    for (size_t yy = 0; yy < tile.side_length; ++yy) {
-      for (size_t xx = 0; xx < tile.side_length; xx += 2) {
+#ifdef PRINT_DEBUG
+    std::cerr << "nibbles DONT match\n";
+#endif
+    size_t yy = 0;
+    size_t xx = 0;
+    for (; yy < tile.side_length; ++yy) {
+#ifdef PRINT_DEBUG
+        std::cerr << "row " << yy << '\n';
+#endif
+      for (; xx < tile.side_length - rem; xx += 2) {
+#ifdef PRINT_DEBUG
+        std::cerr << "col " << xx << '\n';
+#endif
         const size_t idx{(yy + y) * width + (xx + x)};
-        const size_t idx2{yy * tile.side_length + xx};
+        const size_t idx2{yy * tile_pitch + xx};
         const uint8_t lsn{static_cast<uint8_t>(tile.data[idx2 >> 1] & 0b1111U)};
         const uint8_t msn{
             static_cast<uint8_t>(((tile.data[idx2 >> 1]) >> 4) & 0b1111U)};
-        buffer[idx >> 1] |= msn;
-        buffer[(idx >> 1) + 1] |= lsn;
+        buffer[idx >> 1] &= 0b00001111;
+        buffer[idx >> 1] |= (lsn << 4);
+        buffer[(idx >> 1) + 1] &= 0b11110000;
+        buffer[(idx >> 1) + 1] |= msn;
       }
+      if (rem) {
+#ifdef PRINT_DEBUG
+        std::cerr << "rem is " << rem << '\n';
+        std::cerr << "col " << xx + rem << '\n';
+#endif
+        const size_t idx{(yy + y) * width + (xx + x)}; /* off by one error, which are rare for me... why?? */
+        const size_t idx2{yy * tile_pitch + xx + rem};
+#ifdef PRINT_DEBUG
+        std::cerr << "vidbuf idx = " << idx << '\n';
+        std::cerr << "tile   idx = " << idx2 << '\n';
+#endif
+        const uint8_t lsn{static_cast<uint8_t>(tile.data[idx2 >> 1] & 0b1111U)};
+        buffer[idx >> 1] &= 0b00001111;
+        buffer[idx >> 1] |= (lsn << 4);
+      }
+      xx = 0;
     }
   }
 }
@@ -348,4 +406,4 @@ void blit_16bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
   }
 }
 
-} // namespace tile
+} // namespace screen
