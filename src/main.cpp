@@ -168,14 +168,12 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
 
 int ShellCmd_Snake(int argc, const char *argv[]) {
   snake::run();
-  if(!screen::set_console_mode())
-  {
+  if (!screen::set_console_mode()) {
     return -1;
   }
   return 0;
 }
 
-#if 0
 static demo::TouchConfig s_cfg;
 static void run_touch_demo_impl() { demo::run_touch_demo(s_cfg); }
 
@@ -212,7 +210,7 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
   }
   return 0;
 }
-#endif
+
 static int ShellCmd_Clear(int, const char *[]) {
   screen::clear_console();
   return 0;
@@ -232,7 +230,7 @@ int main() {
   {
     ShellFunction_t additional_cmds[] = {
         {.id = "clear", .callback = ShellCmd_Clear},
-        // {.id = "demo", .callback = ShellCmd_Demo},
+        {.id = "demo", .callback = ShellCmd_Demo},
         {.id = "screen", .callback = ShellCmd_Screen},
         {.id = "snake", .callback = ShellCmd_Snake},
     };
@@ -254,10 +252,10 @@ int main() {
   }
 
   // start by running the demo
-  // {
-  //   const char *argvs[2] = {"demo", "rando"};
-  //   ShellCmd_Demo(2, argvs);
-  // }
+  {
+    const char *argvs[2] = {"demo", "rando"};
+    ShellCmd_Demo(2, argvs);
+  }
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);

@@ -8,7 +8,7 @@
 
 namespace screen {
 
-/** @brief blit in tile on a 1bpp buffer
+/** @brief blit in 1bpp tile on a 1bpp buffer
  *
  * Tile rows must be byte aligned, so pad accordingly.
  *
@@ -24,6 +24,16 @@ void blit_1bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
 void blit_2bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
                Tile tile);
 
+/** @brief blit in a 4bpp tile on a 4bpp buffer
+ *
+ * Tile rows must be byte aligned, so pad accordingly.
+ *
+ * @param buffer Raw video buffer
+ * @param width width of video frame, in pixels
+ * @param x Column offset, in pixels, to blit in the tile
+ * @param y Row offset, in pixels, to blit in the tile
+ * @param tile The tile to blit
+ */
 void blit_4bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
                Tile tile);
 

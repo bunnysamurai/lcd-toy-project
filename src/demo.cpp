@@ -15,6 +15,8 @@
 #include "screen/constexpr_tile_utils.hpp"
 #include "screen/screen.hpp"
 
+#include "utilities.hpp"
+
 namespace demo {
 
 void fill_routine(const screen::Tile &tile) noexcept {
@@ -26,39 +28,87 @@ void fill_routine(const screen::Tile &tile) noexcept {
   }
 }
 
+static constexpr std::array Demo_Palette{
+    /* clang-format off */
+  screen::Clut{.r = 255, .g = 0, .b = 255}, /* Magenta */
+  screen::Clut{.r = 255, .g = 255, .b = 0 }, /* Yellow */
+  screen::Clut{.r = 0, .g = 255, .b = 255}, /* Cyan */
+  screen::Clut{.r = 255, .g = 0, .b = 0}, /* Red */
+  screen::Clut{.r = 0, .g = 255, .b = 0}, /* Green */
+  screen::Clut{.r = 0, .g = 0, .b = 255}, /* Blue */
+    /* clang-format on */
+};
+static constexpr uint32_t MAGENTA{0};
+static constexpr uint32_t YELLOW{1};
+static constexpr uint32_t CYAN{2};
+static constexpr uint32_t RED{3};
+static constexpr uint32_t GREEN{4};
+static constexpr uint32_t BLUE{5};
+
 /* I think 8x8 tiles are okay? */
-static constexpr auto magenta_data{
-    constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-        constexpr_screen::Color::MAGENTA)};
-static constexpr auto gold_data{constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-    constexpr_screen::Color::YELLOW)};
-static constexpr auto emerald_data{
-    constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-        constexpr_screen::Color::CYAN)};
-static constexpr auto red_data{constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-    constexpr_screen::Color::RED)};
-static constexpr auto green_data{constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-    constexpr_screen::Color::GREEN)};
-static constexpr auto blue_data{constexpr_screen::fill_with_rgb565<8 * 8 * 2>(
-    constexpr_screen::Color::BLUE)};
+static constexpr auto magenta_data{embp::pfold(
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA,
+    MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA, MAGENTA)};
+static constexpr auto gold_data{embp::pfold(
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,
+    YELLOW)};
+static constexpr auto emerald_data{embp::pfold(
+    CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+    CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+    CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+    CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+    CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+    CYAN, CYAN, CYAN, CYAN)};
+static constexpr auto red_data{
+    embp::pfold(RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
+                RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
+                RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
+                RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
+                RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED)};
+static constexpr auto green_data{embp::pfold(
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN,
+    GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN)};
+static constexpr auto blue_data{embp::pfold(
+    BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE,
+    BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE,
+    BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE,
+    BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE,
+    BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE,
+    BLUE, BLUE, BLUE, BLUE)};
 
 constexpr screen::Tile blue{.side_length = 8,
-                            .format = screen::Format::RGB565,
+                            .format = screen::Format::RGB565_LUT4,
                             .data = std::data(blue_data)};
 constexpr screen::Tile green{.side_length = 8,
-                             .format = screen::Format::RGB565,
+                             .format = screen::Format::RGB565_LUT4,
                              .data = std::data(green_data)};
 constexpr screen::Tile red{.side_length = 8,
-                           .format = screen::Format::RGB565,
+                           .format = screen::Format::RGB565_LUT4,
                            .data = std::data(red_data)};
 constexpr screen::Tile magenta{.side_length = 8,
-                               .format = screen::Format::RGB565,
+                               .format = screen::Format::RGB565_LUT4,
                                .data = std::data(magenta_data)};
 constexpr screen::Tile gold{.side_length = 8,
-                            .format = screen::Format::RGB565,
+                            .format = screen::Format::RGB565_LUT4,
                             .data = std::data(gold_data)};
 constexpr screen::Tile emerald{.side_length = 8,
-                               .format = screen::Format::RGB565,
+                               .format = screen::Format::RGB565_LUT4,
                                .data = std::data(emerald_data)};
 
 void run_color_rando_art() noexcept {
@@ -83,7 +133,8 @@ void run_color_rando_art() noexcept {
   }};
 
   screen::clear_screen();
-  screen::set_format(screen::Format::RGB565);
+  screen::set_format(screen::Format::RGB565_LUT4);
+  screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
 
   fill_routine(emerald);
   while (true) {
@@ -128,7 +179,8 @@ namespace {
 
 void initialize_cool_touch_demo() noexcept {
   screen::clear_screen();
-  screen::set_format(screen::Format::RGB565);
+  screen::set_format(screen::Format::RGB565_LUT4);
+  screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
   fill_routine(emerald);
   sleep_ms(1000000);
 }
@@ -193,8 +245,7 @@ to_pixelspace(screen::TouchReport rawloc) noexcept {
   const auto dims{screen::get_virtual_screen_size()};
   return screen::TouchReport{.x = zclamp(raw_x, dims.width - 1),
                              .y = zclamp(raw_y, dims.height - 1),
-                             .pen_up = rawloc.pen_up,
-                             .timestamp = rawloc.timestamp};
+                             .pen_up = rawloc.pen_up};
 }
 
 void undo_cool_touch_action(screen::TouchReport touch_loc) noexcept {
