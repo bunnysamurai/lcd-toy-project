@@ -14,23 +14,33 @@ namespace snake {
 inline constexpr size_t GRID_SPACE_PIX{7U};
 
 /* snake's color palette */
-inline constexpr std::array<screen::Clut, 6> Palette{
+inline constexpr std::array Palette{
     /* clang-format off */
-    screen::Clut{.r = 0, .g = 0, .b = 0},                   /* black */
-    screen::Clut{.r = 0, .g = 255, .b = 0},            /* snake skin */
-    screen::Clut{.r = 250, .g = 250, .b = 127}, /* snake tail, bright */
-    screen::Clut{.r = 250>>1, .g = 250>>1, .b = 127>>1}, /* snake tail, dim */
-    screen::Clut{.r = 0, .g = 0, .b = 255},             /* blue border, snake eye */
-    screen::Clut{.r = 255, .g = 0, .b = 0},             /* red apple */
+    screen::Clut{.r = 0, .g = 0, .b = 0},           /* black */
+    screen::Clut{.r = 0xCF, .g = 0xCF, .b = 0},     /* snake skin */
+    screen::Clut{.r = 250, .g = 250, .b = 250},     /* snake tail, bright */
+    screen::Clut{.r = 250, .g = 250, .b = 250},     /* snake tail, dim */
+    screen::Clut{.r = 0, .g = 0, .b = 255},         /* blue border, snake eye */
+    screen::Clut{.r = 255, .g = 0, .b = 0},         /* red */
+    screen::Clut{.r = 200, .g = 0, .b = 0},         /* dim red */
+    screen::Clut{.r = 255, .g = 255, .b = 0},       /* yel, snake shine */
+    screen::Clut{.r = 0, .g = 0, .b = 200},         /* blue border shade */
+    screen::Clut{.r = 255>>1, .g = 255>>1, .b = 0}, /* snake shadow */
     /* clang-format on */
 };
 inline constexpr uint8_t BLACK{0};
 inline constexpr uint8_t SKIN{1};
+inline constexpr uint8_t GREEN{SKIN};
 inline constexpr uint8_t TAIL_BRIGHT{2};
 inline constexpr uint8_t TAIL_DIM{3};
 inline constexpr uint8_t EYE{4};
 inline constexpr uint8_t BORDER{EYE};
-inline constexpr uint8_t APPLE{5};
+inline constexpr uint8_t RED{5};
+inline constexpr uint8_t DIMRED{6};
+inline constexpr uint8_t YEL{7};
+inline constexpr uint8_t SKINSHN{YEL};
+inline constexpr uint8_t BDRDIM{8};
+inline constexpr uint8_t SDWSKIN{9};
 
 inline constexpr screen::Format TILE_FORMAT{screen::Format::RGB565_LUT4};
 
@@ -39,15 +49,24 @@ inline constexpr std::array<
     uint8_t, (BorderTile_SideLength * (BorderTile_SideLength + 1)) / 2>
     Border_Tile_Data{
         /* clang-format off */
-    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0, 
-                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0)
+    embp::pfold(BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0, 
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0)
         /* clang-format on */
     };
+
+/* =====================================================================
+                     _   _                _ 
+                    | | | | ___  __ _  __| |
+                    | |_| |/ _ \/ _` |/ _` |
+                    |  _  |  __/ (_| | (_| |
+                    |_| |_|\___|\__,_|\__,_|
+                                            
+ * ===================================================================== */
 inline constexpr screen::Tile BorderTile{.side_length = BorderTile_SideLength,
                                          .format = TILE_FORMAT,
                                          .data = std::data(Border_Tile_Data)};
@@ -58,7 +77,7 @@ inline constexpr size_t SNAKETILE_DATALENGTH{
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_HEAD_UP_Data{
     /* clang-format off */
     embp::pfold(BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK, 0,
-                BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
+                BLACK, BLACK, SKIN, SKIN, SKIN, BLACK, BLACK,0,
                 BLACK, SKIN,  EYE, SKIN,  EYE, SKIN, BLACK,0,
                 BLACK, SKIN,  EYE, SKIN,  EYE, SKIN, BLACK,0,
                 BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
@@ -73,7 +92,7 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_HEAD_DOWN_Data{
                 BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
                 BLACK, SKIN,  EYE, SKIN,  EYE, SKIN, BLACK,0,
                 BLACK, SKIN,  EYE, SKIN,  EYE, SKIN, BLACK,0,
-                BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
+                BLACK, BLACK, SKIN, SKIN, SKIN, BLACK, BLACK,0,
                 BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0)
     /* clang-format on */
 };
@@ -81,30 +100,40 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
     Snake_HEAD_RIGHT_Data{
         /* clang-format off */
     embp::pfold(BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0,
-                SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
+                SKIN, SKIN, SKIN, SKIN, SKIN, BLACK, BLACK,0,
                 SKIN, SKIN, SKIN,  EYE,  EYE, SKIN, BLACK,0,
                 SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
                 SKIN, SKIN, SKIN,  EYE,  EYE, SKIN, BLACK,0,
-                SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
+                SKIN, SKIN, SKIN, SKIN, SKIN, BLACK, BLACK,0,
                 BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0)
         /* clang-format on */
     };
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_HEAD_LEFT_Data{
     /* clang-format off */
     embp::pfold(BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0,
-                BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
+                BLACK, BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,0,
                 BLACK, SKIN,  EYE,  EYE, SKIN, SKIN, SKIN,0,
                 BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
                 BLACK, SKIN,  EYE,  EYE, SKIN, SKIN, SKIN,0,
-                BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
+                BLACK, BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,0,
                 BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0)
     /* clang-format on */
 };
+
+
+/* =====================================================================
+                       _____     _ _ 
+                      |_   _|_ _(_) |
+                        | |/ _` | | |
+                        | | (_| | | |
+                        |_|\__,_|_|_|
+                            
+ * ===================================================================== */
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_TAIL_UP_Data{
     /* clang-format off */
         embp::pfold(
             BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,BLACK,0,
+            BLACK, BLACK, SKIN, SKIN, SKIN, BLACK,BLACK,0,
             BLACK, TAIL_DIM, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_DIM, BLACK,0,
             BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,BLACK,0,
             BLACK, TAIL_DIM, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_DIM, BLACK,0,
@@ -120,7 +149,7 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_TAIL_DOWN_Data{
             BLACK, TAIL_DIM, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_DIM, BLACK,0,
             BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,BLACK,0,
             BLACK, TAIL_DIM, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_BRIGHT, TAIL_DIM, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN,BLACK,0,
+            BLACK, BLACK, SKIN, SKIN, SKIN, BLACK,BLACK,0,
             BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,0)
     /* clang-format on */
 };
@@ -128,11 +157,11 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_TAIL_LEFT_Data{
     /* clang-format off */
         embp::pfold(
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0,
-            BLACK,  SKIN, TAIL_DIM, SKIN, TAIL_DIM, SKIN, SKIN,0,
+            BLACK,  BLACK, TAIL_DIM, SKIN, TAIL_DIM, SKIN, SKIN,0,
             BLACK,  SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, SKIN,0,
             BLACK,  SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, SKIN,0,
             BLACK,  SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, SKIN,0,
-            BLACK,  SKIN, TAIL_DIM, SKIN, TAIL_DIM, SKIN, SKIN,0,
+            BLACK,  BLACK, TAIL_DIM, SKIN, TAIL_DIM, SKIN, SKIN,0,
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0)
     /* clang-format on */
 };
@@ -141,90 +170,203 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
         /* clang-format off */
         embp::pfold(
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0,
-            SKIN, SKIN, TAIL_DIM, SKIN, TAIL_DIM, SKIN, BLACK,0,
+            SKIN, SKIN, TAIL_DIM, SKIN, TAIL_DIM, BLACK, BLACK,0,
             SKIN, SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, BLACK,0,
             SKIN, SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, BLACK,0,
             SKIN, SKIN, TAIL_BRIGHT, SKIN, TAIL_BRIGHT, SKIN, BLACK,0,
-            SKIN, SKIN, TAIL_DIM, SKIN, TAIL_DIM, SKIN, BLACK,0,
+            SKIN, SKIN, TAIL_DIM, SKIN, TAIL_DIM, BLACK, BLACK,0,
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0)
         /* clang-format on */
     };
-inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
-    Snake_BODY_UPDOWN_Data{
-        /* clang-format off */
+
+
+/* =====================================================================
+                     ____            _       
+                    | __ )  ___   __| |_   _ 
+                    |  _ \ / _ \ / _` | | | |
+                    | |_) | (_) | (_| | |_| |
+                    |____/ \___/ \__,_|\__, |
+                                       |___/ 
+
+            Up, down, left, right
+ * ===================================================================== */
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_BODY_UP_Data{
+    /* clang-format off */
         embp::pfold(
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0)
-        /* clang-format on */
-    };
-inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
-    Snake_BODY_LEFTRIGHT_Data{
-        /* clang-format off */
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0,
+            BLACK, SKIN, SKINSHN, SKIN, SKIN, SDWSKIN, BLACK,0)
+    /* clang-format on */
+};
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_BODY_DOWN_Data{
+    /* clang-format off */
+        embp::pfold(
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0,
+            BLACK, SDWSKIN, SKIN, SKIN, SKINSHN, SKIN, BLACK,0)
+    /* clang-format on */
+};
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_BODY_LEFT_Data{
+    /* clang-format off */
         embp::pfold(
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0,
+            SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN,0,
             SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
             SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
+            SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN,0,
             SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
             BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0)
+    /* clang-format on */
+};
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
+    Snake_BODY_RIGHT_Data{
+        /* clang-format off */
+        embp::pfold(
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKINSHN,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN,0,
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0)
         /* clang-format on */
     };
+
+
+/* =====================================================================
+                     ____            _       
+                    | __ )  ___   __| |_   _ 
+                    |  _ \ / _ \ / _` | | | |
+                    | |_) | (_) | (_| | |_| |
+                    |____/ \___/ \__,_|\__, |
+                                       |___/ 
+
+            Up-left, Left-up, Up-right, Right-up
+            previous-next ordering throughout
+ * ===================================================================== */
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
     Snake_CURVE_UPLEFT_Data{
         /* clang-format off */
         embp::pfold(
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0)
+            BLACK,   SKIN,    SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKIN,    SKIN,    SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKINSHN, SKINSHN, SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, BLACK,   BLACK,0,
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0)
+        /* clang-format on */
+    };
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
+    Snake_CURVE_LEFTUP_Data{
+        /* clang-format off */
+        embp::pfold(
+            BLACK,   SDWSKIN, SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0,
+            SDWSKIN, SDWSKIN, SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKINSHN, SKINSHN, SKIN,  BLACK,0,
+            SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKIN,    BLACK, BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SKIN,  BLACK,0,
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK, BLACK,0)
         /* clang-format on */
     };
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
     Snake_CURVE_UPRIGHT_Data{
         /* clang-format off */
         embp::pfold(
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0)
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SDWSKIN, SDWSKIN,0,
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SKIN,  SKINSHN, SKINSHN, SKIN,    SKIN,    SKIN,0,
+            BLACK, SKIN,  SKIN,    SKINSHN, SKINSHN, SKINSHN, SKINSHN,0,
+            BLACK, BLACK, SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, BLACK, BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0)
         /* clang-format on */
     };
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
+    Snake_CURVE_RIGHTUP_Data{
+        /* clang-format off */
+        embp::pfold(
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKIN,    BLACK,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKIN,    SKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKINSHN, SKINSHN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, BLACK,    SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN,0,
+            BLACK, BLACK,    BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0)
+        /* clang-format on */
+    };
+
+
+/* =====================================================================
+                     ____            _       
+                    | __ )  ___   __| |_   _ 
+                    |  _ \ / _ \ / _` | | | |
+                    | |_) | (_) | (_| | |_| |
+                    |____/ \___/ \__,_|\__, |
+                                       |___/ 
+
+            Down-left, Left-down, Down-right, Right-down
+            previous-next ordering throughout
+ * ===================================================================== */
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
     Snake_CURVE_DOWNLEFT_Data{
         /* clang-format off */
         embp::pfold(
-            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            SKIN, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0)
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK, BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    BLACK,  BLACK,0,
+            SKINSHN, SKINSHN, SKINSHN, SKINSHN, SKIN,    SKIN,  BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKINSHN, SKINSHN, SKIN,  BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0,
+            SDWSKIN, SDWSKIN, SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0,
+            BLACK,   SDWSKIN, SKIN,    SKIN,    SKINSHN, SKIN,  BLACK,0)
+        /* clang-format on */
+    };
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
+    Snake_CURVE_LEFTDOWN_Data{
+        /* clang-format off */
+        embp::pfold(
+            BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0,
+            SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, BLACK,   BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKIN,    SKIN,    SKIN,    SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKINSHN, SKINSHN, SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            SKIN,    SKIN,    SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0,
+            BLACK,   SKIN,    SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0)
         /* clang-format on */
     };
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
     Snake_CURVE_DOWNRIGHT_Data{
         /* clang-format off */
         embp::pfold(
-            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, SKIN,0,
-            BLACK, SKIN, SKIN, SKIN, SKIN, SKIN, BLACK,0)
+            BLACK, BLACK,    BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0,
+            BLACK, BLACK,    SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN, SDWSKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKINSHN, SKINSHN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKIN,    SKIN,0,
+            BLACK, SDWSKIN,  SKIN,    SKIN,    SKINSHN, SKIN,    BLACK,0)
+        /* clang-format on */
+    };
+inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
+    Snake_CURVE_RIGHTDOWN_Data{
+        /* clang-format off */
+        embp::pfold(
+            BLACK, BLACK, BLACK,   BLACK,   BLACK,   BLACK,   BLACK,0,
+            BLACK, BLACK, SKIN,    SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SKIN,  SKIN,    SKINSHN, SKINSHN, SKINSHN, SKINSHN,0,
+            BLACK, SKIN,  SKINSHN, SKINSHN, SKIN,    SKIN,    SKIN,0,
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SKIN,    SKIN,0,
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SDWSKIN, SDWSKIN,0,
+            BLACK, SKIN,  SKINSHN, SKIN,    SKIN,    SDWSKIN, BLACK,0)
         /* clang-format on */
     };
 
@@ -237,63 +379,87 @@ enum struct SnakeBodyPart : uint8_t {
   TAIL_DOWN,
   TAIL_LEFT,
   TAIL_RIGHT,
-  BODY_UPDOWN,
-  BODY_LEFTRIGHT,
+  BODY_UP,
+  BODY_DOWN,
+  BODY_LEFT,
+  BODY_RIGHT,
   BODY_UPLEFT,
+  BODY_LEFTUP,
   BODY_UPRIGHT,
+  BODY_RIGHTUP,
   BODY_DOWNLEFT,
+  BODY_LEFTDOWN,
   BODY_DOWNRIGHT,
+  BODY_RIGHTDOWN,
   end_item
 };
 
-inline constexpr std::array<screen::Tile, 14> SnakeTiles{
+inline constexpr std::array SnakeTiles{
     /* Head */
     screen::Tile{.side_length = SnakeTile_SideLength,
                  .format = TILE_FORMAT,
                  .data = std::data(Snake_HEAD_UP_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_HEAD_DOWN_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_HEAD_LEFT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_HEAD_RIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_HEAD_DOWN_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_HEAD_LEFT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_HEAD_RIGHT_Data)},
 
     /* Tail */
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_TAIL_UP_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_TAIL_DOWN_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_TAIL_LEFT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_TAIL_RIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_TAIL_UP_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_TAIL_DOWN_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_TAIL_LEFT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_TAIL_RIGHT_Data)},
 
     /* Body */
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_BODY_UPDOWN_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_BODY_LEFTRIGHT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_CURVE_UPLEFT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_CURVE_UPRIGHT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_CURVE_DOWNLEFT_Data)},
-    {.side_length = SnakeTile_SideLength,
-     .format = TILE_FORMAT,
-     .data = std::data(Snake_CURVE_DOWNRIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_BODY_UP_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_BODY_DOWN_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_BODY_LEFT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_BODY_RIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_UPLEFT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_LEFTUP_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_UPRIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_RIGHTUP_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_DOWNLEFT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_LEFTDOWN_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_DOWNRIGHT_Data)},
+    screen::Tile{.side_length = SnakeTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Snake_CURVE_RIGHTDOWN_Data)},
 };
 
 static_assert(static_cast<uint8_t>(SnakeBodyPart::end_item) ==
@@ -309,13 +475,13 @@ inline constexpr size_t AppleTile_SideLength{GRID_SPACE_PIX};
 inline constexpr auto Apple_Tile_Data{
     /* clang-format off */
         embp::pfold(
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0,
-            APPLE, APPLE, APPLE, APPLE, APPLE, APPLE, APPLE,0)
+            BLACK, BLACK, BLACK, BLACK, GREEN, BLACK, BLACK,0,
+            BLACK, BLACK, BLACK, GREEN, BLACK, BLACK, BLACK,0,
+            BLACK,   YEL,   RED, DIMRED,  RED,   RED, BLACK,0,
+            BLACK,   RED,   YEL,   RED,   RED, BLACK, BLACK,0,
+            BLACK,   RED,   YEL,   RED,   RED,   RED, BLACK,0,
+            BLACK,   RED,   RED,   RED,   RED,   RED, BLACK,0,
+            BLACK, BLACK,   RED,   RED,   RED, BLACK, BLACK,0)
     /* clang-format on */
 };
 inline constexpr screen::Tile AppleTile{.side_length = AppleTile_SideLength,

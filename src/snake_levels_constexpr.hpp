@@ -126,8 +126,8 @@ encode_rectangle(grid_t left, grid_t top, grid_t right,
 // static constexpr auto level_1_line_data{
 //     encode_straight_line(3, 3, Direction::DOWN, 3)};
 static constexpr auto level_1_line_data{
-    embp::concat(encode_straight_line(5, 5, Direction::DOWN, 23),
-                 encode_straight_line(33 - 5, 5, Direction::DOWN, 23))};
+    embp::concat(encode_straight_line(8, 8, Direction::DOWN, 33-2-7-7+1),
+                 encode_straight_line(33 - 8, 8, Direction::DOWN, 33-2-7-7+1))};
 inline constexpr std::array<Structure, 1> level_1_lines{
     Structure{.type = StructureType::STRAIGHT_LINE,
               .len = 2,
@@ -135,11 +135,31 @@ inline constexpr std::array<Structure, 1> level_1_lines{
 inline constexpr Level level_1{.len = std::size(level_1_lines),
                                .data = std::data(level_1_lines)};
 
-inline constexpr uint32_t NUMBER_LEVELS{1};
-inline constexpr std::array<Level, NUMBER_LEVELS> levels{
+static constexpr auto level_2_line_data{
+    embp::concat(encode_straight_line(8, 8, Direction::RIGHT, 33-2-7-7),
+                 encode_straight_line(16, 9, Direction::DOWN, 33-2-7-7-1))};
+inline constexpr std::array<Structure, 1> level_2_lines{
+    Structure{.type = StructureType::STRAIGHT_LINE,
+              .len = 2,
+              .data = std::data(level_2_line_data)}};
+inline constexpr Level level_2{.len = std::size(level_2_lines),
+                               .data = std::data(level_2_lines)};
+
+static constexpr auto level_3_line_data{
+    embp::concat(encode_straight_line(8, 8, Direction::RIGHT, 33-2-7-7+1),
+                 encode_straight_line(8, 16, Direction::DOWN, 33-2-7-7),
+                 encode_straight_line(33-8, 16, Direction::DOWN, 33-2-7-7)) };
+inline constexpr std::array<Structure, 1> level_3_lines{
+    Structure{.type = StructureType::STRAIGHT_LINE,
+              .len = 3,
+              .data = std::data(level_3_line_data)}};
+inline constexpr Level level_3{.len = std::size(level_3_lines),
+                               .data = std::data(level_3_lines)};
+
+inline constexpr std::array levels{
     level_1,
-    // level_2,
-    // level_3,
+    level_2,
+    level_3,
     // level_4,
     // level_5,
     // level_6,

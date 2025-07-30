@@ -164,6 +164,12 @@ void init_level(snake::Level lvl) noexcept {
   g_level.exit = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
                   .y = 0};
   g_level.lvl = lvl;
+  for (grid_t yy = 1; yy < g_tile_grid.grid_height - 1; ++yy) {
+    for (grid_t xx = 1; xx < g_tile_grid.grid_width - 1; ++xx) {
+      const auto [pixx, pixy]{to_pixel_xy({.x = xx, .y = yy})};
+      screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+    }
+  }
 }
 
 void draw_straight_line(snake::StraightLine line, const screen::Tile &tile) {
@@ -303,22 +309,30 @@ determine_snake_tail_tile(Direction dir) noexcept {
 
 [[nodiscard]] constexpr screen::Tile
 determine_snake_body_tile(Direction previous, Direction next) noexcept {
-  /* We do end up with a table:
+  /*
+   * Previous direction is towards the head, next is towards the tail.
+   * Given that the snake tiles are non-symmetric, we need to worry
+   * about which end is the head and which end is the tail.
+   *
+   * We can do this by implementing the following lookup table:
+   *
+   *    Previous is row
+   *    Next is column
    *
    *        | UP  | RIGHT | DOWN | LEFT |
    *        +-----|-------|------|------+
-   *    UP  | X   | DWRHT | UPDN | DWLF |
-   *  RIGHT | UPL |   X   | DWLF | LFRT |
-   *   DOWN | UPD | UPRHT |  X   | UPLF |
-   *   LEFT | UPR | LFRHT | DWRT |  X   |
+   *    UP  | DWN | DWRHT |  X   | DWLF |
+   *  RIGHT | LUP |  LFT  | LFDW |  X   |
+   *   DOWN |  X  | UPRHT |  UP  | UPLF |
+   *   LEFT | RUP |   X   | RTDW | RHT  |
    */
 
   /* clang-format off */
   constexpr std::array<snake::SnakeBodyPart, 16> LUT{
-    snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_DOWNRIGHT, snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_DOWNLEFT,
-    snake::SnakeBodyPart::BODY_UPLEFT, snake::SnakeBodyPart::BODY_LEFTRIGHT, snake::SnakeBodyPart::BODY_DOWNLEFT, snake::SnakeBodyPart::BODY_LEFTRIGHT,
-    snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_UPRIGHT, snake::SnakeBodyPart::BODY_UPDOWN, snake::SnakeBodyPart::BODY_UPLEFT,
-    snake::SnakeBodyPart::BODY_UPRIGHT, snake::SnakeBodyPart::BODY_LEFTRIGHT, snake::SnakeBodyPart::BODY_DOWNRIGHT, snake::SnakeBodyPart::BODY_LEFTRIGHT
+    snake::SnakeBodyPart::BODY_DOWN, snake::SnakeBodyPart::BODY_DOWNRIGHT, snake::SnakeBodyPart::BODY_DOWN, snake::SnakeBodyPart::BODY_DOWNLEFT,
+    snake::SnakeBodyPart::BODY_LEFTUP, snake::SnakeBodyPart::BODY_LEFT, snake::SnakeBodyPart::BODY_LEFTDOWN, snake::SnakeBodyPart::BODY_RIGHT,
+    snake::SnakeBodyPart::BODY_UP, snake::SnakeBodyPart::BODY_UPRIGHT, snake::SnakeBodyPart::BODY_UP, snake::SnakeBodyPart::BODY_UPLEFT,
+    snake::SnakeBodyPart::BODY_RIGHTUP, snake::SnakeBodyPart::BODY_RIGHT, snake::SnakeBodyPart::BODY_RIGHTDOWN, snake::SnakeBodyPart::BODY_RIGHT
   };
   /* clang-format on */
 
@@ -435,8 +449,7 @@ bool change_snake_direction(int key_pressed) noexcept {
 /* ================================================================= */
 void update_lives_on_screen(uint8_t lives) noexcept {
   constexpr auto HEADTILE{snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
-  constexpr auto BODYTILE{
-      snake::to_snake_tile(snake::SnakeBodyPart::BODY_UPDOWN)};
+  constexpr auto BODYTILE{snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
   constexpr auto TAILTILE{
       snake::to_snake_tile(snake::SnakeBodyPart::TAIL_DOWN)};
   static_assert(HEADTILE.side_length == BODYTILE.side_length);
@@ -807,15 +820,15 @@ void run() {
 
   uint8_t growing{2};
   absolute_time_t last_time{get_absolute_time()};
+  uint32_t lvl_idx{snake::levels.size() - 1};
   /* game loop! */
   while (user_desires_play) {
     int8_t lives{3};
-    init_level(snake::levels[0]);
+    init_level(snake::levels[lvl_idx]);
     init_snake(SNAKE_START, SNAKE_DIR);
     init_apples(); /* just places an apple somewhere */
     update_lives_on_screen(lives);
     draw_this_level(g_level.lvl);
-    // draw_this_level(snake::levels[0]);
     bool initial_tick{true};
     while (lives > 0) {
       const auto now{get_absolute_time()};
@@ -880,6 +893,7 @@ void run() {
           lives = 0;
           init_snake(SNAKE_START, SNAKE_DIR);
           initial_tick = true;
+          lvl_idx = lvl_idx == snake::levels.size() - 1 ? 0 : lvl_idx + 1;
         }
       }
     }
