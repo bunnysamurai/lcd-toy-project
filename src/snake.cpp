@@ -102,6 +102,8 @@ struct LevelState {
 TileGridCfg g_tile_grid;
 SnakeState g_snake_state;
 LevelState g_level;
+uint32_t g_collided_apple;
+embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
 
 [[nodiscard]] ScreenLocation to_pixel_xy(GridLocation grid_xy) noexcept {
   /* TODO consider adding range checks here?  Or should it go somewhere else? */
@@ -172,9 +174,14 @@ void init_level(snake::Level lvl) noexcept {
   }
 }
 
-void draw_straight_line(snake::StraightLine line, const screen::Tile &tile) {
+void draw_structure(snake::Point point, const screen::Tile &tile) {
+  const auto [pixx, pixy]{to_pixel_xy({.x = point.x, .y = point.y})};
+  screen::draw_tile(pixx, pixy, tile);
+}
+
+void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
+  const snake::Direction dir{line.dir};
   GridLocation start{.x = line.xs, .y = line.ys};
-  snake::Direction dir{line.dir};
 
   int8_t xinc{};
   int8_t yinc{};
@@ -202,12 +209,21 @@ void draw_straight_line(snake::StraightLine line, const screen::Tile &tile) {
     start.y += yinc;
   }
 }
+void draw_points(const uint8_t *p_data, uint32_t len) {
+  static constexpr auto ENCODED_LENGTH{std::size(snake::encode_point(42, 42))};
+  auto p_point_data{p_data};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    draw_structure(snake::decode_point(p_point_data), snake::BorderTile);
+    std::advance(p_point_data, ENCODED_LENGTH);
+  }
+}
 void draw_straight_lines(const uint8_t *p_data, uint32_t len) {
+  static constexpr auto ENCODED_LENGTH{std::size(
+      snake::encode_straight_line(42, 42, snake::Direction::DOWN, 0))};
   auto p_line_data{p_data};
   for (uint32_t ii = 0; ii < len; ++ii) {
-    draw_straight_line(snake::decode_straight_line(p_line_data),
-                       snake::BorderTile);
-    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
+    draw_structure(snake::decode_straight_line(p_line_data), snake::BorderTile);
+    std::advance(p_line_data, ENCODED_LENGTH);
   }
 }
 void draw_this_level(snake::Level lvl) noexcept {
@@ -218,6 +234,8 @@ void draw_this_level(snake::Level lvl) noexcept {
     case snake::StructureType::STRAIGHT_LINE:
       draw_straight_lines(p_structure[ii].data, p_structure[ii].len);
       break;
+    case snake::StructureType::POINT:
+      draw_points(p_structure[ii].data, p_structure[ii].len);
     default:
       /* TODO not yet implemented */
       break;
@@ -482,23 +500,27 @@ void update_lives_on_screen(uint8_t lives) noexcept {
   }
 }
 
-void configure_tile_grid() noexcept {
+bool configure_tile_grid() noexcept {
+
   const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
 
   /*
    * Play area must be square.  The grid must be 33x33.
    */
+  static constexpr auto grid_width{33};
+  static constexpr auto grid_height{33};
+
   const auto screen_pix_y_off{display_dims.height - display_dims.width};
   const auto screen_pix_height{display_dims.height - screen_pix_y_off};
 
-  /* for now, I'll assume the shape of the border tile drives the grid
-   * requirements */
-
   const auto grid_scale{snake::BorderTile.side_length};
-  const auto grid_width{display_dims.width / grid_scale};
-  const auto grid_height{screen_pix_height / grid_scale};
-  const auto grid_xoff{(display_dims.width % grid_scale) >> 1};
-  const auto grid_yoff{(screen_pix_height % grid_scale) >> 1};
+  const auto grid_xoff{(display_dims.width - grid_scale * grid_width) >> 1};
+  const auto grid_yoff{(screen_pix_height - grid_scale * grid_height) >> 1};
+
+  if (grid_scale * grid_width > display_dims.width ||
+      grid_scale * grid_height > display_dims.height) {
+    return false;
+  }
 
   g_tile_grid.grid_width = grid_width;
   g_tile_grid.grid_height = grid_height;
@@ -506,6 +528,8 @@ void configure_tile_grid() noexcept {
   g_tile_grid.xdimension.off = grid_xoff;
   g_tile_grid.ydimension.scale = grid_scale;
   g_tile_grid.ydimension.off = screen_pix_y_off + grid_yoff;
+
+  return g_tile_grid.grid_width == 33 && g_tile_grid.grid_height == 33;
 }
 
 void draw_border() {
@@ -552,9 +576,11 @@ void update_borders(GridLocation loc) noexcept {
   }
 }
 
-void init_the_screen() noexcept {
+bool init_the_screen() noexcept {
   /* introspect, then configure the tile grid */
-  configure_tile_grid();
+  if (!configure_tile_grid()) {
+    return false;
+  }
 
   /* we are a color application */
   screen::set_format(snake::TILE_FORMAT);
@@ -565,6 +591,143 @@ void init_the_screen() noexcept {
 
   /* we setup a blue border */
   draw_border();
+
+  return true;
+}
+
+/* ================================================================= */
+/*   ____      _ _ _     _               _                _          */
+/*  / ___|___ | | (_)___(_) ___  _ __   | |    ___   __ _(_) ___     */
+/* | |   / _ \| | | / __| |/ _ \| '_ \  | |   / _ \ / _` | |/ __|    */
+/* | |__| (_) | | | \__ \ | (_) | | | | | |__| (_) | (_| | | (__     */
+/*  \____\___/|_|_|_|___/_|\___/|_| |_| |_____\___/ \__, |_|\___|    */
+/*                                                  |___/            */
+/* ================================================================= */
+enum struct Collision { NONE, BORDER, APPLE, SNAKE, EXIT };
+
+[[nodiscard]] bool
+check_for_apple_collision(GridLocation point,
+                          uint32_t &collided_apple_index) noexcept {
+  uint32_t idx{0};
+  for (const auto apple : g_apple_locations) {
+    if (apple == point) {
+      collided_apple_index = idx;
+      return true;
+    }
+    ++idx;
+  }
+  return false;
+}
+
+[[nodiscard]] bool check_for_itself_collision(GridLocation point) noexcept {
+  /* if the head is equal to any of it's body, we have a collision */
+  const auto head{point};
+  auto start{head};
+  for (const auto dir : g_snake_state.body_vec) {
+    start = move_point(start, dir);
+    if (start == head) {
+      return true;
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] constexpr bool check_for_point_collisions(GridLocation point,
+                                                        const uint8_t *p_data,
+                                                        uint32_t len) noexcept {
+  const GridLocation snake_point{point};
+  auto p_point_data{p_data};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    const snake::Point pointdef{snake::decode_point(p_point_data)};
+    const GridLocation border_point{.x = pointdef.x, .y = pointdef.y};
+    if (snake_point == border_point) {
+      return true;
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] constexpr bool
+check_for_straight_line_collisions(GridLocation point, const uint8_t *p_data,
+                                   uint32_t len) noexcept {
+  auto p_line_data{p_data};
+  bool status{false};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    const snake::StraightLine linedef{snake::decode_straight_line(p_line_data)};
+    const GridLocation line_start{.x = linedef.xs, .y = linedef.ys};
+    switch (linedef.dir) {
+    case snake::Direction::DOWN:
+      status = point.x == linedef.xs && point.y >= linedef.ys &&
+               point.y < linedef.ys + linedef.len;
+      break;
+    case snake::Direction::RIGHT:
+      status = point.y == linedef.ys && point.x >= linedef.xs &&
+               point.x < linedef.xs + linedef.len;
+      break;
+    case snake::Direction::UP:
+      status = point.x == linedef.xs &&
+               point.y >= linedef.ys - linedef.len + 1 && point.y <= linedef.ys;
+      break;
+    case snake::Direction::LEFT:
+      status = point.y == linedef.ys &&
+               point.x >= linedef.xs - linedef.len + 1 && point.x <= linedef.xs;
+      break;
+    }
+    if (status) {
+      return true;
+    }
+    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
+  }
+  return false;
+}
+
+[[nodiscard]] constexpr bool
+check_for_level_collisions(GridLocation point, snake::Level lvl) noexcept {
+  const auto *p_structure{lvl.data};
+  for (uint32_t ii = 0; ii < lvl.len; ++ii) {
+    switch (p_structure[ii].type) {
+    case snake::StructureType::STRAIGHT_LINE:
+      if (check_for_straight_line_collisions(point, p_structure[ii].data,
+                                             p_structure[ii].len)) {
+        return true;
+      }
+    case snake::StructureType::POINT:
+      if (check_for_point_collisions(point, p_structure[ii].data,
+                                     p_structure[ii].len)) {
+        return true;
+      }
+    default:
+      /* TODO implement the rest... */
+      break;
+    }
+  }
+  return false;
+}
+
+[[nodiscard]] Collision check_for_collisions(GridLocation point) noexcept {
+  /* If head is on the exit, and the door is open, then make like a tree and get
+   * outta here. */
+  if (g_level.exit_is_open && point == g_level.exit) {
+    return Collision::EXIT;
+  }
+
+  /* if head is on the border, whoops! Game over. */
+  if (point.x < 1 || point.x > g_tile_grid.grid_width - 2 || point.y < 1 ||
+      point.y > g_tile_grid.grid_height - 2 ||
+      check_for_level_collisions(point, g_level.lvl)) {
+    return Collision::BORDER;
+  }
+
+  /* if the head is on itself, whoa!  No cannabilism allowed. */
+  if (check_for_itself_collision(point)) {
+    return Collision::SNAKE;
+  }
+  /* if head is on an apple, yum! Remove the apple. */
+  if (check_for_apple_collision(point, g_collided_apple)) {
+    return Collision::APPLE;
+  }
+
+  return Collision::NONE;
 }
 
 /* ===================================================== */
@@ -575,7 +738,6 @@ void init_the_screen() noexcept {
 /*  /_/   \_\ .__/| .__/|_|\___|  \____\__,_|_|   \__|   */
 /*          |_|   |_|                                    */
 /* ===================================================== */
-embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
 
 void init_apples() noexcept {
   /* if there are already apples, i.e. the level restarted, clear the old ones
@@ -585,14 +747,36 @@ void init_apples() noexcept {
     screen::draw_tile(xx, yy, snake::BackgroundTile);
   }
 
-  /* just places an apple somewhere */
-  g_apple_locations.resize(NUMBER_OF_APPLES);
-  for (auto &apple : g_apple_locations) {
-    const uint32_t seed{get_rand_32()};
-    const auto xloc{(seed & 0xFFFFU) % (g_tile_grid.grid_width - 2) + 1};
-    const auto yloc{((seed >> 16) & 0xFFFFU) % (g_tile_grid.grid_height - 2) +
-                    1};
-    apple = {.x = static_cast<grid_t>(xloc), .y = static_cast<grid_t>(yloc)};
+  /* Naive impl, but whatever... just places an apple somewhere
+   *
+   * Pick a random location in the play area, then check for collision,
+   * If we collide, just try again,
+   *
+   */
+  [[maybe_unused]] uint32_t prev_apple;
+  g_apple_locations.resize(0);
+  for (uint32_t idx = 0; idx < NUMBER_OF_APPLES; ++idx) {
+    while (true) {
+      const uint32_t seed{get_rand_32()};
+      /* play area is always 31x31... this makes the modulo math easy... what a
+       * COINCIDENCE
+       *
+       * Anyways, valid x,y locations for apples are
+       *   in the range [1,31]
+       *   not under a wall
+       */
+      static constexpr auto MASK{0b11111U};
+      const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
+      const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
+      const GridLocation apple{.x = xloc, .y = yloc};
+      if (xloc > 31 || yloc > 31 ||
+          check_for_level_collisions(apple, g_level.lvl) ||
+          check_for_apple_collision(apple, prev_apple)) {
+        continue;
+      }
+      g_apple_locations.push_back(apple);
+      break;
+    }
   }
 
   /* and draw the apples */
@@ -635,124 +819,6 @@ void add_apple() noexcept {
    *    ([2:0] * X + 4) / 8 = grid point x
    *    ([5:3] * Y + 4) / 8 = grid point y
    */
-}
-
-/* ================================================================= */
-/*   ____      _ _ _     _               _                _          */
-/*  / ___|___ | | (_)___(_) ___  _ __   | |    ___   __ _(_) ___     */
-/* | |   / _ \| | | / __| |/ _ \| '_ \  | |   / _ \ / _` | |/ __|    */
-/* | |__| (_) | | | \__ \ | (_) | | | | | |__| (_) | (_| | | (__     */
-/*  \____\___/|_|_|_|___/_|\___/|_| |_| |_____\___/ \__, |_|\___|    */
-/*                                                  |___/            */
-/* ================================================================= */
-enum struct Collision { NONE, BORDER, APPLE, SNAKE, EXIT };
-uint32_t g_collided_apple;
-
-[[nodiscard]] bool
-check_for_apple_collision(uint32_t &collided_apple_index) noexcept {
-  uint32_t idx{0};
-  for (const auto apple : g_apple_locations) {
-    if (apple == g_snake_state.head) {
-      collided_apple_index = idx;
-      return true;
-    }
-    ++idx;
-  }
-  return false;
-}
-
-[[nodiscard]] bool check_for_itself_collision() noexcept {
-  /* if the head is equal to any of it's body, we have a collision */
-  const auto head{g_snake_state.head};
-  auto start{head};
-  for (const auto dir : g_snake_state.body_vec) {
-    start = move_point(start, dir);
-    if (start == head) {
-      return true;
-    }
-  }
-  return false;
-}
-
-[[nodiscard]] constexpr bool
-check_for_straight_line_collisions(const uint8_t *p_data,
-                                   uint32_t len) noexcept {
-  const GridLocation point{g_snake_state.head};
-  auto p_line_data{p_data};
-  bool status{false};
-  for (uint32_t ii = 0; ii < len; ++ii) {
-    const snake::StraightLine linedef{snake::decode_straight_line(p_line_data)};
-    const GridLocation line_start{.x = linedef.xs, .y = linedef.ys};
-    switch (linedef.dir) {
-    case snake::Direction::DOWN:
-      status = point.x == linedef.xs && point.y >= linedef.ys &&
-               point.y < linedef.ys + linedef.len;
-      break;
-    case snake::Direction::RIGHT:
-      status = point.y == linedef.ys && point.x >= linedef.xs &&
-               point.x < linedef.xs + linedef.len;
-      break;
-    case snake::Direction::UP:
-      status = point.x == linedef.xs &&
-               point.y >= linedef.ys - linedef.len + 1 && point.y <= linedef.ys;
-      break;
-    case snake::Direction::LEFT:
-      status = point.y == linedef.ys &&
-               point.x >= linedef.xs - linedef.len + 1 && point.x <= linedef.xs;
-      break;
-    }
-    if (status) {
-      return true;
-    }
-    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
-  }
-  return false;
-}
-
-[[nodiscard]] constexpr bool
-check_for_level_collisions(snake::Level lvl) noexcept {
-  const auto *p_structure{lvl.data};
-  for (uint32_t ii = 0; ii < lvl.len; ++ii) {
-    switch (p_structure[ii].type) {
-    case snake::StructureType::STRAIGHT_LINE:
-      if (check_for_straight_line_collisions(p_structure[ii].data,
-                                             p_structure[ii].len)) {
-        return true;
-      }
-    default:
-      /* TODO implement the rest... */
-      break;
-    }
-  }
-  return false;
-}
-
-[[nodiscard]] Collision check_for_collisions() noexcept {
-  /* If head is on the exit, and the door is open, then make like a tree and get
-   * outta here. */
-  if (g_level.exit_is_open && g_snake_state.head == g_level.exit) {
-    return Collision::EXIT;
-  }
-
-  /* if head is on the border, whoops! Game over. */
-  if (g_snake_state.head.x < 1 ||
-      g_snake_state.head.x > g_tile_grid.grid_width - 2 ||
-      g_snake_state.head.y < 1 ||
-      g_snake_state.head.y > g_tile_grid.grid_height - 2 ||
-      check_for_level_collisions(g_level.lvl)) {
-    return Collision::BORDER;
-  }
-
-  /* if the head is on itself, whoa!  No cannabilism allowed. */
-  if (check_for_itself_collision()) {
-    return Collision::SNAKE;
-  }
-  /* if head is on an apple, yum! Remove the apple. */
-  if (check_for_apple_collision(g_collided_apple)) {
-    return Collision::APPLE;
-  }
-
-  return Collision::NONE;
 }
 
 /* ======================================================= */
@@ -811,7 +877,10 @@ namespace snake {
 void run() {
   bool user_desires_play{true};
 
-  init_the_screen();
+  if (!init_the_screen()) {
+    printf("couldn't init screen\n");
+    return;
+  }
 
   const GridLocation SNAKE_START{
       .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
@@ -820,7 +889,8 @@ void run() {
 
   uint8_t growing{2};
   absolute_time_t last_time{get_absolute_time()};
-  uint32_t lvl_idx{snake::levels.size() - 1};
+  // uint32_t lvl_idx{snake::levels.size() - 1};
+  uint32_t lvl_idx{1};
   /* game loop! */
   while (user_desires_play) {
     int8_t lives{3};
@@ -852,7 +922,7 @@ void run() {
         }
 
         /* handle collision cases */
-        Collision collision{check_for_collisions()};
+        Collision collision{check_for_collisions(g_snake_state.head)};
         /* initial_tick is a hack. We nullify collisions with the border when
          * the snake first enters the play area */
         if (initial_tick) {

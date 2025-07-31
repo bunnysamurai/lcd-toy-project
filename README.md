@@ -6,7 +6,7 @@ A toy project, to play around with the rp2040 driver [found here](https://dmitry
 
 Requires:
 * [Pico SDK](https://github.com/raspberrypi/pico-sdk)
-* [PIO machinery](https://dmitry.gr/images/pioMachinery.zip), which is already in [driver](driver).
+* [PIO machinery](https://dmitry.gr/images/pioMachinery.zip), which a modified version is in [basic_io/screen/waveshare_driver](basic_io/screen/waveshare_driver).
 * [A Pico](https://www.digikey.com/short/00m5w7tv)
 * An [LCD from Waveshare](https://www.waveshare.com/pico-restouch-lcd-2.8.htm)
 
