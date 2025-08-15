@@ -32,7 +32,7 @@ using snake::pix_t;
 /* Some game configurations */
 constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
     1}; /* basically how often we poll for input */
-constexpr auto GAME_TICK_US{200000U};
+constexpr auto GAME_TICK_US{300000U};
 constexpr auto APPLE_GROWTH_TICKS{3U};
 constexpr auto NUMBER_OF_APPLES{10U};
 
@@ -643,6 +643,7 @@ check_for_apple_collision(GridLocation point,
     if (snake_point == border_point) {
       return true;
     }
+    std::advance(p_point_data, 2); /* TODO 2 is a magic number... */
   }
   return false;
 }
@@ -654,7 +655,6 @@ check_for_straight_line_collisions(GridLocation point, const uint8_t *p_data,
   bool status{false};
   for (uint32_t ii = 0; ii < len; ++ii) {
     const snake::StraightLine linedef{snake::decode_straight_line(p_line_data)};
-    const GridLocation line_start{.x = linedef.xs, .y = linedef.ys};
     switch (linedef.dir) {
     case snake::Direction::DOWN:
       status = point.x == linedef.xs && point.y >= linedef.ys &&
@@ -691,11 +691,13 @@ check_for_level_collisions(GridLocation point, snake::Level lvl) noexcept {
                                              p_structure[ii].len)) {
         return true;
       }
+      break;
     case snake::StructureType::POINT:
       if (check_for_point_collisions(point, p_structure[ii].data,
                                      p_structure[ii].len)) {
         return true;
       }
+      break;
     default:
       /* TODO implement the rest... */
       break;
@@ -750,11 +752,11 @@ void init_apples() noexcept {
   /* Naive impl, but whatever... just places an apple somewhere
    *
    * Pick a random location in the play area, then check for collision,
-   * If we collide, just try again,
+   * If we collide, just try again.
    *
    */
   [[maybe_unused]] uint32_t prev_apple;
-  g_apple_locations.resize(0);
+  g_apple_locations.clear();
   for (uint32_t idx = 0; idx < NUMBER_OF_APPLES; ++idx) {
     while (true) {
       const uint32_t seed{get_rand_32()};
@@ -885,12 +887,13 @@ void run() {
   const GridLocation SNAKE_START{
       .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
       .y = static_cast<grid_t>(g_tile_grid.grid_height)};
-  const Direction SNAKE_DIR{Direction::UP};
+  static constexpr Direction SNAKE_DIR{Direction::UP};
 
-  uint8_t growing{2};
+  static constexpr uint8_t GROWING_START{4};
+  uint32_t lvl_idx{snake::levels.size() - 1};
+  // uint32_t lvl_idx{};
+  uint8_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
-  // uint32_t lvl_idx{snake::levels.size() - 1};
-  uint32_t lvl_idx{1};
   /* game loop! */
   while (user_desires_play) {
     int8_t lives{3};
@@ -938,7 +941,7 @@ void run() {
           break;
         case Collision::BORDER:
         case Collision::SNAKE:
-          growing = 2;
+          growing = GROWING_START + lvl_idx;
           cleanup_the_body();
           --lives;
           update_lives_on_screen(lives);
@@ -958,7 +961,7 @@ void run() {
         }
 
         if (collision == Collision::EXIT) {
-          growing = 2;
+          growing = GROWING_START + lvl_idx;
           cleanup_the_body();
           lives = 0;
           init_snake(SNAKE_START, SNAKE_DIR);
