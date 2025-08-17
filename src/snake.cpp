@@ -49,13 +49,8 @@ struct ScreenLocation {
   pix_t y;
 };
 
-struct GridLocation {
-  grid_t x;
-  grid_t y;
-};
-
-[[nodiscard]] constexpr bool operator==(GridLocation lhs,
-                                        GridLocation rhs) noexcept {
+[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
+                                        snake::GridLocation rhs) noexcept {
   return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
@@ -88,14 +83,14 @@ struct TileGridCfg {
 /* clang-format on */
 
 struct SnakeState {
-  GridLocation head;
+  snake::GridLocation head;
   Direction head_dir;
   embp::circular_array<Direction, 255U> body_vec;
 };
 
 struct LevelState {
   bool exit_is_open;
-  GridLocation exit;
+  snake::GridLocation exit;
   snake::Level lvl;
 };
 
@@ -103,9 +98,9 @@ TileGridCfg g_tile_grid;
 SnakeState g_snake_state;
 LevelState g_level;
 uint32_t g_collided_apple;
-embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
+embp::variable_array<snake::GridLocation, NUMBER_OF_APPLES> g_apple_locations;
 
-[[nodiscard]] ScreenLocation to_pixel_xy(GridLocation grid_xy) noexcept {
+[[nodiscard]] ScreenLocation to_pixel_xy(snake::GridLocation grid_xy) noexcept {
   /* TODO consider adding range checks here?  Or should it go somewhere else? */
   return {.x = static_cast<pix_t>(grid_xy.x * g_tile_grid.xdimension.scale +
                                   g_tile_grid.xdimension.off),
@@ -113,15 +108,15 @@ embp::variable_array<GridLocation, NUMBER_OF_APPLES> g_apple_locations;
                                   g_tile_grid.ydimension.off)};
 }
 
-/** @brief Advances a GridLocation in a given Direction
+/** @brief Advances a snake::GridLocation in a given Direction
  *
  * @param point Grid Point
  * @param direction Up, Down, Left, or Right
  *
- * @return A new GridLocation, advanced in the specified direction.
+ * @return A new snake::GridLocation, advanced in the specified direction.
  */
-[[nodiscard]] constexpr GridLocation move_point(GridLocation point,
-                                                Direction direction) noexcept {
+[[nodiscard]] constexpr snake::GridLocation
+move_point(snake::GridLocation point, Direction direction) noexcept {
   switch (direction) {
   case Direction::UP:
     point.y -= 1;
@@ -181,7 +176,7 @@ void draw_structure(snake::Point point, const screen::Tile &tile) {
 
 void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
   const snake::Direction dir{line.dir};
-  GridLocation start{.x = line.xs, .y = line.ys};
+  snake::GridLocation start{.x = line.xs, .y = line.ys};
 
   int8_t xinc{};
   int8_t yinc{};
@@ -209,6 +204,16 @@ void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
     start.y += yinc;
   }
 }
+
+void draw_structure(snake::Rectangle rect, const screen::Tile &tile) {
+  for (grid_t yy = rect.top; yy <= rect.bottom; ++yy) {
+    for (grid_t xx = rect.left; xx <= rect.right; ++xx) {
+      const auto [pixx, pixy]{to_pixel_xy({.x = xx, .y = yy})};
+      screen::draw_tile(pixx, pixy, tile);
+    }
+  }
+}
+
 void draw_points(const uint8_t *p_data, uint32_t len) {
   static constexpr auto ENCODED_LENGTH{std::size(snake::encode_point(42, 42))};
   auto p_point_data{p_data};
@@ -226,6 +231,15 @@ void draw_straight_lines(const uint8_t *p_data, uint32_t len) {
     std::advance(p_line_data, ENCODED_LENGTH);
   }
 }
+void draw_rectangles(const uint8_t *p_data, uint32_t len) {
+  static constexpr auto ENCODED_LENGTH{
+      std::size(snake::encode_rectangle(42, 42, 43, 43))};
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    draw_structure(snake::decode_rectangle(p_data), snake::BorderTile);
+    std::advance(p_data, ENCODED_LENGTH);
+  }
+}
+
 void draw_this_level(snake::Level lvl) noexcept {
   const auto *p_structure{lvl.data};
 
@@ -236,6 +250,10 @@ void draw_this_level(snake::Level lvl) noexcept {
       break;
     case snake::StructureType::POINT:
       draw_points(p_structure[ii].data, p_structure[ii].len);
+      break;
+    case snake::StructureType::RECT:
+      draw_rectangles(p_structure[ii].data, p_structure[ii].len);
+      break;
     default:
       /* TODO not yet implemented */
       break;
@@ -254,7 +272,7 @@ void draw_this_level(snake::Level lvl) noexcept {
  *
  *  NOTE: grid needs to be intialized before this function!
  */
-void init_snake(GridLocation start, Direction dir) {
+void init_snake(snake::GridLocation start, Direction dir) {
   g_snake_state.head = start;
   g_snake_state.head_dir = dir;
   g_snake_state.body_vec.clear();
@@ -563,7 +581,7 @@ void draw_border() {
     }
   }
 }
-void update_borders(GridLocation loc) noexcept {
+void update_borders(snake::GridLocation loc) noexcept {
   const auto [xx, yy]{to_pixel_xy(loc)};
   screen::draw_tile(xx, yy, snake::BorderTile);
 
@@ -606,7 +624,7 @@ bool init_the_screen() noexcept {
 enum struct Collision { NONE, BORDER, APPLE, SNAKE, EXIT };
 
 [[nodiscard]] bool
-check_for_apple_collision(GridLocation point,
+check_for_apple_collision(snake::GridLocation point,
                           uint32_t &collided_apple_index) noexcept {
   uint32_t idx{0};
   for (const auto apple : g_apple_locations) {
@@ -619,7 +637,8 @@ check_for_apple_collision(GridLocation point,
   return false;
 }
 
-[[nodiscard]] bool check_for_itself_collision(GridLocation point) noexcept {
+[[nodiscard]] bool
+check_for_itself_collision(snake::GridLocation point) noexcept {
   /* if the head is equal to any of it's body, we have a collision */
   const auto head{point};
   auto start{head};
@@ -632,57 +651,49 @@ check_for_apple_collision(GridLocation point,
   return false;
 }
 
-[[nodiscard]] constexpr bool check_for_point_collisions(GridLocation point,
-                                                        const uint8_t *p_data,
-                                                        uint32_t len) noexcept {
-  const GridLocation snake_point{point};
-  auto p_point_data{p_data};
+[[nodiscard]] constexpr bool
+check_for_point_collisions(snake::GridLocation point, const uint8_t *p_data,
+                           uint32_t len) noexcept {
   for (uint32_t ii = 0; ii < len; ++ii) {
-    const snake::Point pointdef{snake::decode_point(p_point_data)};
-    const GridLocation border_point{.x = pointdef.x, .y = pointdef.y};
-    if (snake_point == border_point) {
+    const snake::Point pointdef{snake::decode_point(p_data)};
+    const snake::GridLocation border_point{.x = pointdef.x, .y = pointdef.y};
+    if (point == border_point) {
       return true;
     }
-    std::advance(p_point_data, 2); /* TODO 2 is a magic number... */
+    std::advance(p_data, 2); /* TODO 2 is a magic number... */
   }
   return false;
 }
 
 [[nodiscard]] constexpr bool
-check_for_straight_line_collisions(GridLocation point, const uint8_t *p_data,
-                                   uint32_t len) noexcept {
-  auto p_line_data{p_data};
-  bool status{false};
+check_for_rect_collisions(snake::GridLocation point, const uint8_t *p_data,
+                          uint32_t len) noexcept {
+
   for (uint32_t ii = 0; ii < len; ++ii) {
-    const snake::StraightLine linedef{snake::decode_straight_line(p_line_data)};
-    switch (linedef.dir) {
-    case snake::Direction::DOWN:
-      status = point.x == linedef.xs && point.y >= linedef.ys &&
-               point.y < linedef.ys + linedef.len;
-      break;
-    case snake::Direction::RIGHT:
-      status = point.y == linedef.ys && point.x >= linedef.xs &&
-               point.x < linedef.xs + linedef.len;
-      break;
-    case snake::Direction::UP:
-      status = point.x == linedef.xs &&
-               point.y >= linedef.ys - linedef.len + 1 && point.y <= linedef.ys;
-      break;
-    case snake::Direction::LEFT:
-      status = point.y == linedef.ys &&
-               point.x >= linedef.xs - linedef.len + 1 && point.x <= linedef.xs;
-      break;
-    }
-    if (status) {
+    const snake::Rectangle rectdef{snake::decode_rectangle(p_data)};
+    if (snake::check_intersects(point, rectdef)) {
       return true;
     }
-    std::advance(p_line_data, 3); /* TODO 3 is a magic number... */
+    std::advance(p_data, 3); /* TODO 3 is a magic number */
+  }
+  return false;
+}
+
+[[nodiscard]] constexpr bool check_for_straight_line_collisions(
+    snake::GridLocation point, const uint8_t *p_data, uint32_t len) noexcept {
+  for (uint32_t ii = 0; ii < len; ++ii) {
+    const snake::StraightLine linedef{snake::decode_straight_line(p_data)};
+    if (snake::check_intersects(point, linedef)) {
+      return true;
+    }
+    std::advance(p_data, 3); /* TODO 3 is a magic number... */
   }
   return false;
 }
 
 [[nodiscard]] constexpr bool
-check_for_level_collisions(GridLocation point, snake::Level lvl) noexcept {
+check_for_level_collisions(snake::GridLocation point,
+                           snake::Level lvl) noexcept {
   const auto *p_structure{lvl.data};
   for (uint32_t ii = 0; ii < lvl.len; ++ii) {
     switch (p_structure[ii].type) {
@@ -698,6 +709,12 @@ check_for_level_collisions(GridLocation point, snake::Level lvl) noexcept {
         return true;
       }
       break;
+    case snake::StructureType::RECT:
+      if (check_for_rect_collisions(point, p_structure[ii].data,
+                                    p_structure[ii].len)) {
+        return true;
+      }
+      break;
     default:
       /* TODO implement the rest... */
       break;
@@ -706,7 +723,8 @@ check_for_level_collisions(GridLocation point, snake::Level lvl) noexcept {
   return false;
 }
 
-[[nodiscard]] Collision check_for_collisions(GridLocation point) noexcept {
+[[nodiscard]] Collision
+check_for_collisions(snake::GridLocation point) noexcept {
   /* If head is on the exit, and the door is open, then make like a tree and get
    * outta here. */
   if (g_level.exit_is_open && point == g_level.exit) {
@@ -770,7 +788,7 @@ void init_apples() noexcept {
       static constexpr auto MASK{0b11111U};
       const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
       const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
-      const GridLocation apple{.x = xloc, .y = yloc};
+      const snake::GridLocation apple{.x = xloc, .y = yloc};
       if (xloc > 31 || yloc > 31 ||
           check_for_level_collisions(apple, g_level.lvl) ||
           check_for_apple_collision(apple, prev_apple)) {
@@ -884,7 +902,7 @@ void run() {
     return;
   }
 
-  const GridLocation SNAKE_START{
+  const snake::GridLocation SNAKE_START{
       .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
       .y = static_cast<grid_t>(g_tile_grid.grid_height)};
   static constexpr Direction SNAKE_DIR{Direction::UP};

@@ -73,6 +73,30 @@ struct StraightLine {
          lhs.dir == rhs.dir;
 }
 
+[[nodiscard]] constexpr bool check_intersects(GridLocation point,
+                                              StraightLine linedef) noexcept {
+  bool status{false};
+  switch (linedef.dir) {
+  case snake::Direction::DOWN:
+    status = point.x == linedef.xs && point.y >= linedef.ys &&
+             point.y < linedef.ys + linedef.len;
+    break;
+  case snake::Direction::RIGHT:
+    status = point.y == linedef.ys && point.x >= linedef.xs &&
+             point.x < linedef.xs + linedef.len;
+    break;
+  case snake::Direction::UP:
+    status = point.x == linedef.xs && point.y >= linedef.ys - linedef.len + 1 &&
+             point.y <= linedef.ys;
+    break;
+  case snake::Direction::LEFT:
+    status = point.y == linedef.ys && point.x >= linedef.xs - linedef.len + 1 &&
+             point.x <= linedef.xs;
+    break;
+  }
+  return status;
+}
+
 /** @brief Encode a "straight" line
  *
  * @param xs start column position, in grid-space
@@ -119,6 +143,30 @@ static_assert(std::equal(std::begin(encoded_dut), std::end(encoded_dut),
 
 } // namespace constexpr_tests
 
+struct Rectangle {
+  grid_t left;
+  grid_t top;
+  grid_t right;  /* inclusive */
+  grid_t bottom; /* inclusive */
+};
+
+[[nodiscard]] constexpr bool operator==(const Rectangle &lhs,
+                                        const Rectangle &rhs) noexcept {
+  return lhs.left == rhs.left && lhs.top == rhs.top && lhs.right == rhs.right &&
+         lhs.bottom == rhs.bottom;
+}
+
+[[nodiscard]] constexpr bool check_intersects(GridLocation point,
+                                              Rectangle rect) noexcept {
+  if (point.y == rect.top || point.y == rect.bottom) {
+    return point.x <= rect.right && point.x >= rect.left;
+  } else if (point.x == rect.left || point.x == rect.right) {
+    return point.y <= rect.top && point.y >= rect.bottom;
+  } else {
+    return false;
+  }
+}
+
 [[nodiscard]] constexpr std::array<uint8_t, 3>
 encode_rectangle(grid_t left, grid_t top, grid_t right,
                  grid_t bottom) noexcept {
@@ -132,6 +180,36 @@ encode_rectangle(grid_t left, grid_t top, grid_t right,
       static_cast<uint8_t>(((left & 0b11111) << 3) | ((top & 0b11100) >> 2)),
       static_cast<uint8_t>(((top & 0b11) << 6) | (right & 0b11111)), bottom};
 }
+
+[[nodiscard]] constexpr Rectangle
+decode_rectangle(const uint8_t *data) noexcept {
+  /*
+   * byte[0][7:3] = left
+   * byte[0][2:0]byte[1][7:6] = top
+   * byte[1][4:0] = right
+   * byte[2] = bottom
+   */
+  return Rectangle{.left = static_cast<grid_t>((data[0] >> 3U) & 0b11111U),
+                   .top = static_cast<grid_t>(((data[0] & 0b111) << 2) |
+                                              ((data[1] >> 6) & 0b11)),
+                   .right = static_cast<grid_t>(data[1] & 0b11111),
+                   .bottom = data[2]};
+}
+
+namespace constexpr_tests {
+constexpr Rectangle rect_dut{.left = 10, .top = 11, .right = 20, .bottom = 21};
+constexpr std::array<uint8_t, 3> expected_encoded_rect{
+    (10 << 3) | (( 11 & 0b11100 ) >> 2), ((11 & 0b11) << 6) | 20, 21};
+constexpr auto encoded_rect_dut{encode_rectangle(
+    rect_dut.left, rect_dut.top, rect_dut.right, rect_dut.bottom)};
+
+static_assert(std::equal(std::begin(encoded_rect_dut),
+                         std::end(encoded_rect_dut),
+                         std::begin(expected_encoded_rect),
+                         std::end(expected_encoded_rect)));
+
+static_assert(rect_dut == decode_rectangle(std::data(encoded_rect_dut)));
+} // namespace constexpr_tests
 
 /* =======================================================================
                        _                   _
@@ -939,13 +1017,98 @@ inline constexpr std::array level_29_structures{
 inline constexpr Level level_29{.len = std::size(level_29_structures),
                                 .data = std::data(level_29_structures)};
 
+/* clang-format off */
+static constexpr auto level_30_rect_data{
+    embp::concat(
+encode_rectangle(1,4,2,5),
+encode_rectangle(4,2,5,4),
+encode_rectangle(8,1,9,3),
+encode_rectangle(11,2,12,3),
+encode_rectangle(14,1,15,2),
+encode_rectangle(18,1,19,3),
+encode_rectangle(22,3,23,4),
+encode_rectangle(25,2,26,3),
+encode_rectangle(29,4,30,5),
+encode_rectangle(2,7,3,8),
+encode_rectangle(8,5,9,6),
+encode_rectangle(13,5,14,6),
+encode_rectangle(16,5,17,7),
+encode_rectangle(19,6,20,7),
+encode_rectangle(24,5,25,6),
+encode_rectangle(5,9,6,10),
+encode_rectangle(8,8,9,12),
+encode_rectangle(11,8,12,11),
+encode_rectangle(14,10,15,13),
+encode_rectangle(17,9,18,12),
+encode_rectangle(18,13,20,14),
+encode_rectangle(20,10,21,11),
+encode_rectangle(23,8,24,9),
+encode_rectangle(26,8,27,9),
+encode_rectangle(28,7,29,9),
+encode_rectangle(1,11,3,12),
+encode_rectangle(5,15,9,16),
+encode_rectangle(11,13,12,15),
+encode_rectangle(14,15,15,16),
+encode_rectangle(25,12,28,13),
+encode_rectangle(30,12,31,13),
+encode_rectangle(1,17,3,18),
+encode_rectangle(5,18,7,19),
+encode_rectangle(9,19,10,20),
+encode_rectangle(11,17,12,18),
+encode_rectangle(14,18,15,19),
+encode_rectangle(17,18,18,19),
+encode_rectangle(20,16,21,17),
+encode_rectangle(20,19,21,20),
+encode_rectangle(23,16,24,17),
+encode_rectangle(25,19,26,21),
+encode_rectangle(27,16,28,18),
+encode_rectangle(30,16,31,17),
+encode_rectangle(30,20,31,21),
+encode_rectangle(4,21,6,22),
+encode_rectangle(8,22,9,24),
+encode_rectangle(11,22,12,23),
+encode_rectangle(14,21,15,23),
+encode_rectangle(17,23,19,24),
+encode_rectangle(22,23,24,24),
+encode_rectangle(28,23,29,24),
+encode_rectangle(3,24,5,25),
+encode_rectangle(4,27,6,28),
+encode_rectangle(8,26,9,28),
+encode_rectangle(13,25,15,26),
+encode_rectangle(17,26,18,27),
+encode_rectangle(23,28,24,29),
+encode_rectangle(25,26,26,27),
+encode_rectangle(28,26,29,27),
+encode_rectangle(27,29,28,30),
+encode_rectangle(3,30,5,31),
+encode_rectangle(11,28,12,29),
+encode_rectangle(17,30,18,31)
+                )};
+static constexpr auto level_30_line_data{
+    embp::concat(
+encode_straight_line(1,23,Direction::DOWN,6),
+encode_straight_line(14,29,Direction::DOWN,3),
+encode_straight_line(21,27,Direction::DOWN,3),
+encode_straight_line(31,27,Direction::DOWN,3)
+    )
+};
+/* clang-format on */
+inline constexpr std::array level_30_structures{
+    Structure{.type = StructureType::STRAIGHT_LINE,
+              .len = 4,
+              .data = std::data(level_30_line_data)},
+    Structure{.type = StructureType::RECT,
+              .len = 63,
+              .data = std::data(level_30_rect_data)}};
+inline constexpr Level level_30{.len = std::size(level_30_structures),
+                                .data = std::data(level_30_structures)};
+
 inline constexpr std::array levels{
-    level_1,  level_2,  level_3,  level_4,  level_5,  level_6,  level_7,
-    level_8,  level_9,  level_10, level_11, level_12, level_13, level_14,
-    level_15, level_16, level_17, level_18, level_19, level_20, level_21,
-    level_22, level_23, level_24, level_25, level_26, level_27, level_28,
-    level_29,
-    // level_30,
+    level_1,  level_2,  level_3,  level_4,  level_5,  level_6,
+    level_7,  level_8,  level_9,  level_10, level_11, level_12,
+    level_13, level_14, level_15, level_16, level_17, level_18,
+    level_19, level_20, level_21, level_22, level_23, level_24,
+    level_25, level_26, level_27, level_28, level_29, level_30,
 };
 } // namespace snake
 

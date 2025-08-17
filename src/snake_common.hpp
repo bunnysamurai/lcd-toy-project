@@ -15,5 +15,11 @@ enum struct Direction : uint8_t {
   LEFT = 0x3
 };
 
+struct GridLocation {
+  grid_t x;
+  grid_t y;
+};
+
+
 }
 #endif
