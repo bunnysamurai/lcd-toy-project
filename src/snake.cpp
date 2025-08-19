@@ -545,7 +545,14 @@ void draw_snake() {
 
 void run_cleanup_animation() noexcept {
   static constexpr auto ANIMATION_TICK_US{GAME_TICK_US >> 1};
+  static constexpr auto BODYTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
+
+
+  /* play the animation */
   absolute_time_t last_time{get_absolute_time()};
+  /* spin for a game tick */
+  sleep_us(GAME_TICK_US);
   while (!g_snake_state.body_vec.empty()) {
     absolute_time_t now{get_absolute_time()};
     if (absolute_time_diff_us(last_time, now) > ANIMATION_TICK_US) {
@@ -553,6 +560,9 @@ void run_cleanup_animation() noexcept {
       clear_snake_tail();
       g_snake_state.body_vec.pop_back();
       draw_snake();
+      /* replace the head with a snake body running up */
+      const auto [pixx, pixy]{to_pixel_xy(g_snake_state.head)};
+      screen::draw_tile(pixx, pixy, BODYTILE);
     }
   }
 }
