@@ -23,6 +23,7 @@
 #include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"
 
+#define USE_BGRID_OPTIMIZATION
 namespace {
 
 using snake::Direction;
@@ -99,6 +100,8 @@ SnakeState g_snake_state;
 LevelState g_level;
 uint32_t g_collided_apple;
 embp::variable_array<snake::GridLocation, NUMBER_OF_APPLES> g_apple_locations;
+std::array<uint32_t, snake::PLAY_SIZE>
+    g_bgrid; /* bgrid = border grid, I guess */
 
 [[nodiscard]] ScreenLocation to_pixel_xy(snake::GridLocation grid_xy) noexcept {
   /* TODO consider adding range checks here?  Or should it go somewhere else? */
@@ -156,11 +159,7 @@ move_point(snake::GridLocation point, Direction direction) noexcept {
 /*               |_____\___| \_/ \___|_|                      */
 /*                                                            */
 /* ========================================================== */
-void init_level(snake::Level lvl) noexcept {
-  g_level.exit_is_open = false;
-  g_level.exit = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
-                  .y = 0};
-  g_level.lvl = lvl;
+void clear_screen_grid() noexcept {
   for (grid_t yy = 1; yy < g_tile_grid.grid_height - 1; ++yy) {
     for (grid_t xx = 1; xx < g_tile_grid.grid_width - 1; ++xx) {
       const auto [pixx, pixy]{to_pixel_xy({.x = xx, .y = yy})};
@@ -168,12 +167,112 @@ void init_level(snake::Level lvl) noexcept {
     }
   }
 }
+void clear_border_grid() noexcept {
+  for (auto &c : g_bgrid) {
+    c = uint32_t{};
+  }
+}
+
+void set_border_grid_point(grid_t row, grid_t col) noexcept {
+  /* TODO well, this is unfortunate.
+     row and col are 1-indexed, since I encoded everything
+     for the 33x33 sized screen when defining the levels.
+     However, the render logic is 0-indexed, and as such the bgrid is 31x31 so
+     each row neatly fits in 4 bytes.
+     I guess I'll just hack in the corrections at the point of call?
+   */
+  g_bgrid[row] |= (1 << col);
+}
+[[nodiscard]] constexpr uint8_t
+get_border_grid_point(const grid_t row, const grid_t col) noexcept {
+  return static_cast<uint8_t>((g_bgrid[row] >> col) & 0b1);
+}
+
+void init_level(snake::Level lvl) noexcept {
+  g_level.exit_is_open = false;
+  g_level.exit = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+                  .y = 0};
+  g_level.lvl = lvl;
+  clear_screen_grid();
+  clear_border_grid();
+}
+
+[[nodiscard]] constexpr uint8_t encode_four_neighbours(grid_t row,
+                                                       grid_t col) noexcept {
+
+  constexpr grid_t LIMIT{snake::PLAY_SIZE - 1};
+
+  const uint8_t right{col == LIMIT ? uint8_t{1U}
+                                   : get_border_grid_point(row, col + 1)};
+  const uint8_t left{col == 0 ? uint8_t{1U}
+                              : get_border_grid_point(row, col - 1)};
+  const uint8_t top{row == 0 ? uint8_t{1U}
+                             : get_border_grid_point(row - 1, col)};
+  const uint8_t bottom{row == LIMIT ? uint8_t{1U}
+                                    : get_border_grid_point(row + 1, col)};
+
+  /* from the comments in snake_tiles_constexpr.hpp:
+   *     trbl
+   *  BT_0000  :  just c
+   */
+  return ((top << 3) | (right << 2) | (bottom << 1) | left) & 0b1111;
+}
+
+void render_the_level() noexcept {
+#ifdef USE_BGRID_OPTIMIZATION
+  for (grid_t gridrow = 0; gridrow < std::size(g_bgrid); ++gridrow) {
+    for (grid_t gridcol = 0; gridcol < snake::PLAY_SIZE; ++gridcol) {
+      if (!get_border_grid_point(gridrow, gridcol)) {
+        continue;
+      }
+      const auto bcode{encode_four_neighbours(gridrow, gridcol)};
+      const auto [pixx,
+                  pixy]{to_pixel_xy({.x = static_cast<grid_t>(gridcol + 1U),
+                                     .y = static_cast<grid_t>(gridrow + 1U)})};
+      screen::draw_tile(pixx, pixy, snake::BorderTiles[bcode]);
+    }
+  }
+#endif
+}
+
+void draw_structure(snake::Point point) {
+  set_border_grid_point(point.y - 1, point.x - 1);
+}
 
 void draw_structure(snake::Point point, const screen::Tile &tile) {
   const auto [pixx, pixy]{to_pixel_xy({.x = point.x, .y = point.y})};
   screen::draw_tile(pixx, pixy, tile);
 }
 
+void draw_structure(snake::StraightLine line) {
+  const snake::Direction dir{line.dir};
+  snake::GridLocation start{.x = line.xs, .y = line.ys};
+
+  int8_t xinc{};
+  int8_t yinc{};
+  switch (dir) {
+  case snake::Direction::DOWN:
+    yinc = 1;
+    break;
+  case snake::Direction::UP:
+    yinc = -1;
+    break;
+  case snake::Direction::RIGHT:
+    xinc = 1;
+    break;
+  case snake::Direction::LEFT:
+    xinc = -1;
+    break;
+  }
+
+  int32_t count{line.len};
+  while (count > 0) {
+    set_border_grid_point(start.y - 1, start.x - 1);
+    --count;
+    start.x += xinc;
+    start.y += yinc;
+  }
+}
 void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
   const snake::Direction dir{line.dir};
   snake::GridLocation start{.x = line.xs, .y = line.ys};
@@ -205,6 +304,13 @@ void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
   }
 }
 
+void draw_structure(snake::Rectangle rect) {
+  for (grid_t yy = rect.top; yy <= rect.bottom; ++yy) {
+    for (grid_t xx = rect.left; xx <= rect.right; ++xx) {
+      set_border_grid_point(yy - 1, xx - 1);
+    }
+  }
+}
 void draw_structure(snake::Rectangle rect, const screen::Tile &tile) {
   for (grid_t yy = rect.top; yy <= rect.bottom; ++yy) {
     for (grid_t xx = rect.left; xx <= rect.right; ++xx) {
@@ -218,7 +324,11 @@ void draw_points(const uint8_t *p_data, uint32_t len) {
   static constexpr auto ENCODED_LENGTH{std::size(snake::encode_point(42, 42))};
   auto p_point_data{p_data};
   for (uint32_t ii = 0; ii < len; ++ii) {
-    draw_structure(snake::decode_point(p_point_data), snake::BorderTile);
+#ifdef USE_BGRID_OPTIMIZATION
+    draw_structure(snake::decode_point(p_point_data));
+#else
+    draw_structure(snake::decode_point(p_point_data), snake::BorderTiles[0]);
+#endif
     std::advance(p_point_data, ENCODED_LENGTH);
   }
 }
@@ -227,7 +337,12 @@ void draw_straight_lines(const uint8_t *p_data, uint32_t len) {
       snake::encode_straight_line(42, 42, snake::Direction::DOWN, 0))};
   auto p_line_data{p_data};
   for (uint32_t ii = 0; ii < len; ++ii) {
-    draw_structure(snake::decode_straight_line(p_line_data), snake::BorderTile);
+#ifdef USE_BGRID_OPTIMIZATION
+    draw_structure(snake::decode_straight_line(p_line_data));
+#else
+    draw_structure(snake::decode_straight_line(p_line_data),
+                   snake::BorderTiles[0]);
+#endif
     std::advance(p_line_data, ENCODED_LENGTH);
   }
 }
@@ -235,7 +350,11 @@ void draw_rectangles(const uint8_t *p_data, uint32_t len) {
   static constexpr auto ENCODED_LENGTH{
       std::size(snake::encode_rectangle(42, 42, 43, 43))};
   for (uint32_t ii = 0; ii < len; ++ii) {
-    draw_structure(snake::decode_rectangle(p_data), snake::BorderTile);
+#ifdef USE_BGRID_OPTIMIZATION
+    draw_structure(snake::decode_rectangle(p_data));
+#else
+    draw_structure(snake::decode_rectangle(p_data), snake::BorderTiles[0]);
+#endif
     std::advance(p_data, ENCODED_LENGTH);
   }
 }
@@ -259,6 +378,8 @@ void draw_this_level(snake::Level lvl) noexcept {
       break;
     }
   }
+
+  render_the_level();
 }
 /* ========================================================== */
 /*     ____  _   _    _        _        _    _  _______ _     */
@@ -531,7 +652,7 @@ bool configure_tile_grid() noexcept {
   const auto screen_pix_y_off{display_dims.height - display_dims.width};
   const auto screen_pix_height{display_dims.height - screen_pix_y_off};
 
-  const auto grid_scale{snake::BorderTile.side_length};
+  const auto grid_scale{snake::BorderTiles[0].side_length};
   const auto grid_xoff{(display_dims.width - grid_scale * grid_width) >> 1};
   const auto grid_yoff{(screen_pix_height - grid_scale * grid_height) >> 1};
 
@@ -555,42 +676,72 @@ void draw_border() {
 
   /* top and bottom borders */
   {
+    static constexpr auto LR_CODE{0b0101};
     grid_t gy = 0;
-    for (grid_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
+    for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTile);
+      screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
     }
     gy = g_tile_grid.grid_height - 1;
-    for (grid_t gx = 0; gx < g_tile_grid.grid_width; ++gx) {
+    for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTile);
+      screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
     }
   }
 
   /* left and right borders */
   {
+    static constexpr auto TB_CODE{0b1010};
     grid_t gx = 0;
     for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTile);
+      screen::draw_tile(xx, yy, snake::BorderTiles[TB_CODE]);
     }
     gx = g_tile_grid.grid_width - 1;
     for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
       const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTile);
+      screen::draw_tile(xx, yy, snake::BorderTiles[TB_CODE]);
     }
   }
+
+  /* the corners */
+  static constexpr auto TL_CODE{0b1001};
+  static constexpr auto TR_CODE{0b1100};
+  static constexpr auto BL_CODE{0b0011};
+  static constexpr auto BR_CODE{0b0110};
+  {
+    /* bottom right has connectivity on top and left */
+    const auto [xx, yy]{to_pixel_xy({.x = 32, .y = 32})};
+    screen::draw_tile(xx, yy, snake::BorderTiles[TL_CODE]);
+  }
+  {
+    /* bottom left has connectivity on top and right */
+    const auto [xx, yy]{to_pixel_xy({.x = 0, .y = 32})};
+    screen::draw_tile(xx, yy, snake::BorderTiles[TR_CODE]);
+  }
+  {
+    /* top right has connectivity on bottom and left */
+    const auto [xx, yy]{to_pixel_xy({.x = 32, .y = 0})};
+    screen::draw_tile(xx, yy, snake::BorderTiles[BL_CODE]);
+  }
+  {
+    /* top left has connectivity on bottom and right */
+    const auto [xx, yy]{to_pixel_xy({.x = 0, .y = 0})};
+    screen::draw_tile(xx, yy, snake::BorderTiles[BR_CODE]);
+  }
 }
+
 void update_borders(snake::GridLocation loc) noexcept {
   const auto [xx, yy]{to_pixel_xy(loc)};
-  screen::draw_tile(xx, yy, snake::BorderTile);
+  screen::draw_tile(xx, yy, snake::BorderTiles[0]);
 
   if (g_level.exit_is_open) {
     const auto [xx, yy]{to_pixel_xy(g_level.exit)};
     screen::draw_tile(xx, yy, snake::BackgroundTile);
   } else {
+    static constexpr auto LR_CODE{0b0101};
     const auto [xx, yy]{to_pixel_xy(g_level.exit)};
-    screen::draw_tile(xx, yy, snake::BorderTile);
+    screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
   }
 }
 
@@ -849,7 +1000,7 @@ void add_apple() noexcept {
 /*     \___/|___/\___|_|    |___|_| |_| .__/ \__,_|\__|    */
 /*                                    |_|                  */
 /* ======================================================= */
-enum struct UserInput { QUIT, PLAY, CHANGE_DIRECTION };
+enum struct UserInput { QUIT, PLAY, CHANGE_DIRECTION, NEXT_LEVEL };
 
 UserInput process_user_input() {
   UserInput user_has_input{UserInput::PLAY};
@@ -871,6 +1022,9 @@ UserInput process_user_input() {
   if (key_pressed != PICO_ERROR_TIMEOUT) {
     if (key_pressed == 'q') {
       return UserInput::QUIT;
+    }
+    if (key_pressed == 'n') {
+      return UserInput::NEXT_LEVEL;
     }
     if (change_snake_direction(key_pressed)) {
       user_has_input = UserInput::CHANGE_DIRECTION;
@@ -908,8 +1062,8 @@ void run() {
   static constexpr Direction SNAKE_DIR{Direction::UP};
 
   static constexpr uint8_t GROWING_START{4};
-  uint32_t lvl_idx{snake::levels.size() - 1};
-  // uint32_t lvl_idx{};
+  // uint32_t lvl_idx{snake::levels.size() - 1};
+  uint32_t lvl_idx{};
   uint8_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
   /* game loop! */
@@ -928,6 +1082,10 @@ void run() {
 
       if (user_input == UserInput::QUIT) {
         user_desires_play = false;
+        break;
+      }
+      if (user_input == UserInput::NEXT_LEVEL) {
+        lvl_idx = lvl_idx == snake::levels.size() - 1 ? 0 : lvl_idx + 1;
         break;
       }
 

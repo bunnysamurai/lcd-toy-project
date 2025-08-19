@@ -8,6 +8,8 @@ namespace snake {
 using grid_t = uint8_t;
 using pix_t = uint16_t;
 
+inline constexpr grid_t PLAY_SIZE{31U};
+
 enum struct Direction : uint8_t {
   UP = 0x0,
   RIGHT = 0x1,
@@ -20,6 +22,5 @@ struct GridLocation {
   grid_t y;
 };
 
-
-}
+} // namespace snake
 #endif

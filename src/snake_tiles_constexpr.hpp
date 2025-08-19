@@ -44,32 +44,247 @@ inline constexpr uint8_t SDWSKIN{9};
 
 inline constexpr screen::Format TILE_FORMAT{screen::Format::RGB565_LUT4};
 
+/* =====================================================================
+                 ____                _
+                | __ )  ___  _ __ __| | ___ _ __
+                |  _ \ / _ \| '__/ _` |/ _ \ '__|
+                | |_) | (_) | | | (_| |  __/ |
+                |____/ \___/|_|  \__,_|\___|_|
+
+ * ===================================================================== */
+/*
+        4-way mapping
+
+              t
+        l     c     r
+              b
+    t, r, b, l
+    tr, tb, tl
+    rb, rl
+    bl
+    trb, lrb, blt, ltr
+    trbl
+    none, i.e. just c
+
+    can be represented by a 4 bit number
+       trbl
+    BT_0000  :  just c
+    BT_0001  :  l
+    BT_0010  :  b
+    BT_0011  :  bl
+    BT_0100  :  r
+    BT_0101  :  rl
+    BT_0110  :  rb
+    BT_0111  :  rbl
+    BT_1000  :  t
+    BT_1001  :  tl
+    BT_1010  :  tb
+    BT_1011  :  tbl
+    BT_1100  :  tr
+    BT_1101  :  trl
+    BT_1110  :  trb
+    BT_1111  :  trbl
+
+ */
 inline constexpr size_t BorderTile_SideLength{GRID_SPACE_PIX};
-inline constexpr std::array<
-    uint8_t, (BorderTile_SideLength * (BorderTile_SideLength + 1)) / 2>
-    Border_Tile_Data{
-        /* clang-format off */
+inline constexpr size_t BTLEN{
+    (BorderTile_SideLength * (BorderTile_SideLength + 1)) / 2};
+inline constexpr std::array Border_Tile_Data{
+    /* clang-format off */
+embp::concat(
+    /* BT_0000 : c  */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0001 : l  */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0010 : b  */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0, 
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0011 : bl */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0, 
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0100 : r  */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0101 : rl */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_0110 : rb */
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0, 
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0),
+    /* BT_0111 : rbl*/
+    embp::pfold(BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0, 
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0),
+    /* BT_1000 : t  */
+    embp::pfold(BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1001 : tl */
+    embp::pfold(BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1010 : tb */
     embp::pfold(BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
                 BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
                 BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
                 BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
                 BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
                 BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0, 
-                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0)
-        /* clang-format on */
-    };
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1011 : tbl */
+    embp::pfold(BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,0, 
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1100 : tr  */
+    embp::pfold(BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1101 : trl */
+    embp::pfold(BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0, 
+                BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,BDRDIM,0),
+    /* BT_1110 : trb */
+    embp::pfold(BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0, 
+                BORDER,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0),
+    /* BT_1111 : trbl*/
+    embp::pfold(BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0,
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0,
+                BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,0, 
+                BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,BORDER,BDRDIM,0)
+)
+    /* clang-format on */
+};
+static_assert(std::size(Border_Tile_Data) == BTLEN * 16);
+
+inline constexpr std::array BorderTiles{
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::data(Border_Tile_Data)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 2 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 3 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 4 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 5 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 6 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 7 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 8 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 9 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 10 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 11 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 12 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 13 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 14 * BTLEN)},
+    screen::Tile{.side_length = BorderTile_SideLength,
+                 .format = TILE_FORMAT,
+                 .data = std::next(std::data(Border_Tile_Data), 15 * BTLEN)},
+};
+static_assert(std::size(BorderTiles) == 16);
 
 /* =====================================================================
-                     _   _                _ 
+                     _   _                _
                     | | | | ___  __ _  __| |
                     | |_| |/ _ \/ _` |/ _` |
                     |  _  |  __/ (_| | (_| |
                     |_| |_|\___|\__,_|\__,_|
-                                            
+
  * ===================================================================== */
-inline constexpr screen::Tile BorderTile{.side_length = BorderTile_SideLength,
-                                         .format = TILE_FORMAT,
-                                         .data = std::data(Border_Tile_Data)};
 
 inline constexpr size_t SnakeTile_SideLength{GRID_SPACE_PIX};
 inline constexpr size_t SNAKETILE_DATALENGTH{
@@ -120,14 +335,13 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_HEAD_LEFT_Data{
     /* clang-format on */
 };
 
-
 /* =====================================================================
-                       _____     _ _ 
+                       _____     _ _
                       |_   _|_ _(_) |
                         | |/ _` | | |
                         | | (_| | | |
                         |_|\__,_|_|_|
-                            
+
  * ===================================================================== */
 inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH> Snake_TAIL_UP_Data{
     /* clang-format off */
@@ -179,14 +393,13 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
         /* clang-format on */
     };
 
-
 /* =====================================================================
-                     ____            _       
-                    | __ )  ___   __| |_   _ 
+                     ____            _
+                    | __ )  ___   __| |_   _
                     |  _ \ / _ \ / _` | | | |
                     | |_) | (_) | (_| | |_| |
                     |____/ \___/ \__,_|\__, |
-                                       |___/ 
+                                       |___/
 
             Up, down, left, right
  * ===================================================================== */
@@ -240,14 +453,13 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
         /* clang-format on */
     };
 
-
 /* =====================================================================
-                     ____            _       
-                    | __ )  ___   __| |_   _ 
+                     ____            _
+                    | __ )  ___   __| |_   _
                     |  _ \ / _ \ / _` | | | |
                     | |_) | (_) | (_| | |_| |
                     |____/ \___/ \__,_|\__, |
-                                       |___/ 
+                                       |___/
 
             Up-left, Left-up, Up-right, Right-up
             previous-next ordering throughout
@@ -305,14 +517,13 @@ inline constexpr std::array<uint8_t, SNAKETILE_DATALENGTH>
         /* clang-format on */
     };
 
-
 /* =====================================================================
-                     ____            _       
-                    | __ )  ___   __| |_   _ 
+                     ____            _
+                    | __ )  ___   __| |_   _
                     |  _ \ / _ \ / _` | | | |
                     | |_) | (_) | (_| | |_| |
                     |____/ \___/ \__,_|\__, |
-                                       |___/ 
+                                       |___/
 
             Down-left, Left-down, Down-right, Right-down
             previous-next ordering throughout
