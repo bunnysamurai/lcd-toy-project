@@ -499,17 +499,6 @@ determine_snake_body_tile(Direction previous, Direction next) noexcept {
   return snake::to_snake_tile(LUT[idx]);
 }
 
-void impl_draw_along_the_body(const screen::Tile &tile) noexcept {
-  auto head{g_snake_state.head};
-  /* iterate through the body_vec to draw the rest */
-  auto itr{g_snake_state.body_vec.begin()};
-  for (const auto dir : g_snake_state.body_vec) {
-    head = move_point(head, dir);
-    const auto [pixx, pixy]{to_pixel_xy(head)};
-    screen::draw_tile(pixx, pixy, tile);
-  }
-}
-
 void impl_draw_the_snake_body() noexcept {
   /* if the snake is only length 1, this is a special case */
   if (g_snake_state.body_vec.size() == 0) {
@@ -537,12 +526,35 @@ void impl_draw_the_snake_body() noexcept {
   screen::draw_tile(pixx, pixy, tile);
 }
 
-void cleanup_the_body() { impl_draw_along_the_body(snake::BackgroundTile); }
+void cleanup_the_body() {
+  auto head{g_snake_state.head};
+  /* iterate through the body_vec to draw the rest */
+  auto itr{g_snake_state.body_vec.begin()};
+  for (const auto dir : g_snake_state.body_vec) {
+    head = move_point(head, dir);
+    const auto [pixx, pixy]{to_pixel_xy(head)};
+    screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+  }
+}
 
 void draw_snake() {
   /* for right now, we'll just draw green squares */
   impl_draw_head(determine_snake_head_tile(g_snake_state.head_dir));
   impl_draw_the_snake_body();
+}
+
+void run_cleanup_animation() noexcept {
+  static constexpr auto ANIMATION_TICK_US{GAME_TICK_US >> 1};
+  absolute_time_t last_time{get_absolute_time()};
+  while (!g_snake_state.body_vec.empty()) {
+    absolute_time_t now{get_absolute_time()};
+    if (absolute_time_diff_us(last_time, now) > ANIMATION_TICK_US) {
+      last_time = now;
+      clear_snake_tail();
+      g_snake_state.body_vec.pop_back();
+      draw_snake();
+    }
+  }
 }
 
 /**
@@ -732,8 +744,12 @@ void draw_border() {
 }
 
 void update_borders(snake::GridLocation loc) noexcept {
-  const auto [xx, yy]{to_pixel_xy(loc)};
-  screen::draw_tile(xx, yy, snake::BorderTiles[0]);
+  static constexpr auto LR_CODE{0b0101};
+  /* Why the +1?  Because my bugfix for the entry bug was to start the snake
+   * head one row above the border.  Since the 'loc' we are given is the snake
+   * head, we account for this off-by-one behaviour here. */
+  const auto [xx, yy]{to_pixel_xy({.x = loc.x, .y = loc.y + 1})};
+  screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
 
   if (g_level.exit_is_open) {
     const auto [xx, yy]{to_pixel_xy(g_level.exit)};
@@ -1058,24 +1074,24 @@ void run() {
 
   const snake::GridLocation SNAKE_START{
       .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
-      .y = static_cast<grid_t>(g_tile_grid.grid_height)};
+      .y = static_cast<grid_t>(g_tile_grid.grid_height - 1)};
   static constexpr Direction SNAKE_DIR{Direction::UP};
 
   static constexpr uint8_t GROWING_START{4};
-  // uint32_t lvl_idx{snake::levels.size() - 1};
   uint32_t lvl_idx{};
   uint8_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
+  int8_t lives{3};
   /* game loop! */
   while (user_desires_play) {
-    int8_t lives{3};
     init_level(snake::levels[lvl_idx]);
     init_snake(SNAKE_START, SNAKE_DIR);
     init_apples(); /* just places an apple somewhere */
     update_lives_on_screen(lives);
     draw_this_level(g_level.lvl);
     bool initial_tick{true};
-    while (lives > 0) {
+    bool level_is_active{true};
+    while (level_is_active) {
       const auto now{get_absolute_time()};
 
       const auto user_input = process_user_input();
@@ -1123,6 +1139,12 @@ void run() {
           update_lives_on_screen(lives);
           init_snake(SNAKE_START, SNAKE_DIR);
           initial_tick = true;
+          level_is_active = lives > 0;
+          /* TODO this is only for development, and should trigger a Game Over,
+           * instead */
+          if (!level_is_active) {
+            lives = 3;
+          }
           continue;
         case Collision::NONE:
           /* nothing to do */
@@ -1137,9 +1159,10 @@ void run() {
         }
 
         if (collision == Collision::EXIT) {
+          run_cleanup_animation();
           growing = GROWING_START + lvl_idx;
           cleanup_the_body();
-          lives = 0;
+          level_is_active = false;
           init_snake(SNAKE_START, SNAKE_DIR);
           initial_tick = true;
           lvl_idx = lvl_idx == snake::levels.size() - 1 ? 0 : lvl_idx + 1;
