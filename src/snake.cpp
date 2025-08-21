@@ -99,7 +99,8 @@ TileGridCfg g_tile_grid;
 SnakeState g_snake_state;
 LevelState g_level;
 uint32_t g_collided_apple;
-embp::variable_array<snake::GridLocation, NUMBER_OF_APPLES> g_apple_locations;
+embp::variable_array<snake::GridLocation, NUMBER_OF_APPLES * NUMBER_OF_APPLES>
+    g_apple_locations;
 std::array<uint32_t, snake::PLAY_SIZE>
     g_bgrid; /* bgrid = border grid, I guess */
 
@@ -109,6 +110,11 @@ std::array<uint32_t, snake::PLAY_SIZE>
                                   g_tile_grid.xdimension.off),
           .y = static_cast<pix_t>(grid_xy.y * g_tile_grid.ydimension.scale +
                                   g_tile_grid.ydimension.off)};
+}
+
+void draw_grid_tile(grid_t x, grid_t y, const screen::Tile &tile) {
+  const auto [pixx, pixy]{to_pixel_xy({.x = x, .y = y})};
+  screen::draw_tile(pixx, pixy, tile);
 }
 
 /** @brief Advances a snake::GridLocation in a given Direction
@@ -162,8 +168,7 @@ move_point(snake::GridLocation point, Direction direction) noexcept {
 void clear_screen_grid() noexcept {
   for (grid_t yy = 1; yy < g_tile_grid.grid_height - 1; ++yy) {
     for (grid_t xx = 1; xx < g_tile_grid.grid_width - 1; ++xx) {
-      const auto [pixx, pixy]{to_pixel_xy({.x = xx, .y = yy})};
-      screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+      draw_grid_tile(xx, yy, snake::BackgroundTile);
     }
   }
 }
@@ -197,6 +202,8 @@ void init_level(snake::Level lvl) noexcept {
   clear_border_grid();
 }
 
+void draw_level_name(int name) noexcept {}
+
 [[nodiscard]] constexpr uint8_t encode_four_neighbours(grid_t row,
                                                        grid_t col) noexcept {
 
@@ -226,10 +233,9 @@ void render_the_level() noexcept {
         continue;
       }
       const auto bcode{encode_four_neighbours(gridrow, gridcol)};
-      const auto [pixx,
-                  pixy]{to_pixel_xy({.x = static_cast<grid_t>(gridcol + 1U),
-                                     .y = static_cast<grid_t>(gridrow + 1U)})};
-      screen::draw_tile(pixx, pixy, snake::BorderTiles[bcode]);
+      draw_grid_tile(static_cast<grid_t>(gridcol + 1U),
+                     static_cast<grid_t>(gridrow + 1U),
+                     snake::BorderTiles[bcode]);
     }
   }
 #endif
@@ -240,8 +246,7 @@ void draw_structure(snake::Point point) {
 }
 
 void draw_structure(snake::Point point, const screen::Tile &tile) {
-  const auto [pixx, pixy]{to_pixel_xy({.x = point.x, .y = point.y})};
-  screen::draw_tile(pixx, pixy, tile);
+  draw_grid_tile(point.x, point.y, tile);
 }
 
 void draw_structure(snake::StraightLine line) {
@@ -296,8 +301,7 @@ void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
 
   int32_t count{line.len};
   while (count > 0) {
-    const auto [pixx, pixy]{to_pixel_xy(start)};
-    screen::draw_tile(pixx, pixy, tile);
+    draw_grid_tile(start.x, start.y, tile);
     --count;
     start.x += xinc;
     start.y += yinc;
@@ -314,8 +318,7 @@ void draw_structure(snake::Rectangle rect) {
 void draw_structure(snake::Rectangle rect, const screen::Tile &tile) {
   for (grid_t yy = rect.top; yy <= rect.bottom; ++yy) {
     for (grid_t xx = rect.left; xx <= rect.right; ++xx) {
-      const auto [pixx, pixy]{to_pixel_xy({.x = xx, .y = yy})};
-      screen::draw_tile(pixx, pixy, tile);
+      draw_grid_tile(xx, yy, tile);
     }
   }
 }
@@ -405,8 +408,7 @@ void clear_snake_tail() {
   for (const auto dir : g_snake_state.body_vec) {
     head = move_point(head, dir);
   }
-  const auto [pixx, pixy]{to_pixel_xy(head)};
-  screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+  draw_grid_tile(head.x, head.y, snake::BackgroundTile);
 }
 
 void update_snake_state(bool growing) {
@@ -426,8 +428,7 @@ void update_snake_state(bool growing) {
 void impl_draw_head(const screen::Tile &tile) {
   /* draw the head */
   auto head{g_snake_state.head};
-  const auto [pixx, pixy]{to_pixel_xy(head)};
-  screen::draw_tile(pixx, pixy, tile);
+  draw_grid_tile(head.x, head.y, tile);
 }
 
 [[nodiscard]] constexpr screen::Tile
@@ -513,8 +514,7 @@ void impl_draw_the_snake_body() noexcept {
     const auto nextdir{*(std::next(itr, 1))};
     const auto tile{determine_snake_body_tile(dir, nextdir)};
     head = move_point(head, dir);
-    const auto [pixx, pixy]{to_pixel_xy(head)};
-    screen::draw_tile(pixx, pixy, tile);
+    draw_grid_tile(head.x, head.y, tile);
     itr++;
   }
 
@@ -522,8 +522,7 @@ void impl_draw_the_snake_body() noexcept {
   const auto dir{*itr};
   const auto tile{determine_snake_tail_tile(dir)};
   head = move_point(head, dir);
-  const auto [pixx, pixy]{to_pixel_xy(head)};
-  screen::draw_tile(pixx, pixy, tile);
+  draw_grid_tile(head.x, head.y, tile);
 }
 
 void cleanup_the_body() {
@@ -532,8 +531,7 @@ void cleanup_the_body() {
   auto itr{g_snake_state.body_vec.begin()};
   for (const auto dir : g_snake_state.body_vec) {
     head = move_point(head, dir);
-    const auto [pixx, pixy]{to_pixel_xy(head)};
-    screen::draw_tile(pixx, pixy, snake::BackgroundTile);
+    draw_grid_tile(head.x, head.y, snake::BackgroundTile);
   }
 }
 
@@ -548,7 +546,6 @@ void run_cleanup_animation() noexcept {
   static constexpr auto BODYTILE{
       snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
 
-
   /* play the animation */
   absolute_time_t last_time{get_absolute_time()};
   /* spin for a game tick */
@@ -561,8 +558,7 @@ void run_cleanup_animation() noexcept {
       g_snake_state.body_vec.pop_back();
       draw_snake();
       /* replace the head with a snake body running up */
-      const auto [pixx, pixy]{to_pixel_xy(g_snake_state.head)};
-      screen::draw_tile(pixx, pixy, BODYTILE);
+      draw_grid_tile(g_snake_state.head.x, g_snake_state.head.y, BODYTILE);
     }
   }
 }
@@ -626,37 +622,100 @@ bool change_snake_direction(int key_pressed) noexcept {
 /*   \____|_|  |_|\__,_|  \___/\/ |____/ \___/|_|  \__,_|\___|_|     */
 /*                                                                   */
 /* ================================================================= */
-void update_lives_on_screen(uint8_t lives) noexcept {
-  constexpr auto HEADTILE{snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
-  constexpr auto BODYTILE{snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
-  constexpr auto TAILTILE{
+constexpr uint32_t TIMER_HEIGHT_PIX{3};
+constexpr uint32_t LIVES_HEIGHT_TILES{4};
+
+struct TopPanelCfg {
+  uint16_t row_start_lives;
+  uint16_t col_start_lives;
+  uint16_t col_inc_lives;
+  uint16_t lives_height_tiles;
+
+  uint16_t row_start_timer;
+  uint16_t col_start_timer;
+  uint16_t timer_col_length;
+};
+TopPanelCfg g_top_panel_cfg;
+
+void init_top_panel_config(const TileGridCfg &grid_cfg) {
+  static constexpr auto HEADTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
+  static constexpr auto BODYTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
+  static constexpr auto TAILTILE{
       snake::to_snake_tile(snake::SnakeBodyPart::TAIL_DOWN)};
   static_assert(HEADTILE.side_length == BODYTILE.side_length);
   static_assert(HEADTILE.side_length == TAILTILE.side_length);
-  constexpr auto TILE_INC{HEADTILE.side_length};
+  static constexpr auto TILE_INC{HEADTILE.side_length};
 
-  const screen::Dimensions display_dims{screen::get_virtual_screen_size()};
-  const auto row_start{
-      ((display_dims.height - display_dims.width) - TILE_INC) >> 1};
+  /*
+
+    hs = lives_height_tiles * TILE_INC
+    ht = 5
+    hm = g_tile_grid.ydimension.off
+
+    hm = hs + ht + 3 * hg
+    solve for hg:
+    hg = ( hm - hs - ht ) / 3
+
+    then,
+    row_start_lives = hg
+    row_start_timer = hs + 2*hg
+
+   */
+  const auto HEIGHT_LIVES{LIVES_HEIGHT_TILES * TILE_INC};
+  const auto HEIGHT_GAPS{
+      (grid_cfg.ydimension.off - HEIGHT_LIVES - TIMER_HEIGHT_PIX) / 3};
   const auto col_inc{(TILE_INC << 1) - 1};
+  const auto col_start{TILE_INC >> 1};
+
+  g_top_panel_cfg.row_start_lives = HEIGHT_GAPS;
+  g_top_panel_cfg.col_start_lives = col_start;
+  g_top_panel_cfg.col_inc_lives = col_inc;
+  g_top_panel_cfg.lives_height_tiles = LIVES_HEIGHT_TILES;
+  g_top_panel_cfg.row_start_timer = HEIGHT_LIVES + 2 * HEIGHT_GAPS;
+  g_top_panel_cfg.col_start_timer = grid_cfg.xdimension.off * 2;
+  g_top_panel_cfg.timer_col_length =
+      grid_cfg.grid_width * grid_cfg.xdimension.scale -
+      grid_cfg.xdimension.off * 2;
+}
+
+void update_lives_on_screen(uint8_t lives) noexcept {
+  static constexpr auto HEADTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
+  static constexpr auto BODYTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
+  static constexpr auto TAILTILE{
+      snake::to_snake_tile(snake::SnakeBodyPart::TAIL_DOWN)};
+  static_assert(HEADTILE.side_length == BODYTILE.side_length);
+  static_assert(HEADTILE.side_length == TAILTILE.side_length);
+  static constexpr auto TILE_INC{HEADTILE.side_length};
+
+  const auto row_start{g_top_panel_cfg.row_start_lives};
+  const auto col_inc{g_top_panel_cfg.col_inc_lives};
 
   if (lives > 0) {
     --lives;
   }
 
-  auto col_start{TILE_INC >> 1};
+  /* these are drawn outside of the grid, so we need to handle pixel placement
+   * manually */
+  auto col_start{g_top_panel_cfg.col_start_lives};
   for (int ii = 0; ii < 5; ++ii) {
-    screen::draw_tile(col_start + ii * col_inc, row_start - TILE_INC,
-                      snake::BackgroundTile);
-    screen::draw_tile(col_start + ii * col_inc, row_start,
-                      snake::BackgroundTile);
-    screen::draw_tile(col_start + ii * col_inc, row_start + TILE_INC,
-                      snake::BackgroundTile);
+    const auto col{col_start + ii * col_inc};
+    for (int rs = 0; rs < g_top_panel_cfg.lives_height_tiles; ++rs) {
+      screen::draw_tile(col, row_start + rs * TILE_INC, snake::BackgroundTile);
+    }
   }
   for (; lives > 0; --lives) {
-    screen::draw_tile(col_start, row_start - TILE_INC, HEADTILE);
-    screen::draw_tile(col_start, row_start, BODYTILE);
-    screen::draw_tile(col_start, row_start + TILE_INC, TAILTILE);
+    screen::draw_tile(col_start, row_start, HEADTILE);
+    for (int rs = 1; rs < g_top_panel_cfg.lives_height_tiles - 1; ++rs) {
+      screen::draw_tile(col_start, row_start + rs * TILE_INC, BODYTILE);
+    }
+    screen::draw_tile(col_start,
+                      row_start +
+                          (g_top_panel_cfg.lives_height_tiles - 1) * TILE_INC,
+                      TAILTILE);
     col_start += col_inc;
   }
 }
@@ -695,80 +754,58 @@ bool configure_tile_grid() noexcept {
 
 void draw_border() {
   /* border tiles all round the perimeter */
+  static constexpr auto LR_CODE{0b0101};
+  static constexpr auto TB_CODE{0b1010};
+  static constexpr auto TL_CODE{0b1001};
+  static constexpr auto TR_CODE{0b1100};
+  static constexpr auto BL_CODE{0b0011};
+  static constexpr auto BR_CODE{0b0110};
 
   /* top and bottom borders */
   {
-    static constexpr auto LR_CODE{0b0101};
     grid_t gy = 0;
     for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
-      const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
+      draw_grid_tile(gx, gy, snake::BorderTiles[LR_CODE]);
     }
     gy = g_tile_grid.grid_height - 1;
     for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
-      const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
+      draw_grid_tile(gx, gy, snake::BorderTiles[LR_CODE]);
     }
   }
 
   /* left and right borders */
   {
-    static constexpr auto TB_CODE{0b1010};
     grid_t gx = 0;
     for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
-      const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTiles[TB_CODE]);
+      draw_grid_tile(gx, gy, snake::BorderTiles[TB_CODE]);
     }
     gx = g_tile_grid.grid_width - 1;
     for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
-      const auto [xx, yy]{to_pixel_xy({.x = gx, .y = gy})};
-      screen::draw_tile(xx, yy, snake::BorderTiles[TB_CODE]);
+      draw_grid_tile(gx, gy, snake::BorderTiles[TB_CODE]);
     }
   }
 
   /* the corners */
-  static constexpr auto TL_CODE{0b1001};
-  static constexpr auto TR_CODE{0b1100};
-  static constexpr auto BL_CODE{0b0011};
-  static constexpr auto BR_CODE{0b0110};
-  {
-    /* bottom right has connectivity on top and left */
-    const auto [xx, yy]{to_pixel_xy({.x = 32, .y = 32})};
-    screen::draw_tile(xx, yy, snake::BorderTiles[TL_CODE]);
-  }
-  {
-    /* bottom left has connectivity on top and right */
-    const auto [xx, yy]{to_pixel_xy({.x = 0, .y = 32})};
-    screen::draw_tile(xx, yy, snake::BorderTiles[TR_CODE]);
-  }
-  {
-    /* top right has connectivity on bottom and left */
-    const auto [xx, yy]{to_pixel_xy({.x = 32, .y = 0})};
-    screen::draw_tile(xx, yy, snake::BorderTiles[BL_CODE]);
-  }
-  {
-    /* top left has connectivity on bottom and right */
-    const auto [xx, yy]{to_pixel_xy({.x = 0, .y = 0})};
-    screen::draw_tile(xx, yy, snake::BorderTiles[BR_CODE]);
-  }
+  /* bottom right has connectivity on top and left */
+  draw_grid_tile(32, 32, snake::BorderTiles[TL_CODE]);
+  /* bottom left has connectivity on top and right */
+  draw_grid_tile(0, 32, snake::BorderTiles[TR_CODE]);
+  /* top right has connectivity on bottom and left */
+  draw_grid_tile(32, 0, snake::BorderTiles[BL_CODE]);
+  /* top left has connectivity on bottom and right */
+  draw_grid_tile(0, 0, snake::BorderTiles[BR_CODE]);
 }
 
 void update_borders(snake::GridLocation loc) noexcept {
   static constexpr auto LR_CODE{0b0101};
-  /* Why the +1?  Because my bugfix for the entry bug was to start the snake
-   * head one row above the border.  Since the 'loc' we are given is the snake
-   * head, we account for this off-by-one behaviour here. */
-  const auto [xx, yy]{to_pixel_xy({.x = loc.x, .y = loc.y + 1})};
-  screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
+  /* why the +1?  because I'm a hack... also, the fix for a render bug on the
+   * snake's entry to the level was to start the snake head one row up.  we need
+   * to compensate for this here.*/
+  draw_grid_tile(loc.x, loc.y + 1, snake::BorderTiles[LR_CODE]);
 
-  if (g_level.exit_is_open) {
-    const auto [xx, yy]{to_pixel_xy(g_level.exit)};
-    screen::draw_tile(xx, yy, snake::BackgroundTile);
-  } else {
-    static constexpr auto LR_CODE{0b0101};
-    const auto [xx, yy]{to_pixel_xy(g_level.exit)};
-    screen::draw_tile(xx, yy, snake::BorderTiles[LR_CODE]);
-  }
+  const auto &tile{g_level.exit_is_open ? snake::BackgroundTile
+                                        : snake::BorderTiles[LR_CODE]};
+  draw_grid_tile(g_level.exit.x, g_level.exit.y, tile);
 }
 
 bool init_the_screen() noexcept {
@@ -776,6 +813,7 @@ bool init_the_screen() noexcept {
   if (!configure_tile_grid()) {
     return false;
   }
+  init_top_panel_config(g_tile_grid);
 
   /* we are a color application */
   screen::set_format(snake::TILE_FORMAT);
@@ -935,13 +973,51 @@ check_for_collisions(snake::GridLocation point) noexcept {
 /*  /_/   \_\ .__/| .__/|_|\___|  \____\__,_|_|   \__|   */
 /*          |_|   |_|                                    */
 /* ===================================================== */
+[[nodiscard]] snake::GridLocation make_apple() noexcept {
+  [[maybe_unused]] uint32_t prev_apple;
+  while (true) {
+    const uint32_t seed{get_rand_32()};
+    /* play area is always 31x31... this makes the modulo math easy... what a
+     * COINCIDENCE
+     *
+     * Anyways, valid x,y locations for apples are
+     *   in the range [1,31]
+     *   not under a wall
+     */
+    static constexpr auto MASK{0b11111U};
+    const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
+    const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
+    const snake::GridLocation apple{.x = xloc, .y = yloc};
+    if (xloc < 1 || yloc < 1 || xloc > 31 || yloc > 31 ||
+        check_for_level_collisions(apple, g_level.lvl) ||
+        check_for_apple_collision(apple, prev_apple)) {
+      continue;
+    }
+    return apple;
+  }
+}
+
+void add_apples(uint32_t count) noexcept {
+  const uint32_t room_left{g_apple_locations.capacity() -
+                           g_apple_locations.size()};
+  const uint32_t to_add{count < room_left ? count : room_left};
+  g_apple_locations.resize(g_apple_locations.size() + to_add);
+  for (uint32_t idx = 0; idx < to_add; ++idx) {
+    g_apple_locations.push_back(make_apple());
+  }
+}
+void draw_apples() noexcept {
+  /* and draw the apples */
+  for (const auto apple : g_apple_locations) {
+    draw_grid_tile(apple.x, apple.y, snake::AppleTile);
+  }
+}
 
 void init_apples() noexcept {
   /* if there are already apples, i.e. the level restarted, clear the old ones
    */
   for (const auto apple : g_apple_locations) {
-    const auto [xx, yy]{to_pixel_xy(apple)};
-    screen::draw_tile(xx, yy, snake::BackgroundTile);
+    draw_grid_tile(apple.x, apple.y, snake::BackgroundTile);
   }
 
   /* Naive impl, but whatever... just places an apple somewhere
@@ -950,37 +1026,12 @@ void init_apples() noexcept {
    * If we collide, just try again.
    *
    */
-  [[maybe_unused]] uint32_t prev_apple;
   g_apple_locations.clear();
   for (uint32_t idx = 0; idx < NUMBER_OF_APPLES; ++idx) {
-    while (true) {
-      const uint32_t seed{get_rand_32()};
-      /* play area is always 31x31... this makes the modulo math easy... what a
-       * COINCIDENCE
-       *
-       * Anyways, valid x,y locations for apples are
-       *   in the range [1,31]
-       *   not under a wall
-       */
-      static constexpr auto MASK{0b11111U};
-      const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
-      const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
-      const snake::GridLocation apple{.x = xloc, .y = yloc};
-      if (xloc > 31 || yloc > 31 ||
-          check_for_level_collisions(apple, g_level.lvl) ||
-          check_for_apple_collision(apple, prev_apple)) {
-        continue;
-      }
-      g_apple_locations.push_back(apple);
-      break;
-    }
+    g_apple_locations.push_back(make_apple());
   }
 
-  /* and draw the apples */
-  for (const auto apple : g_apple_locations) {
-    const auto [xx, yy]{to_pixel_xy(apple)};
-    screen::draw_tile(xx, yy, snake::AppleTile);
-  }
+  draw_apples();
 }
 
 [[nodiscard]] uint32_t get_number_of_apples() noexcept {
@@ -990,32 +1041,6 @@ void init_apples() noexcept {
 void remove_apple(uint32_t apple_idx) noexcept {
   const auto itr{std::next(g_apple_locations.begin(), apple_idx)};
   g_apple_locations.erase(itr);
-}
-
-/**
- * What's the logic here?  Hmm...
- */
-void add_apple() noexcept {
-  static_assert(sizeof(grid_t) == 1,
-                "add_apple only works with 8-bit grid points right meow");
-
-  const uint32_t seed{get_rand_32()};
-
-  /* Some rules:
-   *   We never put an apple within N points of the head
-   *   We put the apple in a quadrant the head is not
-   *   can't put an apple on any border points
-   */
-
-  /* first, figure out which quadrant the snake is in
-   * next, pick a quadrant by
-   *   counting the number of set bits in the top 3 bits of the seed.
-   *   add the number of set bits to the snake's current quadrant, mod 4
-   * then, divide this quadrant by 8 on each side by:
-   *    say the quadrant is X by Y points in size
-   *    ([2:0] * X + 4) / 8 = grid point x
-   *    ([5:3] * Y + 4) / 8 = grid point y
-   */
 }
 
 /* ======================================================= */
@@ -1061,6 +1086,75 @@ UserInput process_user_input() {
   return user_has_input;
 }
 
+/* ==================================================================== *
+                     _____ _
+                    |_   _(_)_ __ ___   ___ _ __
+                      | | | | '_ ` _ \ / _ \ '__|
+                      | | | | | | | | |  __/ |
+                      |_| |_|_| |_| |_|\___|_|
+
+ * ==================================================================== */
+/* 8 times the side length of the play area */
+constexpr uint32_t TIMER_BIT_DEPTH{8};
+constexpr int TIMER_START_VALUE{1 << TIMER_BIT_DEPTH}; /* aka, 32*8 = 256 */
+
+int g_timer{TIMER_START_VALUE};
+
+void reset_timer() noexcept { g_timer = TIMER_START_VALUE; }
+
+void process_timer() noexcept {
+  if (g_timer > 0) {
+    --g_timer;
+  } else {
+    g_timer = 0;
+  }
+}
+
+[[nodiscard]] bool check_timer_expired() noexcept { return g_timer == 0; }
+
+void draw_timer() noexcept {
+  /* now, here's where things get interesting
+   *
+   * it's rendered as a green line that slowly goes down
+   * alternatively, it's a black line that slowly grows from the right side,
+   * replacing the existing green bar.
+   *
+   * timer_pixel_width * g_timer / TIMER_START_VALUE == length of bar that is
+   * green timer_pixel_width - length of bar that is green == length of bar
+   * that is black
+   *
+   */
+
+  const uint32_t row_start{g_top_panel_cfg.row_start_timer};
+  const uint32_t row_stop{row_start + TIMER_HEIGHT_PIX};
+  const uint32_t col_start{g_top_panel_cfg.col_start_timer};
+  const uint32_t col_stop{col_start + g_top_panel_cfg.timer_col_length};
+
+  const uint32_t green_length{
+      (g_top_panel_cfg.timer_col_length * static_cast<uint32_t>(g_timer)) >>
+      TIMER_BIT_DEPTH};
+  const uint32_t black_length{g_top_panel_cfg.timer_col_length - green_length};
+
+  static constexpr uint8_t timer_green_idx{snake::TIMEGRN};
+  static constexpr uint8_t timer_black_idx{snake::BLACK};
+  static constexpr screen::Tile black_pix{
+      .side_length = 1, .format = snake::TILE_FORMAT, .data = &timer_black_idx};
+  static constexpr screen::Tile green_pix{
+      .side_length = 1, .format = snake::TILE_FORMAT, .data = &timer_green_idx};
+
+  /* draw green first, then black */
+  for (uint32_t yy = row_start; yy < row_stop; ++yy) {
+    for (uint32_t xx = col_start; xx < col_start + green_length; ++xx) {
+      screen::draw_tile(xx, yy, green_pix);
+    }
+  }
+  for (uint32_t yy = row_start; yy < row_stop; ++yy) {
+    for (uint32_t xx = col_start + green_length; xx < col_stop; ++xx) {
+      screen::draw_tile(xx, yy, black_pix);
+    }
+  }
+}
+
 } // namespace
 
 /* ==================================================================== */
@@ -1089,16 +1183,19 @@ void run() {
 
   static constexpr uint8_t GROWING_START{4};
   uint32_t lvl_idx{};
-  uint8_t growing{GROWING_START + lvl_idx};
+  uint32_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
   int8_t lives{3};
   /* game loop! */
   while (user_desires_play) {
     init_level(snake::levels[lvl_idx]);
+    draw_level_name(lvl_idx + 1);
     init_snake(SNAKE_START, SNAKE_DIR);
     init_apples(); /* just places an apple somewhere */
     update_lives_on_screen(lives);
     draw_this_level(g_level.lvl);
+    reset_timer();
+    draw_timer();
     bool initial_tick{true};
     bool level_is_active{true};
     while (level_is_active) {
@@ -1177,6 +1274,15 @@ void run() {
           initial_tick = true;
           lvl_idx = lvl_idx == snake::levels.size() - 1 ? 0 : lvl_idx + 1;
         }
+
+        /* timer logic here? */
+        process_timer();
+        if (check_timer_expired()) {
+          add_apples(NUMBER_OF_APPLES);
+          draw_apples();
+          reset_timer();
+        }
+        draw_timer();
       }
     }
   }

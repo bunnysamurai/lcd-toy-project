@@ -26,6 +26,7 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 255, .g = 255, .b = 0},       /* yel, snake shine */
     screen::Clut{.r = 0, .g = 0, .b = 200},         /* blue border shade */
     screen::Clut{.r = 255>>1, .g = 255>>1, .b = 0}, /* snake shadow */
+    screen::Clut{.r = 0, .g = 255, .b = 0}, /* timer green */
     /* clang-format on */
 };
 inline constexpr uint8_t BLACK{0};
@@ -41,6 +42,7 @@ inline constexpr uint8_t YEL{7};
 inline constexpr uint8_t SKINSHN{YEL};
 inline constexpr uint8_t BDRDIM{8};
 inline constexpr uint8_t SDWSKIN{9};
+inline constexpr uint8_t TIMEGRN{10};
 
 inline constexpr screen::Format TILE_FORMAT{screen::Format::RGB565_LUT4};
 
