@@ -15,6 +15,7 @@
 #endif
 
 #include "screen/TileDef.h"
+#include "screen/glyphs/letters.hpp"
 #include "screen/screen.hpp"
 
 #include "embp/circular_array.hpp"
@@ -201,8 +202,6 @@ void init_level(snake::Level lvl) noexcept {
   clear_screen_grid();
   clear_border_grid();
 }
-
-void draw_level_name(int name) noexcept {}
 
 [[nodiscard]] constexpr uint8_t encode_four_neighbours(grid_t row,
                                                        grid_t col) noexcept {
@@ -634,6 +633,9 @@ struct TopPanelCfg {
   uint16_t row_start_timer;
   uint16_t col_start_timer;
   uint16_t timer_col_length;
+
+  uint16_t row_start_score;
+  uint16_t col_start_score;
 };
 TopPanelCfg g_top_panel_cfg;
 
@@ -648,6 +650,7 @@ void init_top_panel_config(const TileGridCfg &grid_cfg) {
   static_assert(HEADTILE.side_length == TAILTILE.side_length);
   static constexpr auto TILE_INC{HEADTILE.side_length};
 
+  const screen::Dimensions dims{screen::get_virtual_screen_size()};
   /*
 
     hs = lives_height_tiles * TILE_INC
@@ -678,6 +681,10 @@ void init_top_panel_config(const TileGridCfg &grid_cfg) {
   g_top_panel_cfg.timer_col_length =
       grid_cfg.grid_width * grid_cfg.xdimension.scale -
       grid_cfg.xdimension.off * 2;
+
+  g_top_panel_cfg.row_start_score = HEIGHT_GAPS;
+  g_top_panel_cfg.col_start_score =
+      dims.width - (grid_cfg.xdimension.off + 6 * glyphs::tile::width());
 }
 
 void update_lives_on_screen(uint8_t lives) noexcept {
@@ -1155,6 +1162,99 @@ void draw_timer() noexcept {
   }
 }
 
+/* ==================================================================== *
+                   ____
+                  / ___|  ___ ___  _ __ ___
+                  \___ \ / __/ _ \| '__/ _ \
+                   ___) | (_| (_) | | |  __/
+                  |____/ \___\___/|_|  \___|
+
+ * ==================================================================== */
+uint32_t g_score;
+
+enum struct ScoreSource { RED_APPLE, GREEN_APPLE, TIMER };
+
+[[nodiscard]] uint32_t determine_score(ScoreSource source) noexcept {
+  switch (source) {
+  case ScoreSource::RED_APPLE:
+    return 1U;
+  case ScoreSource::GREEN_APPLE:
+    return get_rand_32() & 0b1 + 2;
+  case ScoreSource::TIMER:
+    return 0;
+  }
+  return 0;
+}
+void reset_score() noexcept { g_score = 0; }
+void increment_score(uint32_t value) noexcept { g_score += value; }
+[[nodiscard]] uint32_t get_score() noexcept { return g_score; }
+
+void draw_score() {
+  /* we have 6 decimal digits:
+   *    0 0 0 0 0 0
+   */
+
+  std::array<uint8_t, 6> digits{};
+  uint32_t start{digits.size()};
+  uint32_t score{g_score};
+  uint32_t compare_value{10 * 10 * 10 * 10 * 10};
+  while (start > 1) {
+    const auto idx{(start - 1)};
+    while (score >= compare_value) {
+      score -= compare_value;
+      ++digits[digits.size() - start];
+    }
+    --start;
+    compare_value /= 10;
+  }
+  digits.back() = score;
+
+  std::array<uint8_t, 4 * glyphs::tile::height()> letter_4bpp_data{};
+  screen::Tile letter_tile{.side_length = glyphs::tile::width(),
+                           .format = screen::Format::RGB565_LUT4,
+                           .data = std::data(letter_4bpp_data)};
+
+  auto &&copy_tile_to_4bpp_buffer{[](auto &tile_4bpp, const auto &tile_1bpp) {
+    const auto *p_in{tile_1bpp.data};
+    auto *p_out{std::data(tile_4bpp)};
+
+    for (uint32_t yy = 0; yy < glyphs::tile::height(); ++yy) {
+      auto inrow{p_in[yy]};
+      for (uint32_t xx = 0; xx < glyphs::tile::width(); xx += 2) {
+        const uint32_t outpixloc{yy * glyphs::tile::width() + xx};
+        auto &out{p_out[outpixloc >> 1]};
+
+        switch (inrow & 0b11) {
+        case 0b00:
+          out = snake::WHITE << 4 | snake::WHITE;
+          break;
+        case 0b01:
+          out = snake::WHITE << 4 | snake::BLACK;
+          break;
+        case 0b10:
+          out = snake::BLACK << 4 | snake::WHITE;
+          break;
+        case 0b11:
+          out = snake::BLACK << 4 | snake::BLACK;
+          break;
+        }
+        inrow >>= 2;
+      }
+    }
+  }};
+
+  /* go from msd to lsd */
+  const auto row_start{g_top_panel_cfg.row_start_score};
+  auto col_start{g_top_panel_cfg.col_start_score};
+  for (const auto digit : digits) {
+    const auto tile_1bpp{
+        glyphs::tile::decode_ascii(static_cast<char>(digit + 0x30))};
+    copy_tile_to_4bpp_buffer(letter_4bpp_data, tile_1bpp);
+    screen::draw_tile(col_start, row_start, letter_tile);
+    col_start += tile_1bpp.side_length;
+  }
+}
+
 } // namespace
 
 /* ==================================================================== */
@@ -1189,13 +1289,15 @@ void run() {
   /* game loop! */
   while (user_desires_play) {
     init_level(snake::levels[lvl_idx]);
-    draw_level_name(lvl_idx + 1);
+    // draw_level_name(lvl_idx + 1);
     init_snake(SNAKE_START, SNAKE_DIR);
     init_apples(); /* just places an apple somewhere */
     update_lives_on_screen(lives);
     draw_this_level(g_level.lvl);
     reset_timer();
     draw_timer();
+    reset_score();
+    draw_score();
     bool initial_tick{true};
     bool level_is_active{true};
     while (level_is_active) {
@@ -1236,6 +1338,8 @@ void run() {
         switch (collision) {
         case Collision::APPLE:
           remove_apple(g_collided_apple);
+          increment_score(determine_score(ScoreSource::RED_APPLE));
+          draw_score();
           growing += APPLE_GROWTH_TICKS;
           break;
         case Collision::BORDER:
