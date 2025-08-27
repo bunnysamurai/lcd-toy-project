@@ -688,6 +688,7 @@ void init_top_panel_config(const TileGridCfg &grid_cfg) {
 }
 
 void update_lives_on_screen(uint8_t lives) noexcept {
+  static constexpr int DRAW_LIMIT{7}; /* TODO this also needs tuning */
   static constexpr auto HEADTILE{
       snake::to_snake_tile(snake::SnakeBodyPart::HEAD_UP)};
   static constexpr auto BODYTILE{
@@ -708,13 +709,14 @@ void update_lives_on_screen(uint8_t lives) noexcept {
   /* these are drawn outside of the grid, so we need to handle pixel placement
    * manually */
   auto col_start{g_top_panel_cfg.col_start_lives};
-  for (int ii = 0; ii < 5; ++ii) {
+  for (int ii = 0; ii < DRAW_LIMIT; ++ii) {
     const auto col{col_start + ii * col_inc};
     for (int rs = 0; rs < g_top_panel_cfg.lives_height_tiles; ++rs) {
       screen::draw_tile(col, row_start + rs * TILE_INC, snake::BackgroundTile);
     }
   }
-  for (; lives > 0; --lives) {
+  const auto update_limit{lives > DRAW_LIMIT ? DRAW_LIMIT : lives};
+  for (int ii = 0; ii < update_limit; ++ii) {
     screen::draw_tile(col_start, row_start, HEADTILE);
     for (int rs = 1; rs < g_top_panel_cfg.lives_height_tiles - 1; ++rs) {
       screen::draw_tile(col_start, row_start + rs * TILE_INC, BODYTILE);
@@ -1170,7 +1172,9 @@ void draw_timer() noexcept {
                   |____/ \___\___/|_|  \___|
 
  * ==================================================================== */
+constexpr uint32_t EXTRA_LIFE_INTERVAL{50};
 uint32_t g_score;
+uint32_t g_next_life_threshold{EXTRA_LIFE_INTERVAL};
 
 enum struct ScoreSource { RED_APPLE, GREEN_APPLE, TIMER };
 
@@ -1181,7 +1185,8 @@ enum struct ScoreSource { RED_APPLE, GREEN_APPLE, TIMER };
   case ScoreSource::GREEN_APPLE:
     return get_rand_32() & 0b1 + 2;
   case ScoreSource::TIMER:
-    return 0;
+    return ((20 * g_timer) >> TIMER_BIT_DEPTH) +
+           3; /* TODO this needs some tuning */
   }
   return 0;
 }
@@ -1255,6 +1260,13 @@ void draw_score() {
   }
 }
 
+void update_lives_based_on_score(int8_t &lives) noexcept {
+  if (g_score >= g_next_life_threshold) {
+    ++lives;
+    g_next_life_threshold += EXTRA_LIFE_INTERVAL;
+  }
+}
+
 } // namespace
 
 /* ==================================================================== */
@@ -1286,8 +1298,10 @@ void run() {
   uint32_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
   int8_t lives{3};
+  reset_score();
   /* game loop! */
   while (user_desires_play) {
+    /* stuff that needs to happen on start of every new level */
     init_level(snake::levels[lvl_idx]);
     // draw_level_name(lvl_idx + 1);
     init_snake(SNAKE_START, SNAKE_DIR);
@@ -1296,13 +1310,13 @@ void run() {
     draw_this_level(g_level.lvl);
     reset_timer();
     draw_timer();
-    reset_score();
     draw_score();
     bool initial_tick{true};
     bool level_is_active{true};
     while (level_is_active) {
       const auto now{get_absolute_time()};
 
+      /* process user input and take action immediately if required */
       const auto user_input = process_user_input();
 
       if (user_input == UserInput::QUIT) {
@@ -1318,6 +1332,8 @@ void run() {
       if (absolute_time_diff_us(last_time, now) > GAME_TICK_US ||
           user_input == UserInput::CHANGE_DIRECTION) {
         last_time = now;
+
+        update_lives_on_screen(lives);
 
         update_snake_state(growing > 0);
 
@@ -1339,6 +1355,7 @@ void run() {
         case Collision::APPLE:
           remove_apple(g_collided_apple);
           increment_score(determine_score(ScoreSource::RED_APPLE));
+          update_lives_based_on_score(lives);
           draw_score();
           growing += APPLE_GROWTH_TICKS;
           break;
@@ -1362,14 +1379,19 @@ void run() {
           break;
         }
 
+        /* draw the snake */
         update_borders(move_point(SNAKE_START, SNAKE_DIR));
         draw_snake();
 
+        /* open the pod bay doors, HAL */
         if (get_number_of_apples() == 0) {
           g_level.exit_is_open = true;
         }
 
+        /* check if the snake has exited */
         if (collision == Collision::EXIT) {
+          increment_score(determine_score(ScoreSource::TIMER));
+          update_lives_based_on_score(lives);
           run_cleanup_animation();
           growing = GROWING_START + lvl_idx;
           cleanup_the_body();
