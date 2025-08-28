@@ -28,6 +28,7 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 255>>1, .g = 255>>1, .b = 0}, /* snake shadow */
     screen::Clut{.r = 0, .g = 255, .b = 0},         /* timer green */
     screen::Clut{.r = 255, .g = 255, .b = 255},     /* scoreboard white */
+    screen::Clut{.r = 220, .g = 220, .b = 0},       /* green apple yel */
     /* clang-format on */
 };
 inline constexpr uint8_t BLACK{0};
@@ -45,6 +46,7 @@ inline constexpr uint8_t BDRDIM{8};
 inline constexpr uint8_t SDWSKIN{9};
 inline constexpr uint8_t TIMEGRN{10};
 inline constexpr uint8_t WHITE{11};
+inline constexpr uint8_t GRNAPP{12};
 
 inline constexpr screen::Format TILE_FORMAT{screen::Format::RGB565_LUT4};
 
@@ -702,6 +704,22 @@ inline constexpr auto Apple_Tile_Data{
 inline constexpr screen::Tile AppleTile{.side_length = AppleTile_SideLength,
                                         .format = TILE_FORMAT,
                                         .data = std::data(Apple_Tile_Data)};
+inline constexpr auto Green_Apple_Tile_Data{
+    /* clang-format off */
+        embp::pfold(
+            BLACK, BLACK, BLACK, BLACK, GREEN, BLACK, BLACK,0,
+            BLACK, BLACK, BLACK, GREEN, BLACK, BLACK, BLACK,0,
+            BLACK,   YEL,   GRNAPP, GREEN,  GRNAPP,   GRNAPP, BLACK,0,
+            BLACK,   GRNAPP,   YEL,   GRNAPP,   GRNAPP, BLACK, BLACK,0,
+            BLACK,   GRNAPP,   YEL,   GRNAPP,   GRNAPP,   GRNAPP, BLACK,0,
+            BLACK,   GRNAPP,   GRNAPP,   GRNAPP,   GRNAPP,   GRNAPP, BLACK,0,
+            BLACK, BLACK,   GRNAPP,   GRNAPP,   GRNAPP, BLACK, BLACK,0)
+    /* clang-format on */
+};
+inline constexpr screen::Tile GreenAppleTile{
+    .side_length = AppleTile_SideLength,
+    .format = TILE_FORMAT,
+    .data = std::data(Green_Apple_Tile_Data)};
 
 inline constexpr size_t BackgroundTile_SideLength{GRID_SPACE_PIX};
 inline constexpr auto Background_Tile_Data{

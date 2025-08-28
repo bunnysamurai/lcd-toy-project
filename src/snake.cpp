@@ -34,7 +34,7 @@ using snake::pix_t;
 /* Some game configurations */
 constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
     1}; /* basically how often we poll for input */
-constexpr auto GAME_TICK_US{300000U};
+constexpr auto GAME_TICK_US{250000U};
 constexpr auto APPLE_GROWTH_TICKS{3U};
 constexpr auto NUMBER_OF_APPLES{10U};
 
@@ -50,11 +50,6 @@ struct ScreenLocation {
   pix_t x;
   pix_t y;
 };
-
-[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
-                                        snake::GridLocation rhs) noexcept {
-  return lhs.x == rhs.x && lhs.y == rhs.y;
-}
 
 struct TileTransform {
   pix_t off;
@@ -96,11 +91,32 @@ struct LevelState {
   snake::Level lvl;
 };
 
+/* apples only live on the grid, which is 31x31
+ * which means, only need 5 bits per axis to locate them
+ * we'll use one of our extra bits to mark if the apple is
+ * green or not
+ */
+struct Apple {
+  grid_t x;
+  grid_t y : 7;
+  bool is_green : 1;
+};
+static_assert(sizeof(Apple) == 2);
+
+[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
+                                        Apple rhs) noexcept {
+  return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+[[nodiscard]] constexpr bool operator==(Apple lhs,
+                                        snake::GridLocation rhs) noexcept {
+  return rhs == lhs;
+}
+
 TileGridCfg g_tile_grid;
 SnakeState g_snake_state;
 LevelState g_level;
 uint32_t g_collided_apple;
-embp::variable_array<snake::GridLocation, NUMBER_OF_APPLES * NUMBER_OF_APPLES>
+embp::variable_array<Apple, NUMBER_OF_APPLES * NUMBER_OF_APPLES>
     g_apple_locations;
 std::array<uint32_t, snake::PLAY_SIZE>
     g_bgrid; /* bgrid = border grid, I guess */
@@ -541,7 +557,7 @@ void draw_snake() {
 }
 
 void run_cleanup_animation() noexcept {
-  static constexpr auto ANIMATION_TICK_US{GAME_TICK_US >> 1};
+  static constexpr auto ANIMATION_TICK_US{GAME_TICK_US >> 2};
   static constexpr auto BODYTILE{
       snake::to_snake_tile(snake::SnakeBodyPart::BODY_UP)};
 
@@ -682,9 +698,10 @@ void init_top_panel_config(const TileGridCfg &grid_cfg) {
       grid_cfg.grid_width * grid_cfg.xdimension.scale -
       grid_cfg.xdimension.off * 2;
 
-  g_top_panel_cfg.row_start_score = HEIGHT_GAPS;
+  g_top_panel_cfg.row_start_score =
+      HEIGHT_GAPS + ((HEIGHT_LIVES - 2 * glyphs::tile::width()) >> 1);
   g_top_panel_cfg.col_start_score =
-      dims.width - (grid_cfg.xdimension.off + 6 * glyphs::tile::width());
+      dims.width - (grid_cfg.xdimension.off + 2 * 6 * glyphs::tile::width());
 }
 
 void update_lives_on_screen(uint8_t lives) noexcept {
@@ -699,12 +716,20 @@ void update_lives_on_screen(uint8_t lives) noexcept {
   static_assert(HEADTILE.side_length == TAILTILE.side_length);
   static constexpr auto TILE_INC{HEADTILE.side_length};
 
+  static uint8_t prev_lives{255};
+
   const auto row_start{g_top_panel_cfg.row_start_lives};
   const auto col_inc{g_top_panel_cfg.col_inc_lives};
 
   if (lives > 0) {
     --lives;
   }
+
+  /* let's prevent redrawing stuff if we don't need to... */
+  if (prev_lives == lives) {
+    return;
+  }
+  prev_lives = lives;
 
   /* these are drawn outside of the grid, so we need to handle pixel placement
    * manually */
@@ -982,7 +1007,7 @@ check_for_collisions(snake::GridLocation point) noexcept {
 /*  /_/   \_\ .__/| .__/|_|\___|  \____\__,_|_|   \__|   */
 /*          |_|   |_|                                    */
 /* ===================================================== */
-[[nodiscard]] snake::GridLocation make_apple() noexcept {
+[[nodiscard]] Apple make_apple() noexcept {
   [[maybe_unused]] uint32_t prev_apple;
   while (true) {
     const uint32_t seed{get_rand_32()};
@@ -996,10 +1021,10 @@ check_for_collisions(snake::GridLocation point) noexcept {
     static constexpr auto MASK{0b11111U};
     const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
     const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
-    const snake::GridLocation apple{.x = xloc, .y = yloc};
+    const Apple apple{.x = xloc, .y = yloc, .is_green = false};
     if (xloc < 1 || yloc < 1 || xloc > 31 || yloc > 31 ||
-        check_for_level_collisions(apple, g_level.lvl) ||
-        check_for_apple_collision(apple, prev_apple)) {
+        check_for_level_collisions({.x = apple.x, .y = apple.y}, g_level.lvl) ||
+        check_for_apple_collision({.x = apple.x, .y = apple.y}, prev_apple)) {
       continue;
     }
     return apple;
@@ -1015,10 +1040,18 @@ void add_apples(uint32_t count) noexcept {
     g_apple_locations.push_back(make_apple());
   }
 }
-void draw_apples() noexcept {
-  /* and draw the apples */
-  for (const auto apple : g_apple_locations) {
+
+void draw_apple(const Apple &apple) noexcept {
+  if (apple.is_green) {
+    draw_grid_tile(apple.x, apple.y, snake::GreenAppleTile);
+  } else {
     draw_grid_tile(apple.x, apple.y, snake::AppleTile);
+  }
+}
+
+void draw_apples() noexcept {
+  for (const auto apple : g_apple_locations) {
+    draw_apple(apple);
   }
 }
 
@@ -1050,6 +1083,22 @@ void init_apples() noexcept {
 void remove_apple(uint32_t apple_idx) noexcept {
   const auto itr{std::next(g_apple_locations.begin(), apple_idx)};
   g_apple_locations.erase(itr);
+}
+
+/* there's a 1-in-MERP chance a red apple turn green */
+void process_adding_green_apple() noexcept {
+  const auto roll{get_rand_32()};
+
+  if ((roll & 0b1111111) == 0) {
+    /* pick the first apple that isn't red, and make it green */
+    for (auto &apple : g_apple_locations) {
+      if (!apple.is_green) {
+        apple.is_green = true;
+        draw_apple(apple);
+        break;
+      }
+    }
+  }
 }
 
 /* ======================================================= */
@@ -1183,22 +1232,22 @@ enum struct ScoreSource { RED_APPLE, GREEN_APPLE, TIMER };
   case ScoreSource::RED_APPLE:
     return 1U;
   case ScoreSource::GREEN_APPLE:
-    return get_rand_32() & 0b1 + 2;
+    return (get_rand_32() & 0b1) + 2;
   case ScoreSource::TIMER:
-    return ((20 * g_timer) >> TIMER_BIT_DEPTH) +
+    return ((10 * g_timer) >> TIMER_BIT_DEPTH) +
            3; /* TODO this needs some tuning */
   }
   return 0;
 }
 void reset_score() noexcept { g_score = 0; }
+
 void increment_score(uint32_t value) noexcept { g_score += value; }
+
 [[nodiscard]] uint32_t get_score() noexcept { return g_score; }
 
 void draw_score() {
-  /* we have 6 decimal digits:
-   *    0 0 0 0 0 0
-   */
 
+  /* convert integral score into 6 decimal digits */
   std::array<uint8_t, 6> digits{};
   uint32_t start{digits.size()};
   uint32_t score{g_score};
@@ -1214,36 +1263,25 @@ void draw_score() {
   }
   digits.back() = score;
 
-  std::array<uint8_t, 4 * glyphs::tile::height()> letter_4bpp_data{};
-  screen::Tile letter_tile{.side_length = glyphs::tile::width(),
-                           .format = screen::Format::RGB565_LUT4,
-                           .data = std::data(letter_4bpp_data)};
+  /* convert the existing 1bpp number glyphs into double-sized 4bpp versions */
+  std::array<uint8_t, 4 * 4 * glyphs::tile::height()> letter_4bpp_data{};
+  const screen::Tile letter_tile{.side_length = glyphs::tile::width() * 2,
+                                 .format = screen::Format::RGB565_LUT4,
+                                 .data = std::data(letter_4bpp_data)};
 
   auto &&copy_tile_to_4bpp_buffer{[](auto &tile_4bpp, const auto &tile_1bpp) {
     const auto *p_in{tile_1bpp.data};
     auto *p_out{std::data(tile_4bpp)};
 
-    for (uint32_t yy = 0; yy < glyphs::tile::height(); ++yy) {
-      auto inrow{p_in[yy]};
-      for (uint32_t xx = 0; xx < glyphs::tile::width(); xx += 2) {
-        const uint32_t outpixloc{yy * glyphs::tile::width() + xx};
+    for (uint32_t yy = 0; yy < glyphs::tile::height() * 2; ++yy) {
+      auto inrow{p_in[yy >> 1]};
+      for (uint32_t xx = 0; xx < glyphs::tile::width() * 2; xx += 2) {
+        const uint32_t outpixloc{yy * glyphs::tile::width() * 2 + xx};
         auto &out{p_out[outpixloc >> 1]};
 
-        switch (inrow & 0b11) {
-        case 0b00:
-          out = snake::WHITE << 4 | snake::WHITE;
-          break;
-        case 0b01:
-          out = snake::WHITE << 4 | snake::BLACK;
-          break;
-        case 0b10:
-          out = snake::BLACK << 4 | snake::WHITE;
-          break;
-        case 0b11:
-          out = snake::BLACK << 4 | snake::BLACK;
-          break;
-        }
-        inrow >>= 2;
+        out = inrow & 0b1 ? snake::WHITE << 4 | snake::WHITE
+                          : snake::BLACK << 4 | snake::BLACK;
+        inrow >>= 1;
       }
     }
   }};
@@ -1256,7 +1294,7 @@ void draw_score() {
         glyphs::tile::decode_ascii(static_cast<char>(digit + 0x30))};
     copy_tile_to_4bpp_buffer(letter_4bpp_data, tile_1bpp);
     screen::draw_tile(col_start, row_start, letter_tile);
-    col_start += tile_1bpp.side_length;
+    col_start += letter_tile.side_length;
   }
 }
 
@@ -1335,6 +1373,8 @@ void run() {
 
         update_lives_on_screen(lives);
 
+        process_adding_green_apple();
+
         update_snake_state(growing > 0);
 
         if (growing > 0) {
@@ -1353,8 +1393,11 @@ void run() {
         }
         switch (collision) {
         case Collision::APPLE:
+          increment_score(
+              determine_score(g_apple_locations[g_collided_apple].is_green
+                                  ? ScoreSource::GREEN_APPLE
+                                  : ScoreSource::RED_APPLE));
           remove_apple(g_collided_apple);
-          increment_score(determine_score(ScoreSource::RED_APPLE));
           update_lives_based_on_score(lives);
           draw_score();
           growing += APPLE_GROWTH_TICKS;
@@ -1367,10 +1410,12 @@ void run() {
           update_lives_on_screen(lives);
           init_snake(SNAKE_START, SNAKE_DIR);
           initial_tick = true;
-          level_is_active = lives > 0;
+          // level_is_active = lives > 0;
+          level_is_active = false;
           /* TODO this is only for development, and should trigger a Game Over,
            * instead */
-          if (!level_is_active) {
+          // if (!level_is_active) {
+          if (lives == 0) {
             lives = 3;
           }
           continue;

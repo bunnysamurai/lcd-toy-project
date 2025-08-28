@@ -22,5 +22,10 @@ struct GridLocation {
   grid_t y;
 };
 
+[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
+                                        snake::GridLocation rhs) noexcept {
+  return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+
 } // namespace snake
 #endif
