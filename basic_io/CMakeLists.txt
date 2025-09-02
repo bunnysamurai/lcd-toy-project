@@ -9,7 +9,7 @@ add_library(basic_io
     TextConsole.cpp
 )
 
-set(BASIC_IO_DEPS pico_stdio bsio_screen)
+set(BASIC_IO_DEPS pico_stdio bsio_screen bsio_gamepad)
 
 if( BUILD_WITH_STDIO_USB )
     message(STATUS "stdio over USB")
@@ -27,3 +27,4 @@ target_include_directories(basic_io PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(basic_io PUBLIC  ${BASIC_IO_DEPS})
 
 add_subdirectory(screen)
+add_subdirectory(gamepad)

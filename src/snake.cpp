@@ -18,13 +18,17 @@
 #include "screen/glyphs/letters.hpp"
 #include "screen/screen.hpp"
 
+#include "gamepad/gamepad.hpp"
+
 #include "embp/circular_array.hpp"
 
 #include "snake_common.hpp"
 #include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"
 
+#define SNAKE_USE_GAMEPAD
 #define USE_BGRID_OPTIMIZATION
+
 namespace {
 
 using snake::Direction;
@@ -1113,6 +1117,31 @@ enum struct UserInput { QUIT, PLAY, CHANGE_DIRECTION, NEXT_LEVEL };
 
 UserInput process_user_input() {
   UserInput user_has_input{UserInput::PLAY};
+#ifdef SNAKE_USE_GAMEPAD
+  sleep_ms(KEYBOARD_POLL_MS.count());
+  const gamepad::five::State key_pressed{gamepad::five::get()};
+
+  if (key_pressed.etc) {
+    return UserInput::QUIT;
+  }
+
+  int user_key{0};
+  if (key_pressed.up) {
+    user_key = 'i';
+  } else if (key_pressed.left) {
+    user_key = 'j';
+  } else if (key_pressed.down) {
+    user_key = 'k';
+  } else if (key_pressed.right) {
+    user_key = 'l';
+  } else {
+    user_key = 0;
+  }
+
+  if (change_snake_direction(user_key)) {
+    user_has_input = UserInput::CHANGE_DIRECTION;
+  }
+#else
 #ifdef BSIO_KEYBOARD_AVAILABLE
   keyboard::result_t key_status;
   const int key_pressed{keyboard::wait_key(KEYBOARD_POLL_MS, key_status)};
@@ -1139,6 +1168,7 @@ UserInput process_user_input() {
       user_has_input = UserInput::CHANGE_DIRECTION;
     }
   }
+#endif
 #endif
 
   return user_has_input;
@@ -1326,6 +1356,8 @@ void run() {
     return;
   }
 
+  gamepad::five::init();
+
   const snake::GridLocation SNAKE_START{
       .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
       .y = static_cast<grid_t>(g_tile_grid.grid_height - 1)};
@@ -1457,5 +1489,8 @@ void run() {
       }
     }
   }
+
+  gamepad::five::deinit();
+
 }
 } // namespace snake
