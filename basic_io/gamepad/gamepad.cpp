@@ -37,7 +37,7 @@ struct PadControl {
 };
 
 /* our static state for the module*/
-
+bool g_initialized{false};
 static PadControl g_control{
     .poll_interval = DEFAULT_POLL_INTERVAL_US,
 };
@@ -77,13 +77,19 @@ static void configure_gpios() noexcept {
 
 /* we're going to use a timer to periodically poll */
 void init() noexcept {
-  configure_gpios();
-  configure_timer();
+  if (!g_initialized) {
+    configure_gpios();
+    configure_timer();
+    g_initialized = true;
+  }
 }
 
 void deinit() noexcept {
-  /* we'll leave the gpios as-is, but we'll disable our running timer */
-  cancel_alarm(g_control.id);
+  if (g_initialized) {
+    /* we'll leave the gpios as-is, but we'll disable our running timer */
+    cancel_alarm(g_control.id);
+    g_initialized = false;
+  }
 }
 
 [[nodiscard]] State get() noexcept {
