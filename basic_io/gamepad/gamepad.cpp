@@ -16,7 +16,7 @@
 namespace gamepad::five {
 
 /* some defaults */
-static constexpr int64_t DEFAULT_POLL_INTERVAL_US{1000}; /* 1000 Hz? */
+static constexpr int64_t DEFAULT_POLL_INTERVAL_US{10000}; /* ever 10 ms */
 
 /* some bsp level stuff, to be abstracted away? This is for the breadboard
  * setup. */

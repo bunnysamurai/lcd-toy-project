@@ -6,6 +6,7 @@ add_executable(${PROJECT_NAME}
     status_utilities.cpp
     demo.cpp
     snake.cpp
+    ShellCmd_Menu.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

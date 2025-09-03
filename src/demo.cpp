@@ -11,6 +11,7 @@
 #include "pico/stdio.h"
 #include "pico/time.h"
 
+#include "gamepad/gamepad.hpp"
 #include "screen/TileDef.h"
 #include "screen/constexpr_tile_utils.hpp"
 #include "screen/screen.hpp"
@@ -112,6 +113,8 @@ constexpr screen::Tile emerald{.side_length = 8,
                                .data = std::data(emerald_data)};
 
 void run_color_rando_art() noexcept {
+  gamepad::five::init();
+
   static constexpr std::array<screen::Tile, 4> tilelist{gold, green, gold,
                                                         gold};
   const auto dims{screen::get_virtual_screen_size()};
@@ -137,10 +140,22 @@ void run_color_rando_art() noexcept {
   screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
 
   fill_routine(emerald);
+  absolute_time_t prev_time{get_absolute_time()};
+  random_routine();
   while (true) {
-    random_routine();
-    sleep_ms(2000);
+    const auto now{get_absolute_time()};
+    if (absolute_time_diff_us(prev_time, now) > 2000000) {
+      random_routine();
+      prev_time += 2000000;
+    }
+    sleep_ms(1);
+    const auto state{gamepad::five::get()};
+    if (state.etc) {
+      break;
+    }
   }
+
+  gamepad::five::deinit();
 }
 
 void run_text_animation() noexcept {

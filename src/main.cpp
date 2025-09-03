@@ -9,6 +9,7 @@
 #include "pico/stdlib.h"
 
 #include "Shell.h"
+#include "ShellCmd_Menu.hpp"
 #include "bsio.hpp"
 #include "demo.hpp"
 #include "screen/screen.hpp"
@@ -233,6 +234,7 @@ int main() {
         {.id = "demo", .callback = ShellCmd_Demo},
         {.id = "screen", .callback = ShellCmd_Screen},
         {.id = "snake", .callback = ShellCmd_Snake},
+        {.id = "menu", .callback = ShellCmd_Menu},
     };
     const int ADDITIONAL_CMDS_LENGTH =
         sizeof(additional_cmds) / sizeof(ShellFunction_t);
@@ -253,8 +255,9 @@ int main() {
 
   // start by running the demo
   {
-    const char *argvs[2] = {"demo", "rando"};
-    ShellCmd_Demo(2, argvs);
+    // const char *argvs[2] = {"demo", "rando"};
+    // ShellCmd_Demo(2, argvs);
+    ShellCmd_Menu(0, nullptr);
   }
 
   /* launch the shell... does not return */
