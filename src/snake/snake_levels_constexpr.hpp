@@ -5,7 +5,7 @@
 #include <array>
 
 #include "snake_common.hpp"
-#include "utilities.hpp"
+#include "../utilities.hpp"
 
 namespace snake {
 

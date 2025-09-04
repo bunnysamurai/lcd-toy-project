@@ -11,7 +11,7 @@
 #include "demo.hpp"
 #include "gamepad/gamepad.hpp"
 #include "screen/screen.hpp"
-#include "snake.hpp"
+#include "snake/snake.hpp"
 
 namespace {
 

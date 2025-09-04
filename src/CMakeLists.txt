@@ -5,7 +5,7 @@ add_executable(${PROJECT_NAME}
     main.cpp
     status_utilities.cpp
     demo.cpp
-    snake.cpp
+    snake/snake.cpp
     ShellCmd_Menu.cpp
 )
 

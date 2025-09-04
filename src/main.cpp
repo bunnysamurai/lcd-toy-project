@@ -13,7 +13,7 @@
 #include "bsio.hpp"
 #include "demo.hpp"
 #include "screen/screen.hpp"
-#include "snake.hpp"
+#include "snake/snake.hpp"
 #include "status_utilities.hpp"
 
 int mywrap_putchar(int c, FILE *) { return stdio_putchar(c); }
