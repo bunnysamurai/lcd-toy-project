@@ -61,7 +61,7 @@ static void configure_timer() noexcept {
 }
 
 static void configure_gpios() noexcept {
-  /* always set for input, disable pull-up/pull-down */
+  /* always set for input, enable pull-up */
 
   gpio_set_function_masked(GPIOS_USED, GPIO_FUNC_SIO);
   gpio_set_dir_in_masked(GPIOS_USED);
@@ -69,7 +69,7 @@ static void configure_gpios() noexcept {
   uint32_t gpio_pin{GPIOS_USED};
   for (int shift = 0; shift < 32; ++shift) {
     if (gpio_pin & 0b1) {
-      gpio_set_pulls(shift, false, false);
+      gpio_set_pulls(shift, true, false);
     }
     gpio_pin >>= 1;
   }
