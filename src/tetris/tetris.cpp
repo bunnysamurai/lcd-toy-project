@@ -101,6 +101,7 @@ namespace tetris {
 static ThreeBitImage<PLAY_NO_COLS, PLAY_NO_ROWS> g_playfield;
 static bool g_pending_commit{false};
 static bool g_is_active{false};
+static Tetrimino g_next_tetrimino{Tetrimino::Code::A};
 static Tetrimino g_tetrimino{Tetrimino::Code::A};
 static Tetrimino g_prvtetrimino{Tetrimino::Code::A};
 static Location g_location;
@@ -257,13 +258,12 @@ auto get_position(int pos) -> Location {
   return {};
 }
 
-void draw_tetrimino_tile(uint32_t tile_idx, uint32_t grid_x,
-                         uint32_t grid_y) noexcept {
-  const auto [xx, yy]{to_pixel_xy({.x = grid_x, .y = grid_y})};
-  screen::draw_tile(xx, yy, TETRIMINO_TILES[tile_idx]);
+void draw_tetrimino_tile_pix(uint32_t tile_idx, uint32_t pixx,
+                             uint32_t pixy) noexcept {
+  screen::draw_tile(pixx, pixy, TETRIMINO_TILES[tile_idx]);
 }
-void draw_tetrimino_impl(const Tetrimino tetrimino, const Location curloc,
-                         const bool clear) noexcept {
+void draw_tetrimino_impl_pix(const Tetrimino tetrimino, const Location curloc,
+                             const uint8_t tile_idx) noexcept {
   /* we'll hand roll this */
 
   /* tetrimino lives in a 4x4 grid
@@ -271,20 +271,46 @@ void draw_tetrimino_impl(const Tetrimino tetrimino, const Location curloc,
    * rows 1 and 2 are all 4 columns
    * of course we've mapped each bit to a certain location in this 4x4 grid
    */
-  const auto tile_idx{clear ? to_index(Tetrimino::Code::BLANK)
-                            : to_index(tetrimino.code())};
   const auto bits{tetrimino.data()};
   for (int bit_position = 0; bit_position < 0xC; ++bit_position) {
     const auto [x, y]{get_position(bit_position)};
     if ((bits >> bit_position) & 0b1) {
-      draw_tetrimino_tile(tile_idx, curloc.x + x, curloc.y + y);
+      draw_tetrimino_tile_pix(tile_idx, curloc.x + x * SQUARE_SIZE,
+                              curloc.y + y * SQUARE_SIZE);
     }
   }
 }
+void draw_tetrimino_tile(uint32_t tile_idx, uint32_t grid_x,
+                         uint32_t grid_y) noexcept {
+  const auto [xx, yy]{to_pixel_xy({.x = grid_x, .y = grid_y})};
+  draw_tetrimino_tile_pix(tile_idx, xx, yy);
+}
+void draw_tetrimino_impl(const Tetrimino tetrimino, const Location curloc,
+                         const uint8_t tile_idx) noexcept {
+  /* we'll hand roll this */
+
+  /* tetrimino lives in a 4x4 grid
+   * rows 0 and 3 are just columns 1 and 2
+   * rows 1 and 2 are all 4 columns
+   * of course we've mapped each bit to a certain location in this 4x4 grid
+   */
+  const auto [xx, yy]{to_pixel_xy({.x = curloc.x, .y = curloc.y})};
+  draw_tetrimino_impl_pix(tetrimino, {.x = xx, .y = yy}, tile_idx);
+}
 void draw_tetrimino() noexcept {
-  draw_tetrimino_impl(g_prvtetrimino, g_prvlocation, true);
-  draw_tetrimino_impl(g_tetrimino, g_location, false);
+  static Tetrimino previous_spawned{g_next_tetrimino};
+  draw_tetrimino_impl(g_prvtetrimino, g_prvlocation,
+                      to_index(Tetrimino::Code::BLANK));
+  draw_tetrimino_impl(g_tetrimino, g_location, to_index(g_tetrimino.code()));
   g_prvlocation = g_location;
+
+  /* here we'll also draw the preview */
+  const Location loc{.x = g_gui.piece_preview.x + 1,
+                     .y = g_gui.piece_preview.y + 1};
+  draw_tetrimino_impl_pix(previous_spawned, loc,
+                          std::size(TETRIMINO_TILES) - 1);
+  draw_tetrimino_impl_pix(g_next_tetrimino, loc, to_index(g_next_tetrimino.code()));
+  previous_spawned = g_next_tetrimino;
 }
 void draw_playfield() noexcept {
   for (uint32_t yy = 0; yy < PLAY_NO_ROWS; ++yy) {
@@ -434,6 +460,7 @@ void move_this_row_segment(uint16_t start, uint16_t stop) {
 /*                                                                            */
 /* ========================================================================== */
 static constexpr uint32_t GUI_OUTSIDE_BORDER_WIDTH{2};
+static constexpr uint32_t GUI_PREVIEW_BORDER{4};
 static constexpr auto GUI_UNDERLAY_COLOR_MAIN{LGREY};
 static constexpr auto GUI_UNDERLAY_COLOR_SCNDRY{WHITE};
 static constexpr auto GUI_TEXT_COLOR{BLACK};
@@ -492,10 +519,6 @@ void scoring_gui_draw_rectangle_primitive(uint32_t topy, uint32_t leftx,
   }
 }
 void scoring_gui_draw_underlay() {
-  /* TODO of note, the below is a rectangle graphic primitive ;P */
-
-  /* we'll roll this by hand.  First, some tiles. */
-
   /* some helpers */
   const uint32_t topy{g_gui.scoring_box_start.y};
   const uint32_t leftx{g_gui.scoring_box_start.x};
@@ -555,8 +578,24 @@ void scoring_gui_write_text(const char *str, uint32_t yoffset) {
   }
 }
 
-void init_scoring_gui() {
+void scoring_gui_draw_preview_underlay() {
+  const uint32_t topy{g_gui.piece_preview.y};
+  const uint32_t leftx{g_gui.piece_preview.x};
+  const uint32_t rightx{leftx + 4 * SQUARE_SIZE + 2 + 2 * GUI_PREVIEW_BORDER};
+  const uint32_t boty{topy + +4 * SQUARE_SIZE + 2 + 2 * GUI_PREVIEW_BORDER};
+
+  /* bot row and right column */
+  scoring_gui_draw_rectangle_primitive(topy, leftx, boty, rightx, WHITE, 1);
+  /* top row */
+  scoring_gui_draw_rectangle_primitive(topy, leftx, topy + 1, rightx, DRKGRY,
+                                       0);
+  /* left column */
+  scoring_gui_draw_rectangle_primitive(topy, leftx, boty, leftx + 1, DRKGRY, 0);
+}
+
+void init_gui() {
   scoring_gui_draw_underlay();
+  scoring_gui_draw_preview_underlay();
   scoring_gui_write_text("Score:", g_gui.line_score_text.y);
   scoring_gui_write_text("Level:",
                          g_gui.line_score_text.y + glyphs::tile::height() * 2);
@@ -564,15 +603,12 @@ void init_scoring_gui() {
                          g_gui.line_score_text.y + glyphs::tile::height() * 4);
 }
 
-void init_gui() { init_scoring_gui(); }
-
 void scoring_gui_draw_bcd_number(const auto &digits, uint32_t yoffset) {
   screen::letter_4bpp_array_t buffer;
   const screen::Tile tile{.side_length = glyphs::tile::width(),
                           .format = VIDEO_FORMAT,
                           .data = std::data(buffer)};
 
-  // const auto ypos{g_gui.line_score_text.y + glyphs::tile::height() * 3};
   const auto ypos{yoffset};
 
   auto xpos{g_gui.line_score_text.x};
@@ -659,6 +695,18 @@ void process_level_change(uint32_t lines) noexcept {
   return check_for_wall(blocks, proposed);
 }
 
+[[nodiscard]] Tetrimino get_random_tetrimino() noexcept {
+  while (true) {
+    uint32_t rno{get_rand_32()};
+    for (uint32_t idx{0}; idx < sizeof(uint32_t) * 8 / 3; idx++) {
+      if ((rno & 0b111) != 0) {
+        return Tetrimino{to_tetrimino_code(rno & 0b111)};
+      }
+      rno >>= 3;
+    }
+  }
+}
+
 [[nodiscard]] bool start_a_new_tetrimino() noexcept {
   /* pick a random one
    * it's start location is always x=8, y=0
@@ -679,7 +727,8 @@ void process_level_change(uint32_t lines) noexcept {
 
   g_is_active = true;
   g_pending_commit = true;
-  g_tetrimino = Tetrimino{get_value()};
+  g_tetrimino = g_next_tetrimino;
+  g_next_tetrimino = get_random_tetrimino();
   g_prvtetrimino = g_tetrimino;
   g_prvlocation.x = 2;
   g_prvlocation.y = 0;
@@ -819,26 +868,50 @@ void init_play_config() {
 
   const auto dims{screen::get_virtual_screen_size()};
 
+  /* we need to divide the width up evenly between the playfield and the scoring
+   * gui box
+   *
+   * So, how does that shake out?
+   *  playfield (SQUARE_SIZE * 10)
+   *  score gui (4*SQUARE_SIZE + margin)
+   */
+  const auto score_gui_width{
+      GUI_OUTSIDE_BORDER_WIDTH * 2 + 4 * SQUARE_SIZE + 2 +
+      2 * GUI_PREVIEW_BORDER +
+      5 * 2}; // our fine-tuned margin is 5 pixels on either side, I guess
+  const auto playfied_width{PLAY_NO_COLS * SQUARE_SIZE};
+  const auto remainder_width{dims.width - (score_gui_width + playfied_width)};
+
   g_play_cfg.grid_height = PLAY_NO_ROWS;
   g_play_cfg.grid_width = PLAY_NO_COLS;
-  g_play_cfg.xdimension.off =
-      (3 * (dims.width - SQUARE_SIZE * PLAY_NO_COLS)) >> 2;
+  g_play_cfg.xdimension.off = 2 * remainder_width / 3 + score_gui_width;
   g_play_cfg.ydimension.off = (dims.height - SQUARE_SIZE * PLAY_NO_ROWS) >> 1;
   g_play_cfg.xdimension.scale = SQUARE_SIZE;
   g_play_cfg.ydimension.scale = SQUARE_SIZE;
 
-  const auto buffer{3}; // buffer between score box and playfield
-  g_gui.scoring_box_height = 6 * glyphs::tile::height() +
-                             GUI_OUTSIDE_BORDER_WIDTH * 2 +
-                             1; // * it will be 6 glyphs tall, minimum
-  g_gui.scoring_box_width = g_play_cfg.xdimension.off - buffer * 2;
-  g_gui.scoring_box_start = {
-      .x = buffer, .y = (dims.height - g_gui.scoring_box_height) >> 1};
+  /* gui scoreboard box needs to be tall enough to fit:
+   *  margin (GUI_OUTSIDE_BORDER_WIDTH)
+   *  score (2*glyphs::tile::height())
+   *  level (2*glyphs::tile::height())
+   *  lines (2*glyphs::tile::height())
+   *  piece preview ( 4 * SQUARE_SIZE + margin )
+   *  margin (GUI_OUTSIDE_BORDER_WIDTH)
+   */
+  g_gui.scoring_box_height = 6 * glyphs::tile::height() + 1 +
+                             GUI_OUTSIDE_BORDER_WIDTH * 2 + 4 * SQUARE_SIZE +
+                             2 + 2 * GUI_PREVIEW_BORDER + 5 * 2;
+  g_gui.scoring_box_width = score_gui_width;
+  g_gui.scoring_box_start = {.x = remainder_width / 3,
+                             .y =
+                                 (dims.height - g_gui.scoring_box_height) >> 1};
 
-  g_gui.line_score_text.x =
-      g_gui.scoring_box_start.x + GUI_OUTSIDE_BORDER_WIDTH + 1;
-  g_gui.line_score_text.y =
-      g_gui.scoring_box_start.y + GUI_OUTSIDE_BORDER_WIDTH + 1;
+  g_gui.line_score_text = {
+      .x = g_gui.scoring_box_start.x + GUI_OUTSIDE_BORDER_WIDTH + 1,
+      .y = g_gui.scoring_box_start.y + GUI_OUTSIDE_BORDER_WIDTH + 1};
+
+  g_gui.piece_preview = {.x = g_gui.scoring_box_start.x + 5,
+                         .y = g_gui.scoring_box_start.y +
+                              glyphs::tile::height() * 6 + 6};
 
   init_playfield();
 
@@ -879,6 +952,8 @@ void run() {
   TimeClock game_clock{process_clock};
   UserInput status;
   bool keep_going{true};
+
+  g_next_tetrimino = get_random_tetrimino();
 
   reset_all_global_state();
   init_the_screen();

@@ -99,11 +99,13 @@ embp::concat(
     /* F */
     helper_make_tile(DRKGRY, LGREY),
     /* G */
-    helper_make_tile(CYAN, LCYAN)
+    helper_make_tile(CYAN, LCYAN),
+    /* just for clearing the piece preview */
+    embp::filled<uint8_t, BTLEN>(( LGREY<<4 ) | LGREY)
 )
     /* clang-format on */
 };
-static_assert(std::size(Tetrimino_Tile_Data) == BTLEN * 8);
+static_assert(std::size(Tetrimino_Tile_Data) == BTLEN * 9);
 
 inline constexpr std::array TETRIMINO_TILES{
     /* BLANK */ screen::Tile{.side_length = TetriminoTile_SideLength,
@@ -137,8 +139,12 @@ inline constexpr std::array TETRIMINO_TILES{
     screen::Tile{.side_length = TetriminoTile_SideLength,
                  .format = VIDEO_FORMAT,
                  .data = std::next(std::data(Tetrimino_Tile_Data), 7 * BTLEN)},
+    /* PREVIEW */
+    screen::Tile{.side_length = TetriminoTile_SideLength,
+                 .format = VIDEO_FORMAT,
+                 .data = std::next(std::data(Tetrimino_Tile_Data), 8 * BTLEN)},
 };
-static_assert(std::size(TETRIMINO_TILES) == 8);
+static_assert(std::size(TETRIMINO_TILES) == 9);
 
 } // namespace tetris
 
