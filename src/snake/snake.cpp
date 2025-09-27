@@ -22,6 +22,7 @@
 
 #include "embp/circular_array.hpp"
 
+#include "../screen_utils.hpp"
 #include "snake_common.hpp"
 #include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"
@@ -136,6 +137,27 @@ std::array<uint32_t, snake::PLAY_SIZE>
 void draw_grid_tile(grid_t x, grid_t y, const screen::Tile &tile) {
   const auto [pixx, pixy]{to_pixel_xy({.x = x, .y = y})};
   screen::draw_tile(pixx, pixy, tile);
+}
+
+/** @brief convert 1bpp letter tile into double-sized, 4bpp versions
+ */
+template <size_t N>
+constexpr void copy_tile_to_4bpp_buffer_and_double_in_size(
+    std::array<uint8_t, N> &tile_4bpp, const screen::Tile &tile_1bpp) noexcept {
+  const auto *p_in{tile_1bpp.data};
+  auto *p_out{std::data(tile_4bpp)};
+
+  for (uint32_t yy = 0; yy < glyphs::tile::height() * 2; ++yy) {
+    auto inrow{p_in[yy >> 1]};
+    for (uint32_t xx = 0; xx < glyphs::tile::width() * 2; xx += 2) {
+      const uint32_t outpixloc{yy * glyphs::tile::width() * 2 + xx};
+      auto &out{p_out[outpixloc >> 1]};
+
+      out = inrow & 0b1 ? snake::WHITE << 4 | snake::WHITE
+                        : snake::BLACK << 4 | snake::BLACK;
+      inrow >>= 1;
+    }
+  }
 }
 
 /** @brief Advances a snake::GridLocation in a given Direction
@@ -1278,20 +1300,7 @@ void increment_score(uint32_t value) noexcept { g_score += value; }
 void draw_score() {
 
   /* convert integral score into 6 decimal digits */
-  std::array<uint8_t, 6> digits{};
-  uint32_t start{digits.size()};
-  uint32_t score{g_score};
-  uint32_t compare_value{10 * 10 * 10 * 10 * 10};
-  while (start > 1) {
-    const auto idx{(start - 1)};
-    while (score >= compare_value) {
-      score -= compare_value;
-      ++digits[digits.size() - start];
-    }
-    --start;
-    compare_value /= 10;
-  }
-  digits.back() = score;
+  const auto digits{screen::bcd<6>(g_score)};
 
   /* convert the existing 1bpp number glyphs into double-sized 4bpp versions */
   std::array<uint8_t, 4 * 4 * glyphs::tile::height()> letter_4bpp_data{};
@@ -1299,30 +1308,13 @@ void draw_score() {
                                  .format = screen::Format::RGB565_LUT4,
                                  .data = std::data(letter_4bpp_data)};
 
-  auto &&copy_tile_to_4bpp_buffer{[](auto &tile_4bpp, const auto &tile_1bpp) {
-    const auto *p_in{tile_1bpp.data};
-    auto *p_out{std::data(tile_4bpp)};
-
-    for (uint32_t yy = 0; yy < glyphs::tile::height() * 2; ++yy) {
-      auto inrow{p_in[yy >> 1]};
-      for (uint32_t xx = 0; xx < glyphs::tile::width() * 2; xx += 2) {
-        const uint32_t outpixloc{yy * glyphs::tile::width() * 2 + xx};
-        auto &out{p_out[outpixloc >> 1]};
-
-        out = inrow & 0b1 ? snake::WHITE << 4 | snake::WHITE
-                          : snake::BLACK << 4 | snake::BLACK;
-        inrow >>= 1;
-      }
-    }
-  }};
-
   /* go from msd to lsd */
   const auto row_start{g_top_panel_cfg.row_start_score};
   auto col_start{g_top_panel_cfg.col_start_score};
   for (const auto digit : digits) {
     const auto tile_1bpp{
         glyphs::tile::decode_ascii(static_cast<char>(digit + 0x30))};
-    copy_tile_to_4bpp_buffer(letter_4bpp_data, tile_1bpp);
+    copy_tile_to_4bpp_buffer_and_double_in_size(letter_4bpp_data, tile_1bpp);
     screen::draw_tile(col_start, row_start, letter_tile);
     col_start += letter_tile.side_length;
   }
@@ -1491,6 +1483,5 @@ void run() {
   }
 
   gamepad::five::deinit();
-
 }
 } // namespace snake

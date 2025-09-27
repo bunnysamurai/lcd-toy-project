@@ -6,7 +6,9 @@ add_executable(${PROJECT_NAME}
     status_utilities.cpp
     demo.cpp
     snake/snake.cpp
+    tetris/tetris.cpp
     ShellCmd_Menu.cpp
+    screen_utils.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

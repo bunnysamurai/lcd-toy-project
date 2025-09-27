@@ -320,6 +320,7 @@ void blit_4bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
 #ifdef PRINT_DEBUG
     std::cerr << "nibbles match\n";
 #endif
+    static_assert(sizeof(size_t) == 4);
     size_t yy = 0;
     size_t xx = 0;
     for (; yy < tile.side_length; ++yy) {
@@ -347,7 +348,7 @@ void blit_4bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
     size_t xx = 0;
     for (; yy < tile.side_length; ++yy) {
 #ifdef PRINT_DEBUG
-        std::cerr << "row " << yy << '\n';
+      std::cerr << "row " << yy << '\n';
 #endif
       for (; xx < tile.side_length - rem; xx += 2) {
 #ifdef PRINT_DEBUG
@@ -368,7 +369,9 @@ void blit_4bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
         std::cerr << "rem is " << rem << '\n';
         std::cerr << "col " << xx + rem << '\n';
 #endif
-        const size_t idx{(yy + y) * width + (xx + x)}; /* off by one error, which are rare for me... why?? */
+        const size_t idx{
+            (yy + y) * width +
+            (xx + x)}; /* off by one error, which are rare for me... why?? */
         const size_t idx2{yy * tile_pitch + xx + rem};
 #ifdef PRINT_DEBUG
         std::cerr << "vidbuf idx = " << idx << '\n';

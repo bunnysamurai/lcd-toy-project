@@ -1,6 +1,7 @@
 #pragma once
 #ifdef STD_LIB_AVAILABLE
 #include <cstddef>
+#include <iterator>
 #else
 #include <stddef.h>
 #endif
