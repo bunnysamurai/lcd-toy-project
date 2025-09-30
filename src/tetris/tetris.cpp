@@ -2,7 +2,6 @@
 #include "tetris_defs.hpp"
 #include "tetris_tiles_constexpr.hpp"
 
-#include "pico/printf.h"
 #include "pico/rand.h"
 #include "pico/time.h"
 
@@ -11,6 +10,10 @@
 #include "gamepad/gamepad.hpp"
 
 // #define PRINT_DEBUG_MSG
+
+#ifdef PRINT_DEBUG_MSG
+#include "pico/printf.h"
+#endif
 
 /* Tetris for Windows is 10 x 20 grid points
  *
@@ -96,8 +99,14 @@ namespace tetris {
 /*         |____/ |_/_/   \_\_| |___\____|    \_/_/   \_\_| \_\               */
 /*                                                                            */
 /* ========================================================================== */
-/** @brief purely for record keeping
- */
+/* GUI related, there are really configurations that could live elsewhere */
+static constexpr uint32_t GUI_OUTSIDE_BORDER_WIDTH{2};
+static constexpr uint32_t GUI_PREVIEW_BORDER{4};
+static constexpr auto GUI_UNDERLAY_COLOR_MAIN{LGREY};
+static constexpr auto GUI_UNDERLAY_COLOR_SCNDRY{WHITE};
+static constexpr auto GUI_TEXT_COLOR{BLACK};
+
+/* Gameplay related */
 static ThreeBitImage<PLAY_NO_COLS, PLAY_NO_ROWS> g_playfield;
 static bool g_pending_commit{false};
 static bool g_is_active{false};
@@ -114,6 +123,18 @@ static absolute_time_t g_game_tick_us{INITIAL_GAME_TICK_US};
 static uint32_t g_points_scored{};
 static constexpr std::array<uint32_t, 9> g_level_thresholds{10, 20, 30, 40, 50,
                                                             60, 70, 80, 90};
+static constexpr std::array<uint8_t, 10> g_level_color{
+    MAGENTA, RED, LBLUE, LMAGENTA, BLUE, LYELLOW, CYAN, YELLOW, DRKGRY, LGREY};
+
+/* ========================================================================== */
+/*                      _______        ______                                 */
+/*                     |  ___\ \      / /  _ \                                */
+/*                     | |_   \ \ /\ / /| | | |                               */
+/*                     |  _|   \ V  V / | |_| |                               */
+/*                     |_|      \_/\_/  |____/                                */
+/*                                                                            */
+/* ========================================================================== */
+void change_background_color(const uint8_t palette_index) noexcept;
 
 /* ========================================================================== */
 /*                    _   _ _____ ___ _     ____                              */
@@ -176,6 +197,58 @@ void print_playfield() {
 }
 #endif
 
+/** @brief draw a rectangle
+ *
+ * @param topy
+ * @param leftx
+ * @param boty
+ * @param rightx
+ * @param coloridx Index into the color palette
+ * @param thickness '0' is special, it means "filled, please"
+ *
+ */
+void scoring_gui_draw_rectangle_primitive(uint32_t topy, uint32_t leftx,
+                                          uint32_t boty, uint32_t rightx,
+                                          uint8_t coloridx,
+                                          uint32_t thickness) {
+
+  /* our stack allocated tile */
+  const screen::Tile tile{
+      .side_length = 1, .format = VIDEO_FORMAT, .data = &coloridx};
+
+  if (thickness == 0) {
+    for (uint32_t yy = topy; yy < boty; ++yy) {
+      for (uint32_t xx = leftx; xx < rightx; ++xx) {
+        screen::draw_tile(xx, yy, tile);
+      }
+    }
+  } else {
+    /* bot row */
+    for (uint32_t yy = boty - thickness; yy < boty; ++yy) {
+      for (uint32_t xx = leftx; xx < rightx; ++xx) {
+        screen::draw_tile(xx, yy, tile);
+      }
+    }
+    /* right column */
+    for (uint32_t yy = topy; yy < boty; ++yy) {
+      for (uint32_t xx = rightx - thickness; xx < rightx; ++xx) {
+        screen::draw_tile(xx, yy, tile);
+      }
+    }
+    /* top row */
+    for (uint32_t yy = topy; yy < topy + thickness; ++yy) {
+      for (uint32_t xx = leftx; xx < rightx; ++xx) {
+        screen::draw_tile(xx, yy, tile);
+      }
+    }
+    /* left column */
+    for (uint32_t yy = topy; yy < boty; ++yy) {
+      for (uint32_t xx = leftx; xx < leftx + thickness; ++xx) {
+        screen::draw_tile(xx, yy, tile);
+      }
+    }
+  }
+}
 /* ========================================================================== */
 /*          _   _ ____  _____ ____    ___ _   _ ____  _   _ _____             */
 /*         | | | / ___|| ____|  _ \  |_ _| \ | |  _ \| | | |_   _|            */
@@ -221,11 +294,11 @@ enum struct UserInput { LEFT, RIGHT, UP, DOWN, QUIT, NONE, DROP };
 }
 
 /* ========================================================================== */
-/*             ____  ____      ___        _____ _   _  ____                   */
-/*            |  _ \|  _ \    / \ \      / /_ _| \ | |/ ___|                  */
-/*            | | | | |_) |  / _ \ \ /\ / / | ||  \| | |  _                   */
-/*            | |_| |  _ <  / ___ \ V  V /  | || |\  | |_| |                  */
-/*            |____/|_| \_\/_/   \_\_/\_/  |___|_| \_|\____|                  */
+/*          ____  _        _ __   _______ ___ _____ _     ____                */
+/*         |  _ \| |      / \\ \ / /  ___|_ _| ____| |   |  _ \               */
+/*         | |_) | |     / _ \\ V /| |_   | ||  _| | |   | | | |              */
+/*         |  __/| |___ / ___ \| | |  _|  | || |___| |___| |_| |              */
+/*         |_|   |_____/_/   \_\_| |_|   |___|_____|_____|____/               */
 /*                                                                            */
 /* ========================================================================== */
 auto get_position(int pos) -> Location {
@@ -287,16 +360,10 @@ void draw_tetrimino_tile(uint32_t tile_idx, uint32_t grid_x,
 }
 void draw_tetrimino_impl(const Tetrimino tetrimino, const Location curloc,
                          const uint8_t tile_idx) noexcept {
-  /* we'll hand roll this */
-
-  /* tetrimino lives in a 4x4 grid
-   * rows 0 and 3 are just columns 1 and 2
-   * rows 1 and 2 are all 4 columns
-   * of course we've mapped each bit to a certain location in this 4x4 grid
-   */
   const auto [xx, yy]{to_pixel_xy({.x = curloc.x, .y = curloc.y})};
   draw_tetrimino_impl_pix(tetrimino, {.x = xx, .y = yy}, tile_idx);
 }
+
 void draw_tetrimino() noexcept {
   static Tetrimino previous_spawned{g_next_tetrimino};
   draw_tetrimino_impl(g_prvtetrimino, g_prvlocation,
@@ -305,11 +372,12 @@ void draw_tetrimino() noexcept {
   g_prvlocation = g_location;
 
   /* here we'll also draw the preview */
-  const Location loc{.x = g_gui.piece_preview.x + 1,
-                     .y = g_gui.piece_preview.y + 1};
+  const Location loc{.x = g_gui.piece_preview.x + GUI_PREVIEW_BORDER,
+                     .y = g_gui.piece_preview.y + GUI_PREVIEW_BORDER};
   draw_tetrimino_impl_pix(previous_spawned, loc,
                           std::size(TETRIMINO_TILES) - 1);
-  draw_tetrimino_impl_pix(g_next_tetrimino, loc, to_index(g_next_tetrimino.code()));
+  draw_tetrimino_impl_pix(g_next_tetrimino, loc,
+                          to_index(g_next_tetrimino.code()));
   previous_spawned = g_next_tetrimino;
 }
 void draw_playfield() noexcept {
@@ -319,6 +387,39 @@ void draw_playfield() noexcept {
       draw_tetrimino_tile(tile_index, xx, yy);
     }
   }
+}
+void draw_playfield_border() {
+  static constexpr uint32_t playfield_inset{4};
+
+  const auto topy{g_play_cfg.ydimension.off - playfield_inset};
+  const auto leftx{g_play_cfg.xdimension.off - playfield_inset};
+  const auto rightx{leftx +
+                    g_play_cfg.grid_width * g_play_cfg.xdimension.scale +
+                    2 * playfield_inset};
+  const auto boty{topy + g_play_cfg.grid_height * g_play_cfg.ydimension.scale +
+                  2 * playfield_inset};
+
+  /* bot */
+  scoring_gui_draw_rectangle_primitive(boty - playfield_inset, leftx, boty,
+                                       rightx, LGREY, 0);
+  /* right */
+  scoring_gui_draw_rectangle_primitive(topy, rightx - playfield_inset, boty,
+                                       rightx, LGREY, 0);
+  /* top */
+  scoring_gui_draw_rectangle_primitive(topy, leftx, topy + playfield_inset,
+                                       rightx, LGREY, 0);
+  /* left */
+  scoring_gui_draw_rectangle_primitive(topy, leftx, boty,
+                                       leftx + playfield_inset, LGREY, 0);
+
+  scoring_gui_draw_rectangle_primitive(topy, rightx - (playfield_inset >> 1),
+                                       boty, rightx, DRKGRY, 0);
+  scoring_gui_draw_rectangle_primitive(boty - (playfield_inset >> 1), leftx,
+                                       boty, rightx, DRKGRY, 0);
+  scoring_gui_draw_rectangle_primitive(
+      topy, leftx, topy + (playfield_inset >> 1), rightx, WHITE, 0);
+  scoring_gui_draw_rectangle_primitive(
+      topy, leftx, boty, leftx + (playfield_inset >> 1), WHITE, 0);
 }
 
 /* ========================================================================== */
@@ -439,7 +540,6 @@ void move_this_row_segment(uint16_t start, uint16_t stop) {
     move_this_row_segment(starty, PLAY_NO_ROWS);
     lines_cleared += PLAY_NO_ROWS - starty;
   }
-  printf("lines cleared is %d\n", lines_cleared);
   return lines_cleared;
 }
 [[nodiscard]] uint32_t check_for_complete_lines() noexcept {
@@ -447,7 +547,6 @@ void move_this_row_segment(uint16_t start, uint16_t stop) {
   if (lines > 0) {
     draw_playfield();
   }
-  printf("now we return %d\n", lines);
   return lines;
 }
 
@@ -459,65 +558,7 @@ void move_this_row_segment(uint16_t start, uint16_t stop) {
 /*                          \____|\___/|___|                                  */
 /*                                                                            */
 /* ========================================================================== */
-static constexpr uint32_t GUI_OUTSIDE_BORDER_WIDTH{2};
-static constexpr uint32_t GUI_PREVIEW_BORDER{4};
-static constexpr auto GUI_UNDERLAY_COLOR_MAIN{LGREY};
-static constexpr auto GUI_UNDERLAY_COLOR_SCNDRY{WHITE};
-static constexpr auto GUI_TEXT_COLOR{BLACK};
 
-/** @brief draw a rectangle
- *
- * @param topy
- * @param leftx
- * @param boty
- * @param rightx
- * @param coloridx Index into the color palette
- * @param thickness '0' is special, it means "filled, please"
- *
- */
-void scoring_gui_draw_rectangle_primitive(uint32_t topy, uint32_t leftx,
-                                          uint32_t boty, uint32_t rightx,
-                                          uint8_t coloridx,
-                                          uint32_t thickness) {
-
-  /* our stack allocated tile */
-  const screen::Tile tile{
-      .side_length = 1, .format = VIDEO_FORMAT, .data = &coloridx};
-
-  /* first, draw a box */
-  if (thickness == 0) {
-    for (uint32_t yy = topy; yy < boty; ++yy) {
-      for (uint32_t xx = leftx; xx < rightx; ++xx) {
-        screen::draw_tile(xx, yy, tile);
-      }
-    }
-  } else {
-    /* bot row */
-    for (uint32_t yy = boty - thickness; yy < boty; ++yy) {
-      for (uint32_t xx = leftx; xx < rightx; ++xx) {
-        screen::draw_tile(xx, yy, tile);
-      }
-    }
-    /* right column */
-    for (uint32_t yy = topy; yy < boty; ++yy) {
-      for (uint32_t xx = rightx - thickness; xx < rightx; ++xx) {
-        screen::draw_tile(xx, yy, tile);
-      }
-    }
-    /* top row */
-    for (uint32_t yy = topy; yy < topy + thickness; ++yy) {
-      for (uint32_t xx = leftx; xx < rightx; ++xx) {
-        screen::draw_tile(xx, yy, tile);
-      }
-    }
-    /* left column */
-    for (uint32_t yy = topy; yy < boty; ++yy) {
-      for (uint32_t xx = leftx; xx < leftx + thickness; ++xx) {
-        screen::draw_tile(xx, yy, tile);
-      }
-    }
-  }
-}
 void scoring_gui_draw_underlay() {
   /* some helpers */
   const uint32_t topy{g_gui.scoring_box_start.y};
@@ -581,8 +622,8 @@ void scoring_gui_write_text(const char *str, uint32_t yoffset) {
 void scoring_gui_draw_preview_underlay() {
   const uint32_t topy{g_gui.piece_preview.y};
   const uint32_t leftx{g_gui.piece_preview.x};
-  const uint32_t rightx{leftx + 4 * SQUARE_SIZE + 2 + 2 * GUI_PREVIEW_BORDER};
-  const uint32_t boty{topy + +4 * SQUARE_SIZE + 2 + 2 * GUI_PREVIEW_BORDER};
+  const uint32_t rightx{leftx + g_gui.piece_preview_width};
+  const uint32_t boty{topy + g_gui.piece_preview_width};
 
   /* bot row and right column */
   scoring_gui_draw_rectangle_primitive(topy, leftx, boty, rightx, WHITE, 1);
@@ -609,15 +650,16 @@ void scoring_gui_draw_bcd_number(const auto &digits, uint32_t yoffset) {
                           .format = VIDEO_FORMAT,
                           .data = std::data(buffer)};
 
+  bool written{false};
   const auto ypos{yoffset};
-
   auto xpos{g_gui.line_score_text.x};
   for (uint32_t idx{0}; idx < std::size(digits) - 1; ++idx) {
-    if (digits[idx] > 0) {
+    if (digits[idx] > 0 || written) {
       screen::get_letter_data_4bpp(buffer,
                                    static_cast<char>(digits[idx] + 0x30),
                                    GUI_TEXT_COLOR, GUI_UNDERLAY_COLOR_MAIN);
       screen::draw_tile(xpos, ypos, tile);
+      written = true;
     }
     xpos += glyphs::tile::width();
   }
@@ -645,7 +687,6 @@ void draw_line_score() noexcept {
 }
 
 void process_level_change(uint32_t lines) noexcept {
-  printf("lines here is %d\n", lines);
   g_points_scored += lines * (g_level + 1) * 5;
   g_lines_scored += lines;
   draw_line_score();
@@ -654,7 +695,8 @@ void process_level_change(uint32_t lines) noexcept {
     if (g_level < std::size(g_level_thresholds)) {
       ++g_level;
       g_game_tick_us -= 100'000; /* 100 ms */
-      draw_level_score();
+      change_background_color(g_level_color[g_level]);
+      // draw_level_score();
     }
   }
 }
@@ -840,21 +882,50 @@ void commit_tetrimino() {
 /*                         |_| \_\\___/|_| \_|                                */
 /*                                                                            */
 /* ========================================================================== */
-void fill_screen_with_color() noexcept {
+/** @brief Fill the screen with a solid color.
+ *  This is a primitive that needs to move to a different module.
+ */
+void fill_screen_with_color(const uint8_t palette_index) noexcept {
   const auto dims{screen::get_virtual_screen_size()};
-
-  const uint8_t magenta_idx{MAGENTA};
-
+#if 0
   const screen::Tile tile{
-      .side_length = 1, .format = VIDEO_FORMAT, .data = &magenta_idx};
+      .side_length = 1, .format = VIDEO_FORMAT, .data = &palette_index};
   for (uint32_t yy = 0; yy < dims.height; ++yy) {
     for (uint32_t xx = 0; xx < dims.width; ++xx) {
       screen::draw_tile(xx, yy, tile);
     }
   }
+#else
+  /* seems to take forever, which is unsurprising... let's try something else */
+  uint8_t *buf{screen::get_video_buffer()};
+  for (uint32_t idx = 0, limit = dims.height * dims.width; idx < limit;
+       idx += 2) {
+    buf[idx >> 1] = (palette_index << 4) | palette_index;
+  }
+#endif
+}
+void change_background_color(const uint8_t palette_index) noexcept {
+  /* background is anywhere where the playfield and score gui are not
+    probably easiest to just iterate through the image
+
+    our steps are:
+      draw background tiles
+      draw scoring underlays
+      draw scoring text and scores
+      draw playfield
+  */
+  fill_screen_with_color(palette_index);
+  init_gui();
+  draw_level_score();
+  draw_line_score();
+  draw_points_score();
+  draw_tetrimino();
+  draw_playfield_border();
+  draw_playfield();
 }
 
 void init_playfield() noexcept {
+  draw_playfield_border();
   for (uint32_t yy = 0; yy < g_play_cfg.grid_height; ++yy) {
     for (uint32_t xx = 0; xx < g_play_cfg.grid_width; ++xx) {
       draw_tetrimino_tile(to_index(Tetrimino::Code::BLANK), xx, yy);
@@ -863,8 +934,6 @@ void init_playfield() noexcept {
 }
 
 void init_play_config() {
-
-  fill_screen_with_color();
 
   const auto dims{screen::get_virtual_screen_size()};
 
@@ -909,12 +978,16 @@ void init_play_config() {
       .x = g_gui.scoring_box_start.x + GUI_OUTSIDE_BORDER_WIDTH + 1,
       .y = g_gui.scoring_box_start.y + GUI_OUTSIDE_BORDER_WIDTH + 1};
 
-  g_gui.piece_preview = {.x = g_gui.scoring_box_start.x + 5,
-                         .y = g_gui.scoring_box_start.y +
-                              glyphs::tile::height() * 6 + 6};
+  g_gui.piece_preview_width = 4 * SQUARE_SIZE + 2 + 2 * GUI_PREVIEW_BORDER;
+  g_gui.piece_preview_height = g_gui.piece_preview_width;
 
+  g_gui.piece_preview = {
+      .x = g_gui.scoring_box_start.x +
+           ((score_gui_width - g_gui.piece_preview_width) >> 1),
+      .y = g_gui.scoring_box_start.y + glyphs::tile::height() * 6 + 6};
+
+  fill_screen_with_color(g_level_color[g_level]);
   init_playfield();
-
   init_gui();
 }
 
@@ -953,9 +1026,8 @@ void run() {
   UserInput status;
   bool keep_going{true};
 
-  g_next_tetrimino = get_random_tetrimino();
-
   reset_all_global_state();
+  g_next_tetrimino = get_random_tetrimino();
   init_the_screen();
   init_play_config();
   draw_line_score();

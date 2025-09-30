@@ -42,6 +42,8 @@ struct GuiCfg {
   uint8_t scoring_box_height;
   Location line_score_text;
   Location piece_preview;
+  uint8_t piece_preview_width;
+  uint8_t piece_preview_height;
 };
 
 /** @brief for bookkeeping  */

@@ -27,7 +27,7 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 0, .g = 220, .b = 220},       /* cyan */
     screen::Clut{.r = 220, .g = 220, .b = 0},       /* yellow */
     screen::Clut{.r = 245, .g = 0, .b = 245},       /* magenta */
-    screen::Clut{.r = 64, .g = 64, .b = 64},        /* dark grey */
+    screen::Clut{.r = 84, .g = 84, .b = 84},        /* dark grey */
 
     screen::Clut{.r = 255, .g = 255, .b = 255},     /* white */
     screen::Clut{.r = 255, .g = 128, .b = 128},     /* light red */
@@ -36,7 +36,7 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 200, .g = 255, .b = 255},     /* light cyan */
     screen::Clut{.r = 255, .g = 255, .b = 200},     /* light yellow */
     screen::Clut{.r = 255, .g = 128, .b = 255},     /* light magenta */
-    screen::Clut{.r = 128, .g = 128, .b = 128},     /* light grey */
+    screen::Clut{.r = 188, .g = 188, .b = 188},     /* light grey */
     /* clang-format on */
 };
 
