@@ -1071,7 +1071,6 @@ void add_apples(uint32_t count) noexcept {
   const uint32_t room_left{g_apple_locations.capacity() -
                            g_apple_locations.size()};
   const uint32_t to_add{count < room_left ? count : room_left};
-  // g_apple_locations.resize(g_apple_locations.size() + to_add);
   for (uint32_t idx = 0; idx < to_add; ++idx) {
     g_apple_locations.push_back(make_apple());
   }
