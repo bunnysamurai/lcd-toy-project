@@ -30,6 +30,8 @@
 #define SNAKE_USE_GAMEPAD
 #define USE_BGRID_OPTIMIZATION
 
+// #define PRINT_DEBUG_MSG
+
 namespace {
 
 using snake::Direction;
@@ -42,6 +44,7 @@ constexpr std::chrono::milliseconds KEYBOARD_POLL_MS{
 constexpr auto GAME_TICK_US{250000U};
 constexpr auto APPLE_GROWTH_TICKS{3U};
 constexpr auto NUMBER_OF_APPLES{10U};
+constexpr uint8_t INITIAL_TICK_HACK_TUNING{1};
 
 /* These abstractions should help with pixel->tile grid location
  * Observed behaviour of RattleRace(r) is that the snake moves on a fixed
@@ -1048,11 +1051,18 @@ check_for_collisions(snake::GridLocation point) noexcept {
     const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
     const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
     const Apple apple{.x = xloc, .y = yloc, .is_green = false};
-    if (xloc < 1 || yloc < 1 || xloc > 31 || yloc > 31 ||
-        check_for_level_collisions({.x = apple.x, .y = apple.y}, g_level.lvl) ||
-        check_for_apple_collision({.x = apple.x, .y = apple.y}, prev_apple)) {
+    if (Collision::NONE != check_for_collisions({.x = apple.x, .y = apple.y})) {
       continue;
     }
+    // if (xloc < 1 || yloc < 1 || xloc > 31 || yloc > 31 ||
+    //     check_for_level_collisions({.x = apple.x, .y = apple.y}, g_level.lvl)
+    //     || check_for_apple_collision({.x = apple.x, .y = apple.y},
+    //     prev_apple)) {
+    //   continue;
+    // }
+#if PRINT_DEBUG_MSG
+    printf("new apple  { .x = %d, .y = %d }\n", apple.x, apple.y);
+#endif
     return apple;
   }
 }
@@ -1061,10 +1071,16 @@ void add_apples(uint32_t count) noexcept {
   const uint32_t room_left{g_apple_locations.capacity() -
                            g_apple_locations.size()};
   const uint32_t to_add{count < room_left ? count : room_left};
-  g_apple_locations.resize(g_apple_locations.size() + to_add);
+  // g_apple_locations.resize(g_apple_locations.size() + to_add);
   for (uint32_t idx = 0; idx < to_add; ++idx) {
     g_apple_locations.push_back(make_apple());
   }
+#if PRINT_DEBUG_MSG
+  printf("**\nour new apple locations are\n");
+  for (const auto &appl : g_apple_locations) {
+    printf("  {.x=%d, .y=%d}\n", appl.x, appl.y);
+  }
+#endif
 }
 
 void draw_apple(const Apple &apple) noexcept {
@@ -1373,13 +1389,16 @@ void run() {
     reset_timer();
     draw_timer();
     draw_score();
-    bool initial_tick{true};
+    uint8_t initial_tick{INITIAL_TICK_HACK_TUNING};
     bool level_is_active{true};
     while (level_is_active) {
       const auto now{get_absolute_time()};
 
-      /* process user input and take action immediately if required */
-      const auto user_input = process_user_input();
+      /* process user input and take action immediately if required,
+       *  (unless we are just starting...)
+       */
+      const auto user_input =
+          !initial_tick ? process_user_input() : UserInput::PLAY;
 
       if (user_input == UserInput::QUIT) {
         user_desires_play = false;
@@ -1410,7 +1429,7 @@ void run() {
         /* initial_tick is a hack. We nullify collisions with the border when
          * the snake first enters the play area */
         if (initial_tick) {
-          initial_tick = false;
+          --initial_tick;
           if (collision == Collision::BORDER) {
             collision = Collision::NONE;
           }
@@ -1433,8 +1452,7 @@ void run() {
           --lives;
           update_lives_on_screen(lives);
           init_snake(SNAKE_START, SNAKE_DIR);
-          initial_tick = true;
-          // level_is_active = lives > 0;
+          initial_tick = INITIAL_TICK_HACK_TUNING;
           level_is_active = false;
           /* TODO this is only for development, and should trigger a Game Over,
            * instead */
@@ -1466,7 +1484,7 @@ void run() {
           cleanup_the_body();
           level_is_active = false;
           init_snake(SNAKE_START, SNAKE_DIR);
-          initial_tick = true;
+          initial_tick = INITIAL_TICK_HACK_TUNING;
           lvl_idx = lvl_idx == snake::levels.size() - 1 ? 0 : lvl_idx + 1;
         }
 
