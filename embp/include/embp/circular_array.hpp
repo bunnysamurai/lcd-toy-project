@@ -34,7 +34,7 @@ private:
     difference_type head_offset;
 
     template < class Offset >
-    void rotate_impl(Offset middle)
+    constexpr void rotate_impl(Offset middle)
     {
 #ifdef STD_LIB_AVAILABLE
         static_assert(std::is_same_v<typename decltype(this->data_)::difference_type, difference_type>);
@@ -128,7 +128,7 @@ private:
 #endif
     }
 
-    void shift_head_to_front_impl() noexcept
+    constexpr void shift_head_to_front_impl() noexcept
     {
         /* shifting the head of the circular array
          * like shift_subarray_impl, but it operates on the data_ iterators, and not the circular iterators...
@@ -145,29 +145,29 @@ private:
         return (head_offset + pos) % (Capacity + 1); // implicit that head_offset is always zero, unless size == Capacity
     }
 
-    iterator createIterator(const difference_type offset) noexcept
+    constexpr iterator createIterator(const difference_type offset) noexcept
     {
         return iterator{data_.data(), offset, static_cast<difference_type>(data_.size())};
     }
-    const_iterator createIterator(const difference_type offset) const noexcept
+    constexpr const_iterator createIterator(const difference_type offset) const noexcept
     {
         return const_iterator{data_.data(), offset, static_cast<difference_type>(data_.size())};
     }
 
-    void adjust_size(const difference_type n) noexcept
+    constexpr void adjust_size(const difference_type n) noexcept
     {
         data_.resize(data_.size() + n);
     }
 
     template < class IteratorType >
-    [[nodiscard]] IteratorType adjust_size_and_revalidate_iterator(IteratorType itr, const difference_type n) noexcept
+    [[nodiscard]] constexpr IteratorType adjust_size_and_revalidate_iterator(IteratorType itr, const difference_type n) noexcept
     {
         const auto dis = embp::distance(this->cbegin(), itr);
         adjust_size(n); // adjusting size invalidates all iterators
         return this->cbegin() + dis;
     }
 
-    void adjust_head_offset(const difference_type n) noexcept
+    constexpr void adjust_head_offset(const difference_type n) noexcept
     {
         // head_offset = ( head_offset + n ) % Capacity;
         // head_offset is aliased on Capacity, as it must always point to a valid element in the array
@@ -242,74 +242,74 @@ private:
 
 public:
     // Constructors
-    circular_array() = default;
-    explicit circular_array(size_type n) noexcept :
+    constexpr circular_array() = default;
+    constexpr explicit circular_array(size_type n) noexcept :
         data_{n},
         head_offset{0}
     { }
-    explicit circular_array(size_type n, const value_type &value) noexcept :
+    constexpr explicit circular_array(size_type n, const value_type &value) noexcept :
         data_{n, value},
         head_offset{0}
     { }
     template < class Iter >
-    circular_array(Iter first, Iter last) noexcept :
+    constexpr circular_array(Iter first, Iter last) noexcept :
         data_{first, last},
         head_offset{0}
     { }
-    circular_array(const circular_array &cpy) noexcept :
+    constexpr circular_array(const circular_array &cpy) noexcept :
         data_{cpy.data_},
         head_offset{cpy.head_offset}
     { }
-    circular_array(circular_array &&mv) noexcept :
+    constexpr circular_array(circular_array &&mv) noexcept :
         data_{embp::move(mv.data_)},
         head_offset{embp::move(mv.head_offset)}
     { }
 
 
     // Assignment
-    circular_array& operator=(const circular_array &cpy) noexcept
+    constexpr circular_array& operator=(const circular_array &cpy) noexcept
     {
         data_ = cpy.data_;
         head_offset = cpy.head_offset;
         return *this;
     }
-    circular_array& operator=(circular_array &&mv) noexcept
+    constexpr circular_array& operator=(circular_array &&mv) noexcept
     {
         data_ = embp::move(mv.data_);
         head_offset = embp::move(mv.head_offset);
         return *this;
     }
-    void assign(size_type n, const value_type &value) noexcept
+    constexpr void assign(size_type n, const value_type &value) noexcept
     {
         data_.assign(n, value);
         head_offset = 0;
     }
     template < class Iter >
-    void assign(Iter first, Iter last) noexcept
+    constexpr void assign(Iter first, Iter last) noexcept
     {
         data_.assign(first, last);
         head_offset = 0;
     }
 
     // Element access
-    [[nodiscard]] reference operator[](size_type pos) noexcept { return data_[resolveIndexRequest(pos)]; }
-    [[nodiscard]] const_reference operator[](size_type pos) const noexcept { return data_[resolveIndexRequest(pos)]; }
-    [[nodiscard]] reference front() noexcept { return data_[resolveIndexRequest(0)]; }
-    [[nodiscard]] const_reference front() const noexcept { return data_[resolveIndexRequest(0)]; }
-    [[nodiscard]] reference back() noexcept { return data_[resolveIndexRequest(data_.size() - 1)]; }
-    [[nodiscard]] const_reference back() const noexcept { return data_[resolveIndexRequest(data_.size() - 1)]; }
+    [[nodiscard]] constexpr reference operator[](size_type pos) noexcept { return data_[resolveIndexRequest(pos)]; }
+    [[nodiscard]] constexpr const_reference operator[](size_type pos) const noexcept { return data_[resolveIndexRequest(pos)]; }
+    [[nodiscard]] constexpr reference front() noexcept { return data_[resolveIndexRequest(0)]; }
+    [[nodiscard]] constexpr const_reference front() const noexcept { return data_[resolveIndexRequest(0)]; }
+    [[nodiscard]] constexpr reference back() noexcept { return data_[resolveIndexRequest(data_.size() - 1)]; }
+    [[nodiscard]] constexpr const_reference back() const noexcept { return data_[resolveIndexRequest(data_.size() - 1)]; }
 
-    [[nodiscard]] const_pointer data() const noexcept { return data_.data(); }
-    [[nodiscard]] const difference_type& head() const noexcept { return head_offset; }
+    [[nodiscard]] constexpr const_pointer data() const noexcept { return data_.data(); }
+    [[nodiscard]] constexpr const difference_type& head() const noexcept { return head_offset; }
 
     // Iterators
-    [[nodiscard]] iterator begin() noexcept { return createIterator(head_offset); }
-    [[nodiscard]] const_iterator begin() const noexcept { return createIterator(head_offset); }
-    [[nodiscard]] const_iterator cbegin() const noexcept { return createIterator(head_offset); }
-    [[nodiscard]] iterator end() noexcept { return createIterator(head_offset + data_.size()); }
-    [[nodiscard]] const_iterator end() const noexcept { return createIterator(head_offset + data_.size()); }
-    [[nodiscard]] const_iterator cend() const noexcept { return createIterator(head_offset + data_.size()); }
-    [[nodiscard]] reverse_iterator rbegin() noexcept { return reverse_iterator(this->end()); }
+    [[nodiscard]] constexpr iterator begin() noexcept { return createIterator(head_offset); }
+    [[nodiscard]] constexpr const_iterator begin() const noexcept { return createIterator(head_offset); }
+    [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return createIterator(head_offset); }
+    [[nodiscard]] constexpr iterator end() noexcept { return createIterator(head_offset + data_.size()); }
+    [[nodiscard]] constexpr const_iterator end() const noexcept { return createIterator(head_offset + data_.size()); }
+    [[nodiscard]] constexpr const_iterator cend() const noexcept { return createIterator(head_offset + data_.size()); }
+    [[nodiscard]] constexpr reverse_iterator rbegin() noexcept { return reverse_iterator(this->end()); }
     // [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(this->end()); }
     // [[nodiscard]] const_reverse_iterator rcbegin() const noexcept { return const_reverse_iterator(this->cend()); }
     // [[nodiscard]] reverse_iterator rend() noexcept { return reverse_iterator(this->begin()); }

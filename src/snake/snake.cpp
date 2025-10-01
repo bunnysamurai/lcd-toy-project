@@ -915,19 +915,81 @@ check_for_apple_collision(snake::GridLocation point,
   return false;
 }
 
-[[nodiscard]] bool
-check_for_itself_collision(snake::GridLocation point) noexcept {
+[[nodiscard]] constexpr bool
+check_for_itself_collision_impl(snake::GridLocation point,
+                                const SnakeState &snake) noexcept {
   /* if the head is equal to any of it's body, we have a collision */
-  const auto head{point};
-  auto start{head};
-  for (const auto dir : g_snake_state.body_vec) {
+  auto start{snake.head};
+  for (const auto dir : snake.body_vec) {
     start = move_point(start, dir);
-    if (start == head) {
+    if (start == point) {
       return true;
     }
   }
   return false;
 }
+[[nodiscard]] constexpr bool
+check_for_itself_collision(snake::GridLocation point) noexcept {
+  return check_for_itself_collision_impl(point, g_snake_state);
+}
+
+namespace constexpr_tests {
+[[nodiscard]] constexpr bool test_itself_collision_impl() {
+  bool result{true};
+  SnakeState dut;
+  /* move the snake a bunch of times */
+
+  dut.head = snake::GridLocation{.x = 15, .y = 30};
+  dut.head_dir = Direction::UP;
+  dut.body_vec.clear();
+
+  /* move left, up, right, up */
+  auto &&update_snake{[&](Direction dir) {
+    /* head always moves */
+    dut.head = move_point(dut.head, dir);
+
+    /* add to the length of the body, in the opposite direction */
+    dut.body_vec.push_front(get_opposite(dir));
+  }};
+
+  update_snake(Direction::LEFT);
+  result &= dut.head == snake::GridLocation{.x = 14, .y = 30};
+  update_snake(Direction::UP);
+  result &= dut.head == snake::GridLocation{.x = 14, .y = 29};
+  update_snake(Direction::RIGHT);
+  result &= dut.head == snake::GridLocation{.x = 15, .y = 29};
+  update_snake(Direction::UP);
+  result &= dut.head == snake::GridLocation{.x = 15, .y = 28};
+
+  /* current snake state
+   *      (x,y)
+   * head (15,28)
+   * body (15,29)
+   * body (14,29)
+   * body (14,30)
+   * body (15,30)
+   */
+
+  /* now, we test for collisions with the body */
+  result &= check_for_itself_collision_impl({.x = 15, .y = 30}, dut);
+  result &= check_for_itself_collision_impl({.x = 14, .y = 30}, dut);
+  result &= check_for_itself_collision_impl({.x = 14, .y = 29}, dut);
+  result &= check_for_itself_collision_impl({.x = 15, .y = 29}, dut);
+
+  /* the head shouldn't collide with itself with this current state */
+  result &= (check_for_itself_collision_impl(dut.head, dut) == false);
+
+  /* move the head so that it does collide, and check */
+  update_snake(Direction::RIGHT);
+  update_snake(Direction::DOWN);
+  update_snake(Direction::LEFT);
+
+  result &= check_for_itself_collision_impl(dut.head, dut);
+
+  return result;
+}
+static_assert(test_itself_collision_impl());
+} // namespace constexpr_tests
 
 [[nodiscard]] constexpr bool
 check_for_point_collisions(snake::GridLocation point, const uint8_t *p_data,
@@ -1051,15 +1113,14 @@ check_for_collisions(snake::GridLocation point) noexcept {
     const grid_t xloc{static_cast<grid_t>((seed & MASK) + 1)};
     const grid_t yloc{static_cast<grid_t>(((seed >> 16) & MASK) + 1)};
     const Apple apple{.x = xloc, .y = yloc, .is_green = false};
-    if (Collision::NONE != check_for_collisions({.x = apple.x, .y = apple.y})) {
+    /* check_for_collisions is optimized for the snake head.
+     * however, when placing apples, we also need to check for the location of
+     * the snake head.
+     */
+    if (Collision::NONE != check_for_collisions({.x = apple.x, .y = apple.y}) ||
+        apple == g_snake_state.head) {
       continue;
     }
-    // if (xloc < 1 || yloc < 1 || xloc > 31 || yloc > 31 ||
-    //     check_for_level_collisions({.x = apple.x, .y = apple.y}, g_level.lvl)
-    //     || check_for_apple_collision({.x = apple.x, .y = apple.y},
-    //     prev_apple)) {
-    //   continue;
-    // }
 #if PRINT_DEBUG_MSG
     printf("new apple  { .x = %d, .y = %d }\n", apple.x, apple.y);
 #endif
@@ -1470,9 +1531,7 @@ void run() {
         draw_snake();
 
         /* open the pod bay doors, HAL */
-        if (get_number_of_apples() == 0) {
-          g_level.exit_is_open = true;
-        }
+        g_level.exit_is_open = get_number_of_apples() == 0;
 
         /* check if the snake has exited */
         if (collision == Collision::EXIT) {
