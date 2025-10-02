@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <array>
 
-#include "snake_common.hpp"
 #include "../utilities.hpp"
+#include "snake_common.hpp"
 
 namespace snake {
 
@@ -158,15 +158,19 @@ struct Rectangle {
 
 [[nodiscard]] constexpr bool check_intersects(GridLocation point,
                                               Rectangle rect) noexcept {
-  if (point.y == rect.top || point.y == rect.bottom) {
-    return point.x <= rect.right && point.x >= rect.left;
-  } else if (point.x == rect.left || point.x == rect.right) {
-    return point.y <= rect.top && point.y >= rect.bottom;
-  } else {
-    return false;
-  }
+  return point.x <= rect.right && point.x >= rect.left && point.y >= rect.top &&
+         point.y <= rect.bottom;
 }
 
+/** @brief encode a rectangle
+ *
+ * @param left column, or x, position of the left edge
+ * @param top row, or y, position of the top edge
+ * @param right column, or x, position of the right edge
+ * @param bottom row, or y, position of the bottom edge
+ *
+ * @return Encoded byte array representation of the rectangle.
+ */
 [[nodiscard]] constexpr std::array<uint8_t, 3>
 encode_rectangle(grid_t left, grid_t top, grid_t right,
                  grid_t bottom) noexcept {
@@ -199,7 +203,7 @@ decode_rectangle(const uint8_t *data) noexcept {
 namespace constexpr_tests {
 constexpr Rectangle rect_dut{.left = 10, .top = 11, .right = 20, .bottom = 21};
 constexpr std::array<uint8_t, 3> expected_encoded_rect{
-    (10 << 3) | (( 11 & 0b11100 ) >> 2), ((11 & 0b11) << 6) | 20, 21};
+    (10 << 3) | ((11 & 0b11100) >> 2), ((11 & 0b11) << 6) | 20, 21};
 constexpr auto encoded_rect_dut{encode_rectangle(
     rect_dut.left, rect_dut.top, rect_dut.right, rect_dut.bottom)};
 
@@ -209,6 +213,45 @@ static_assert(std::equal(std::begin(encoded_rect_dut),
                          std::end(expected_encoded_rect)));
 
 static_assert(rect_dut == decode_rectangle(std::data(encoded_rect_dut)));
+
+[[nodiscard]] constexpr bool test_check_intersects_rect() noexcept {
+
+  bool result{true};
+
+  const Rectangle rect_dut{.left = 10, .top = 11, .right = 11, .bottom = 13};
+
+  auto &&xpos_constant_test{[rect_dut](const grid_t xpos) {
+    for (uint8_t ypos = rect_dut.top; ypos <= rect_dut.bottom; ++ypos) {
+      return check_intersects({.x = xpos, .y = ypos}, rect_dut);
+    }
+  }};
+  auto &&ypos_constant_test{[rect_dut](const grid_t ypos) {
+    for (uint8_t xpos = rect_dut.left; xpos <= rect_dut.right; ++xpos) {
+      return check_intersects({.x = xpos, .y = ypos}, rect_dut);
+    }
+  }};
+
+  /* these tests should always return FALSE */
+  /* check along just out the left edge */
+  result &= !xpos_constant_test(static_cast<grid_t>(rect_dut.left - 1));
+  /* repeat, but for the right side */
+  result &= !xpos_constant_test(static_cast<grid_t>(rect_dut.right + 1));
+  /* switch axis; check just above the top edge */
+  result &= !ypos_constant_test(static_cast<grid_t>(rect_dut.top - 1));
+  /* and again, but for the bottom edge */
+  result &= !ypos_constant_test(static_cast<grid_t>(rect_dut.bottom + 1));
+
+  /* these tests should always return TRUE */
+  for (grid_t xpos = rect_dut.left; xpos <= rect_dut.right; ++xpos) {
+    result &= xpos_constant_test(static_cast<grid_t>(xpos));
+  }
+  for (grid_t ypos = rect_dut.top; ypos <= rect_dut.bottom; ++ypos) {
+    result &= ypos_constant_test(static_cast<grid_t>(ypos));
+  }
+
+  return result;
+}
+static_assert(test_check_intersects_rect());
 } // namespace constexpr_tests
 
 /* =======================================================================
@@ -1111,12 +1154,11 @@ inline constexpr std::array levels{
     level_25, level_26, level_27, level_28, level_29, level_30,
 };
 
-/* ============================================================== 
- 
+/* ==============================================================
+
 
 
  * ============================================================== */
-
 
 } // namespace snake
 
