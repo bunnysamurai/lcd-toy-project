@@ -16,7 +16,7 @@
 #include "screen/constexpr_tile_utils.hpp"
 #include "screen/screen.hpp"
 
-#include "utilities.hpp"
+#include "common/utilities.hpp"
 
 namespace demo {
 

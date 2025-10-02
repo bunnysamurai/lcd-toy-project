@@ -5,8 +5,8 @@
 #include "pico/rand.h"
 #include "pico/time.h"
 
-#include "../screen_utils.hpp"
-#include "BitImage.hpp"
+#include "common/screen_utils.hpp"
+#include "common/BitImage.hpp"
 #include "gamepad/gamepad.hpp"
 
 // #define PRINT_DEBUG_MSG

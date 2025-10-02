@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "BitImage.hpp"
+#include "common/BitImage.hpp"
 
 #include "screen/TileDef.h"
 #include "screen/glyphs/letters.hpp"

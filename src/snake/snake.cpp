@@ -22,7 +22,7 @@
 
 #include "embp/circular_array.hpp"
 
-#include "../screen_utils.hpp"
+#include "common/screen_utils.hpp"
 #include "snake_common.hpp"
 #include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"

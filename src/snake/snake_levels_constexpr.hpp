@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <array>
 
-#include "../utilities.hpp"
+#include "common/utilities.hpp"
 #include "snake_common.hpp"
 
 namespace snake {

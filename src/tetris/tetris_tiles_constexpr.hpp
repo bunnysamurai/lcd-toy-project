@@ -9,7 +9,7 @@
 #include "screen/constexpr_tile_utils.hpp"
 #include "screen/screen_def.h"
 
-#include "../utilities.hpp"
+#include "common/utilities.hpp"
 #include "tetris_defs.hpp"
 
 #include "embp/constexpr_numeric.hpp"

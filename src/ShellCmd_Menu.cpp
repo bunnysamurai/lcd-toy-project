@@ -7,7 +7,7 @@
 
 #include "pico/time.h"
 
-#include "Cursor.hpp"
+#include "common/Cursor.hpp"
 #include "demo.hpp"
 #include "gamepad/gamepad.hpp"
 #include "screen/screen.hpp"
