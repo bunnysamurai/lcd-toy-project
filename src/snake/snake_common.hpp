@@ -2,6 +2,7 @@
 #define SNAKE_COMMON_HPP
 
 #include <cstdint>
+#include "common/Grid.hpp"
 
 namespace snake {
 
@@ -16,16 +17,6 @@ enum struct Direction : uint8_t {
   DOWN = 0x2,
   LEFT = 0x3
 };
-
-struct GridLocation {
-  grid_t x;
-  grid_t y;
-};
-
-[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
-                                        snake::GridLocation rhs) noexcept {
-  return lhs.x == rhs.x && lhs.y == rhs.y;
-}
 
 } // namespace snake
 #endif

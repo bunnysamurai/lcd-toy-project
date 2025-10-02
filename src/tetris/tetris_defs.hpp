@@ -46,34 +46,6 @@ struct GuiCfg {
   uint8_t piece_preview_height;
 };
 
-/** @brief for bookkeeping  */
-template <uint32_t NCols, uint32_t NRows> struct ThreeBitImage {
-public:
-  std::array<BitImage<NCols, NRows>, 3> m_field;
-
-  [[nodiscard]] constexpr uint8_t get(uint32_t x, uint32_t y) const noexcept {
-    // uint32_t count{};
-    // uint8_t result{};
-    // for (const auto &bit : m_field) {
-    //   result |= bit.get(x, y) << count;
-    //   ++count;
-    // }
-
-    return (uint8_t{m_field[2].get(x, y)} << 2) |
-           (uint8_t{m_field[1].get(x, y)} << 1) | uint8_t{m_field[0].get(x, y)};
-  }
-  constexpr void set(uint8_t value, uint32_t x, uint32_t y) noexcept {
-    // uint32_t count{};
-    // for (auto &bit : m_field) {
-    //   bit.set((value >> count) & 0b1, x, y);
-    //   ++count;
-    // }
-
-    m_field[2].set(((value >> 2) & 0b1) == 1, x, y);
-    m_field[1].set(((value >> 1) & 0b1) == 1, x, y);
-    m_field[0].set((value & 0b1) == 1, x, y);
-  }
-};
 
 /* Tetriminos
  *

@@ -73,7 +73,7 @@ struct StraightLine {
          lhs.dir == rhs.dir;
 }
 
-[[nodiscard]] constexpr bool check_intersects(GridLocation point,
+[[nodiscard]] constexpr bool check_intersects(Grid::Location point,
                                               StraightLine linedef) noexcept {
   bool status{false};
   switch (linedef.dir) {
@@ -156,7 +156,7 @@ struct Rectangle {
          lhs.bottom == rhs.bottom;
 }
 
-[[nodiscard]] constexpr bool check_intersects(GridLocation point,
+[[nodiscard]] constexpr bool check_intersects(Grid::Location point,
                                               Rectangle rect) noexcept {
   return point.x <= rect.right && point.x >= rect.left && point.y >= rect.top &&
          point.y <= rect.bottom;

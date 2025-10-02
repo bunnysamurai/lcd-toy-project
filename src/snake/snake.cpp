@@ -54,23 +54,11 @@ constexpr uint8_t INITIAL_TICK_HACK_TUNING{1};
  * other snakes might be.
  */
 
-struct ScreenLocation {
-  pix_t x;
-  pix_t y;
-};
+using ScreenLocation = NativeLocation;
 
-struct TileTransform {
-  pix_t off;
-  pix_t scale;
-};
+using TileTransform = Grid::GridTransform;
 
-struct TileGridCfg {
-  TileTransform xdimension;
-  TileTransform ydimension;
-
-  grid_t grid_width;
-  grid_t grid_height;
-};
+using TileGridCfg = Grid::GridCfg;
 
 /* clang-format off */
 /* the snake state:
@@ -88,14 +76,14 @@ struct TileGridCfg {
 /* clang-format on */
 
 struct SnakeState {
-  snake::GridLocation head;
+  Grid::Location head;
   Direction head_dir;
   embp::circular_array<Direction, 255U> body_vec;
 };
 
 struct LevelState {
   bool exit_is_open;
-  snake::GridLocation exit;
+  Grid::Location exit;
   snake::Level lvl;
 };
 
@@ -111,16 +99,16 @@ struct Apple {
 };
 static_assert(sizeof(Apple) == 2);
 
-[[nodiscard]] constexpr bool operator==(snake::GridLocation lhs,
+[[nodiscard]] constexpr bool operator==(Grid::Location lhs,
                                         Apple rhs) noexcept {
   return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 [[nodiscard]] constexpr bool operator==(Apple lhs,
-                                        snake::GridLocation rhs) noexcept {
+                                        Grid::Location rhs) noexcept {
   return rhs == lhs;
 }
 
-TileGridCfg g_tile_grid;
+Grid g_grid;
 SnakeState g_snake_state;
 LevelState g_level;
 uint32_t g_collided_apple;
@@ -129,12 +117,8 @@ embp::variable_array<Apple, NUMBER_OF_APPLES * NUMBER_OF_APPLES>
 std::array<uint32_t, snake::PLAY_SIZE>
     g_bgrid; /* bgrid = border grid, I guess */
 
-[[nodiscard]] ScreenLocation to_pixel_xy(snake::GridLocation grid_xy) noexcept {
-  /* TODO consider adding range checks here?  Or should it go somewhere else? */
-  return {.x = static_cast<pix_t>(grid_xy.x * g_tile_grid.xdimension.scale +
-                                  g_tile_grid.xdimension.off),
-          .y = static_cast<pix_t>(grid_xy.y * g_tile_grid.ydimension.scale +
-                                  g_tile_grid.ydimension.off)};
+[[nodiscard]] ScreenLocation to_pixel_xy(Grid::Location grid_xy) noexcept {
+  return g_grid.to_native(grid_xy);
 }
 
 void draw_grid_tile(grid_t x, grid_t y, const screen::Tile &tile) {
@@ -163,15 +147,15 @@ constexpr void copy_tile_to_4bpp_buffer_and_double_in_size(
   }
 }
 
-/** @brief Advances a snake::GridLocation in a given Direction
+/** @brief Advances a Grid::Location in a given Direction
  *
  * @param point Grid Point
  * @param direction Up, Down, Left, or Right
  *
- * @return A new snake::GridLocation, advanced in the specified direction.
+ * @return A new Grid::Location, advanced in the specified direction.
  */
-[[nodiscard]] constexpr snake::GridLocation
-move_point(snake::GridLocation point, Direction direction) noexcept {
+[[nodiscard]] constexpr Grid::Location
+move_point(Grid::Location point, Direction direction) noexcept {
   switch (direction) {
   case Direction::UP:
     point.y -= 1;
@@ -212,8 +196,8 @@ move_point(snake::GridLocation point, Direction direction) noexcept {
 /*                                                            */
 /* ========================================================== */
 void clear_screen_grid() noexcept {
-  for (grid_t yy = 1; yy < g_tile_grid.grid_height - 1; ++yy) {
-    for (grid_t xx = 1; xx < g_tile_grid.grid_width - 1; ++xx) {
+  for (grid_t yy = 1; yy < g_grid.config().grid_height - 1; ++yy) {
+    for (grid_t xx = 1; xx < g_grid.config().grid_width - 1; ++xx) {
       draw_grid_tile(xx, yy, snake::BackgroundTile);
     }
   }
@@ -241,7 +225,7 @@ get_border_grid_point(const grid_t row, const grid_t col) noexcept {
 
 void init_level(snake::Level lvl) noexcept {
   g_level.exit_is_open = false;
-  g_level.exit = {.x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
+  g_level.exit = {.x = static_cast<grid_t>(g_grid.config().grid_width >> 1),
                   .y = 0};
   g_level.lvl = lvl;
   clear_screen_grid();
@@ -295,7 +279,7 @@ void draw_structure(snake::Point point, const screen::Tile &tile) {
 
 void draw_structure(snake::StraightLine line) {
   const snake::Direction dir{line.dir};
-  snake::GridLocation start{.x = line.xs, .y = line.ys};
+  Grid::Location start{.x = line.xs, .y = line.ys};
 
   int8_t xinc{};
   int8_t yinc{};
@@ -324,7 +308,7 @@ void draw_structure(snake::StraightLine line) {
 }
 void draw_structure(snake::StraightLine line, const screen::Tile &tile) {
   const snake::Direction dir{line.dir};
-  snake::GridLocation start{.x = line.xs, .y = line.ys};
+  Grid::Location start{.x = line.xs, .y = line.ys};
 
   int8_t xinc{};
   int8_t yinc{};
@@ -440,7 +424,7 @@ void draw_this_level(snake::Level lvl) noexcept {
  *
  *  NOTE: grid needs to be intialized before this function!
  */
-void init_snake(snake::GridLocation start, Direction dir) {
+void init_snake(Grid::Location start, Direction dir) {
   g_snake_state.head = start;
   g_snake_state.head_dir = dir;
   g_snake_state.body_vec.clear();
@@ -700,7 +684,7 @@ void init_top_panel_config(const TileGridCfg &grid_cfg) {
 
     hs = lives_height_tiles * TILE_INC
     ht = 5
-    hm = g_tile_grid.ydimension.off
+    hm = g_grid.config().ydimension.off
 
     hm = hs + ht + 3 * hg
     solve for hg:
@@ -805,14 +789,13 @@ bool configure_tile_grid() noexcept {
     return false;
   }
 
-  g_tile_grid.grid_width = grid_width;
-  g_tile_grid.grid_height = grid_height;
-  g_tile_grid.xdimension.scale = grid_scale;
-  g_tile_grid.xdimension.off = grid_xoff;
-  g_tile_grid.ydimension.scale = grid_scale;
-  g_tile_grid.ydimension.off = screen_pix_y_off + grid_yoff;
+  g_grid = Grid{
+      {.xdimension = {.off = grid_xoff, .scale = grid_scale},
+       .ydimension = {.off = screen_pix_y_off + grid_yoff, .scale = grid_scale},
+       .grid_width = grid_width,
+       .grid_height = grid_height}};
 
-  return g_tile_grid.grid_width == 33 && g_tile_grid.grid_height == 33;
+  return g_grid.config().grid_width == 33 && g_grid.config().grid_height == 33;
 }
 
 void draw_border() {
@@ -827,11 +810,11 @@ void draw_border() {
   /* top and bottom borders */
   {
     grid_t gy = 0;
-    for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
+    for (grid_t gx = 1; gx < g_grid.config().grid_width - 1; ++gx) {
       draw_grid_tile(gx, gy, snake::BorderTiles[LR_CODE]);
     }
-    gy = g_tile_grid.grid_height - 1;
-    for (grid_t gx = 1; gx < g_tile_grid.grid_width - 1; ++gx) {
+    gy = g_grid.config().grid_height - 1;
+    for (grid_t gx = 1; gx < g_grid.config().grid_width - 1; ++gx) {
       draw_grid_tile(gx, gy, snake::BorderTiles[LR_CODE]);
     }
   }
@@ -839,11 +822,11 @@ void draw_border() {
   /* left and right borders */
   {
     grid_t gx = 0;
-    for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
+    for (grid_t gy = 1; gy < g_grid.config().grid_height - 1; ++gy) {
       draw_grid_tile(gx, gy, snake::BorderTiles[TB_CODE]);
     }
-    gx = g_tile_grid.grid_width - 1;
-    for (grid_t gy = 1; gy < g_tile_grid.grid_height - 1; ++gy) {
+    gx = g_grid.config().grid_width - 1;
+    for (grid_t gy = 1; gy < g_grid.config().grid_height - 1; ++gy) {
       draw_grid_tile(gx, gy, snake::BorderTiles[TB_CODE]);
     }
   }
@@ -859,7 +842,7 @@ void draw_border() {
   draw_grid_tile(0, 0, snake::BorderTiles[BR_CODE]);
 }
 
-void update_borders(snake::GridLocation loc) noexcept {
+void update_borders(Grid::Location loc) noexcept {
   static constexpr auto LR_CODE{0b0101};
   /* why the +1?  because I'm a hack... also, the fix for a render bug on the
    * snake's entry to the level was to start the snake head one row up.  we need
@@ -876,7 +859,7 @@ bool init_the_screen() noexcept {
   if (!configure_tile_grid()) {
     return false;
   }
-  init_top_panel_config(g_tile_grid);
+  init_top_panel_config(g_grid.config());
 
   /* we are a color application */
   screen::set_format(snake::TILE_FORMAT);
@@ -902,7 +885,7 @@ bool init_the_screen() noexcept {
 enum struct Collision { NONE, BORDER, APPLE, SNAKE, EXIT };
 
 [[nodiscard]] bool
-check_for_apple_collision(snake::GridLocation point,
+check_for_apple_collision(Grid::Location point,
                           uint32_t &collided_apple_index) noexcept {
   uint32_t idx{0};
   for (const auto apple : g_apple_locations) {
@@ -916,7 +899,7 @@ check_for_apple_collision(snake::GridLocation point,
 }
 
 [[nodiscard]] constexpr bool
-check_for_itself_collision_impl(snake::GridLocation point,
+check_for_itself_collision_impl(Grid::Location point,
                                 const SnakeState &snake) noexcept {
   /* if the head is equal to any of it's body, we have a collision */
   auto start{snake.head};
@@ -929,7 +912,7 @@ check_for_itself_collision_impl(snake::GridLocation point,
   return false;
 }
 [[nodiscard]] constexpr bool
-check_for_itself_collision(snake::GridLocation point) noexcept {
+check_for_itself_collision(Grid::Location point) noexcept {
   return check_for_itself_collision_impl(point, g_snake_state);
 }
 
@@ -939,7 +922,7 @@ namespace constexpr_tests {
   SnakeState dut;
   /* move the snake a bunch of times */
 
-  dut.head = snake::GridLocation{.x = 15, .y = 30};
+  dut.head = Grid::Location{.x = 15, .y = 30};
   dut.head_dir = Direction::UP;
   dut.body_vec.clear();
 
@@ -953,13 +936,13 @@ namespace constexpr_tests {
   }};
 
   update_snake(Direction::LEFT);
-  result &= dut.head == snake::GridLocation{.x = 14, .y = 30};
+  result &= dut.head == Grid::Location{.x = 14, .y = 30};
   update_snake(Direction::UP);
-  result &= dut.head == snake::GridLocation{.x = 14, .y = 29};
+  result &= dut.head == Grid::Location{.x = 14, .y = 29};
   update_snake(Direction::RIGHT);
-  result &= dut.head == snake::GridLocation{.x = 15, .y = 29};
+  result &= dut.head == Grid::Location{.x = 15, .y = 29};
   update_snake(Direction::UP);
-  result &= dut.head == snake::GridLocation{.x = 15, .y = 28};
+  result &= dut.head == Grid::Location{.x = 15, .y = 28};
 
   /* current snake state
    *      (x,y)
@@ -991,12 +974,12 @@ namespace constexpr_tests {
 static_assert(test_itself_collision_impl());
 } // namespace constexpr_tests
 
-[[nodiscard]] constexpr bool
-check_for_point_collisions(snake::GridLocation point, const uint8_t *p_data,
-                           uint32_t len) noexcept {
+[[nodiscard]] constexpr bool check_for_point_collisions(Grid::Location point,
+                                                        const uint8_t *p_data,
+                                                        uint32_t len) noexcept {
   for (uint32_t ii = 0; ii < len; ++ii) {
     const snake::Point pointdef{snake::decode_point(p_data)};
-    const snake::GridLocation border_point{.x = pointdef.x, .y = pointdef.y};
+    const Grid::Location border_point{.x = pointdef.x, .y = pointdef.y};
     if (point == border_point) {
       return true;
     }
@@ -1005,9 +988,9 @@ check_for_point_collisions(snake::GridLocation point, const uint8_t *p_data,
   return false;
 }
 
-[[nodiscard]] constexpr bool
-check_for_rect_collisions(snake::GridLocation point, const uint8_t *p_data,
-                          uint32_t len) noexcept {
+[[nodiscard]] constexpr bool check_for_rect_collisions(Grid::Location point,
+                                                       const uint8_t *p_data,
+                                                       uint32_t len) noexcept {
 
   for (uint32_t ii = 0; ii < len; ++ii) {
     const snake::Rectangle rectdef{snake::decode_rectangle(p_data)};
@@ -1019,8 +1002,9 @@ check_for_rect_collisions(snake::GridLocation point, const uint8_t *p_data,
   return false;
 }
 
-[[nodiscard]] constexpr bool check_for_straight_line_collisions(
-    snake::GridLocation point, const uint8_t *p_data, uint32_t len) noexcept {
+[[nodiscard]] constexpr bool
+check_for_straight_line_collisions(Grid::Location point, const uint8_t *p_data,
+                                   uint32_t len) noexcept {
   for (uint32_t ii = 0; ii < len; ++ii) {
     const snake::StraightLine linedef{snake::decode_straight_line(p_data)};
     if (snake::check_intersects(point, linedef)) {
@@ -1032,8 +1016,7 @@ check_for_rect_collisions(snake::GridLocation point, const uint8_t *p_data,
 }
 
 [[nodiscard]] constexpr bool
-check_for_level_collisions(snake::GridLocation point,
-                           snake::Level lvl) noexcept {
+check_for_level_collisions(Grid::Location point, snake::Level lvl) noexcept {
   const auto *p_structure{lvl.data};
   for (uint32_t ii = 0; ii < lvl.len; ++ii) {
     switch (p_structure[ii].type) {
@@ -1063,8 +1046,7 @@ check_for_level_collisions(snake::GridLocation point,
   return false;
 }
 
-[[nodiscard]] Collision
-check_for_collisions(snake::GridLocation point) noexcept {
+[[nodiscard]] Collision check_for_collisions(Grid::Location point) noexcept {
   /* If head is on the exit, and the door is open, then make like a tree and get
    * outta here. */
   if (g_level.exit_is_open && point == g_level.exit) {
@@ -1072,8 +1054,8 @@ check_for_collisions(snake::GridLocation point) noexcept {
   }
 
   /* if head is on the border, whoops! Game over. */
-  if (point.x < 1 || point.x > g_tile_grid.grid_width - 2 || point.y < 1 ||
-      point.y > g_tile_grid.grid_height - 2 ||
+  if (point.x < 1 || point.x > g_grid.config().grid_width - 2 || point.y < 1 ||
+      point.y > g_grid.config().grid_height - 2 ||
       check_for_level_collisions(point, g_level.lvl)) {
     return Collision::BORDER;
   }
@@ -1426,9 +1408,9 @@ void run() {
 
   gamepad::five::init();
 
-  const snake::GridLocation SNAKE_START{
-      .x = static_cast<grid_t>(g_tile_grid.grid_width >> 1),
-      .y = static_cast<grid_t>(g_tile_grid.grid_height - 1)};
+  const Grid::Location SNAKE_START{
+      .x = static_cast<grid_t>(g_grid.config().grid_width >> 1),
+      .y = static_cast<grid_t>(g_grid.config().grid_height - 1)};
   static constexpr Direction SNAKE_DIR{Direction::UP};
 
   static constexpr uint8_t GROWING_START{4};
