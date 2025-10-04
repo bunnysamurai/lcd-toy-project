@@ -9,6 +9,8 @@
  */
 template <uint32_t NCols, uint32_t NRows> struct BitImage {
 public:
+  static constexpr uint32_t ROWS{NRows};
+  static constexpr uint32_t COLS{NCols};
   std::array<uint32_t, (NCols * NRows + 31) / (8 * 4)> m_field{};
 
   [[nodiscard]] constexpr bool get(uint32_t x, uint32_t y) const noexcept {
@@ -46,6 +48,8 @@ public:
  */
 template <uint32_t NCols, uint32_t NRows> struct TwoBitImage {
 public:
+  static constexpr uint32_t ROWS{NRows};
+  static constexpr uint32_t COLS{NCols};
   std::array<BitImage<NCols, NRows>, 2> m_field;
 
   [[nodiscard]] constexpr uint8_t get(uint32_t x, uint32_t y) const noexcept {
@@ -62,6 +66,8 @@ public:
  */
 template <uint32_t NCols, uint32_t NRows> struct ThreeBitImage {
 public:
+  static constexpr uint32_t ROWS{NRows};
+  static constexpr uint32_t COLS{NCols};
   std::array<BitImage<NCols, NRows>, 3> m_field;
 
   [[nodiscard]] constexpr uint8_t get(uint32_t x, uint32_t y) const noexcept {

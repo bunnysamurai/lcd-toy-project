@@ -5,8 +5,8 @@
 #include "pico/rand.h"
 #include "pico/time.h"
 
-#include "common/screen_utils.hpp"
 #include "common/BitImage.hpp"
+#include "common/screen_utils.hpp"
 #include "gamepad/gamepad.hpp"
 
 // #define PRINT_DEBUG_MSG
@@ -1075,16 +1075,5 @@ void run() {
     }
     sleep_us(PROCESS_TICK_US >> 4);
   }
-  /*
-   * rules on processing user input:
-   *   take action as soon as a key is pressed
-   *   supress any further actions until all keys are released
-   *
-   * Score... uhh, level * 10 per line?
-   *
-   * If score gets high enough, increment the level.
-   *
-   * There are ten levels, where each one shortens the game tick period.
-   */
 }
 } // namespace tetris
