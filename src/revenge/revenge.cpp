@@ -1,7 +1,8 @@
 #include "revenge.hpp"
 
+#include <algorithm>
 #include <cstdint>
-#include <regex>
+#include <tuple>
 
 #include "revenge_defs.hpp"
 #include "revenge_tiles.hpp"
@@ -12,6 +13,7 @@
 #include "revenge_tiles.hpp"
 #include "screen/screen.hpp"
 
+#include "pico/rand.h"
 #include "pico/time.h"
 
 // clang-format off
@@ -92,8 +94,8 @@ namespace revenge {
 /*           |____/ |_/_/   \_\_| |___\____|    \_/_/   \_\_| \_\             */
 /*                                                                            */
 /* ===========================================================================*/
+
 static Timer_t g_game_timer{GAME_TICK_PERIOD_US};
-static Timer_t g_input_timer{INPUT_POLL_PERIOD_US};
 static PlayGrid g_playfield;
 /* our playfield keeps track of these tile types:
     000 - nothing
@@ -103,6 +105,7 @@ static PlayGrid g_playfield;
     100 - unmoveable block
     101 - cheese
 */
+
 static Grid g_grid;
 static Beast g_mouse;
 static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
@@ -115,10 +118,134 @@ static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
 /*                       \___/  |_| |___|_____|____/                          */
 /*                                                                            */
 /* ===========================================================================*/
+
+/** @brief draw a tile on the grid
+ * Primary drawing utility once the game is up and running.
+ * Use lower level drawing primitives for things other than tiles-on-the-grid.
+ *
+ * @param xx Column location on the grid
+ * @param yy Row location on the grid
+ * @param tile Tile to draw.  Should probably have side_length equal to the
+ * grid's scaling.
+ */
 void draw_grid_tile(grid_t xx, grid_t yy, const screen::Tile &tile) noexcept {
   const auto [pixx, pixy]{g_grid.to_native({.x = xx, .y = yy})};
   screen::draw_tile(pixx, pixy, tile);
 }
+
+/** @brief return a random location that is also open on the play grid
+ *      probably most useful when spawning in new cats
+ * @return Grid location that's guaranteed to have nothing in it (i.e. is a
+ * GridObject::NOTHING )
+ */
+[[nodiscard]] Grid::Location find_suitable_cat_spawn() noexcept {
+
+  /* only need 5 bits for the grid location */
+  static_assert(GRID_SIZE_COLS < (1 << 5));
+  static_assert(GRID_SIZE_ROWS < (1 << 5));
+  static_assert(
+      GRID_SIZE_ROWS == GRID_SIZE_COLS,
+      "If you want a rectangle for the grid, this function needs to change");
+
+  /*
+   *
+   * THE method
+   * Like in snake, just reroll if the random position is unsuitable.
+   *
+   * A suitable place is defined as a location that is both a
+   *   GridObject::NOTHING
+   *   AND
+   *   first 3 rows or last 3 rows or first 3 columns or last 3 columns
+   *
+   * a call to rand gives us 32 random bits
+   * the bottom two bits map us to the section:
+   *   00 - first 3 rows
+   *   01 - last 3 rows
+   *   10 - first 3 cols
+   *   11 - last 3 cols
+   *
+   * the next two bits give use which row/col to use:
+   *   00 - row/col 0
+   *   01 - row/col 1
+   *   10 - row/col 2
+   *   11 - row/col 1 ( we'll bias towards the middle of the 3 possibilities )
+   *
+   * the next 5 bits index into the other dimension
+   *
+   * and reroll if the index value is out-of-range or the selected location is
+   * not open
+   *
+   * ...
+   *
+   * With the strategy, I think it is technically possible for a player to
+   * supress creation of a cat, which would result in an unending loop.  We
+   * should probably check for this in a future update or decide not to care.
+   */
+
+  auto &&generate_other_dim_index{[](auto &randnum) {
+    const auto other_dimension_index{randnum & 0b11111};
+    randnum >>= 5;
+    return other_dimension_index;
+  }};
+
+  auto &&generate_section_selection_offsets{[](auto &randnum) {
+    const auto section_selection{randnum & 0b11};
+    randnum >>= 2;
+    const auto x_is_prime{static_cast<bool>(section_selection & 0b1)};
+    const auto offset{static_cast<uint16_t>((GRID_SIZE_COLS - 3) *
+                                            ((section_selection >> 1) & 0b1))};
+    return std::make_tuple(offset, x_is_prime);
+  }};
+
+  auto &&generate_prime_dimension_index{[](auto &randnum) -> uint8_t {
+    const auto result{randnum & 0b11};
+    if (result == 0b11) {
+      return 0b01;
+    }
+    return result;
+  }};
+
+  /* we use 9 bits for "roll of the dice", so we can use a single call to
+   * get_rand_32 3 times before we need to call it again.*/
+  static constexpr uint32_t NUMBER_OF_INNER_TRIES{3};
+  for (;;) {
+    auto number{get_rand_32()};
+
+    for (uint32_t ii = 0; ii < NUMBER_OF_INNER_TRIES; ++ii) {
+      const auto other_dimension_index{generate_other_dim_index(number)};
+      if (other_dimension_index >= GRID_SIZE_COLS) {
+        /* reroll */
+        continue;
+      }
+      const auto [offset,
+                  x_is_prime]{generate_section_selection_offsets(number)};
+      const auto within_selection_index{generate_prime_dimension_index(number)};
+
+      const Grid::Location potential{
+          .x = offset * x_is_prime + within_selection_index * x_is_prime +
+               other_dimension_index * (!x_is_prime),
+          .y = offset * (!x_is_prime) + within_selection_index * (!x_is_prime) +
+               other_dimension_index * x_is_prime};
+
+      /* final check, make sure this location isn't on top of another cat */
+      const bool no_cat_here{std::end(g_cats) ==
+                             std::find_if(std::begin(g_cats), std::end(g_cats),
+                                          [=](const auto &beast) {
+                                            return beast.location() ==
+                                                   potential;
+                                          })};
+
+      if (no_cat_here &&
+          static_cast<GridObject>(g_playfield.get(potential.x, potential.y)) ==
+              GridObject::NOTHING) {
+        return potential;
+      }
+    }
+  }
+
+  return {};
+}
+
 /* ===========================================================================*/
 /*              ____ ___  _     _     ___ ____ ___ ___  _   _                 */
 /*             / ___/ _ \| |   | |   |_ _/ ___|_ _/ _ \| \ | |                */
@@ -127,6 +254,7 @@ void draw_grid_tile(grid_t xx, grid_t yy, const screen::Tile &tile) noexcept {
 /*             \____\___/|_____|_____|___|____/___\___/|_| \_|                */
 /*                                                                            */
 /* ===========================================================================*/
+
 [[nodiscard]] constexpr Collision
 check_for_collision(Grid::Location proposed) noexcept {
   /* first, check for the border */
@@ -156,29 +284,98 @@ check_for_collision(Grid::Location proposed) noexcept {
 /*                     |____/|_____/_/   \_\____/ |_|                         */
 /*                                                                            */
 /* ===========================================================================*/
+
 void draw_beast(const Beast &aminal, const screen::Tile &tile) noexcept {
   draw_grid_tile(aminal.location().x, aminal.location().y, tile);
 }
 
-[[nodiscard]] Collision move_beast(UserInput request, Beast &beast) noexcept {
+/** @brief traverse through the moveable block row/column, given the intended
+ * direction.
+ *
+ * @return False if this block train can't move, true if it can move.
+ */
+[[nodiscard]] bool
+traverse_moveable_blocks(Grid::Location start, const Direction dir,
+                         Grid::Location &point_of_encounter) noexcept {
+  /* starting with start, keep moving in the 'dir' direction until one of the
+   * following occurs:
+   *   a non-moveable thing is encountered (nonmove-block, trap, cat)
+   *   a hole is encountered
+   *   open space or cheese is encountered
+   */
+  static constexpr Grid::Location LIMITS{.x = GRID_SIZE_COLS,
+                                         .y = GRID_SIZE_ROWS};
+  point_of_encounter = start;
+  if (point_of_encounter >= LIMITS) {
+    return false;
+  }
+  GridObject obj{static_cast<GridObject>(
+      g_playfield.get(point_of_encounter.x, point_of_encounter.y))};
+  while (obj == GridObject::MOVABLE_BLOCK) {
+    point_of_encounter = move(point_of_encounter, dir);
+    if (point_of_encounter >= LIMITS) {
+      return false;
+    }
+    obj = static_cast<GridObject>(
+        g_playfield.get(point_of_encounter.x, point_of_encounter.y));
+  }
+
+  return obj == GridObject::CHEESE || obj == GridObject::HOLE ||
+         obj == GridObject::NOTHING;
+}
+
+[[nodiscard]] Collision move_mouse(UserInput request, Beast &beast) noexcept {
   const Direction dir{static_cast<Direction>(request)};
   const Grid::Location proposed_location{beast.proposed(dir)};
 
   const Collision collide{check_for_collision(proposed_location)};
 
-  if (collide != Collision::FIXED_BLOCK) {
+  Grid::Location encounter;
+  /* the only thing we need to do here is answer the question, is this requested
+   * move allowed? */
+  switch (collide) {
+  case Collision::NONE:
+  case Collision::CHEESE:
+  case Collision::HOLE:
     beast.location(proposed_location);
+    break;
+  case Collision::BLOCK:
+    if (traverse_moveable_blocks(proposed_location, dir, encounter)) {
+      beast.location(proposed_location);
+
+      const GridObject obj{g_playfield.get(encounter.x, encounter.y)};
+      if (obj != GridObject::HOLE) {
+        g_playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK),
+                        encounter.x, encounter.y);
+        draw_grid_tile(encounter.x, encounter.y, BLOCK);
+      }
+    }
+    break;
+  case Collision::FIXED_BLOCK:
+  case Collision::CAT:
+  case Collision::TRAP:
+  case Collision::MOUSE:
+    break;
   }
 
   return collide;
 }
 
+void init_cats(uint8_t number_of_cats) noexcept {
+  for (uint8_t idx = 0; idx < number_of_cats; ++idx) {
+    g_cats.push_back(Beast{find_suitable_cat_spawn()});
+    draw_beast(g_cats.back(), CAT);
+  }
+}
+
+[[nodiscard]] bool move_cats() { return false; }
+
 /* ===========================================================================*/
-/*               ____  _        _ __   ______ ____  ___ ____                  */
-/*              |  _ \| |      / \\ \ / / ___|  _ \|_ _|  _ \                 */
-/*              | |_) | |     / _ \\ V / |  _| |_) || || | | |                */
-/*              |  __/| |___ / ___ \| || |_| |  _ < | || |_| |                */
-/*              |_|   |_____/_/   \_\_| \____|_| \_\___|____/                 */
+/*            ____  _        _ __   ______ ____  ___ ____                     */
+/*           |  _ \| |      / \\ \ / / ___|  _ \|_ _|  _ \                    */
+/*           | |_) | |     / _ \\ V / |  _| |_) || || | | |                   */
+/*           |  __/| |___ / ___ \| || |_| |  _ < | || |_| |                   */
+/*           |_|   |_____/_/   \_\_| \____|_| \_\___|____/                    */
 /*                                                                            */
 /* ===========================================================================*/
 
@@ -221,11 +418,11 @@ void render_playgrid(PlayGrid &playfield) {
 }
 
 /* ===========================================================================*/
-/*           _   _ ____  _____ ____    ___ _   _ ____  _   _ _____            */
-/*          | | | / ___|| ____|  _ \  |_ _| \ | |  _ \| | | |_   _|           */
-/*          | | | \___ \|  _| | |_) |  | ||  \| | |_) | | | | | |             */
-/*          | |_| |___) | |___|  _ <   | || |\  |  __/| |_| | | |             */
-/*           \___/|____/|_____|_| \_\ |___|_| \_|_|    \___/  |_|             */
+/*           _   _ ____  _____ ____    ___ _   _ ____  _   _ _____ */
+/*          | | | / ___|| ____|  _ \  |_ _| \ | |  _ \| | | |_   _| */
+/*          | | | \___ \|  _| | |_) |  | ||  \| | |_) | | | | | | */
+/*          | |_| |___) | |___|  _ <   | || |\  |  __/| |_| | | | */
+/*           \___/|____/|_____|_| \_\ |___|_| \_|_|    \___/  |_| */
 /*                                                                            */
 /* ===========================================================================*/
 [[nodiscard]] UserInput process_user_input() noexcept {
@@ -264,11 +461,11 @@ void render_playgrid(PlayGrid &playfield) {
 }
 
 /* ===========================================================================*/
-/*                             ____  _   _ _   _                              */
-/*                            |  _ \| | | | \ | |                             */
-/*                            | |_) | | | |  \| |                             */
-/*                            |  _ <| |_| | |\  |                             */
-/*                            |_| \_\\___/|_| \_|                             */
+/*                             ____  _   _ _   _ */
+/*                            |  _ \| | | | \ | | */
+/*                            | |_) | | | |  \| | */
+/*                            |  _ <| |_| | |\  | */
+/*                            |_| \_\\___/|_| \_| */
 /*                                                                            */
 /* ===========================================================================*/
 void screen_init() noexcept {
@@ -304,23 +501,44 @@ void run() {
 
   /* initalize where the mouse goes */
   g_mouse.location({.x = GRID_SIZE_COLS >> 1, .y = GRID_SIZE_ROWS >> 1});
+  g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
+                  GRID_SIZE_COLS >> 1, GRID_SIZE_ROWS >> 1);
   draw_beast(g_mouse, MOUSE);
 
+  /* initialize the cats */
+  init_cats(2);
+
+  g_game_timer.reset();
   for (;;) {
 
+    /* user input loop, which runs on a release of a button */
     const UserInput request{process_user_input()};
     if (request == UserInput::QUIT) {
       break;
     }
+    if (request != UserInput::NO_ACTION) {
+      const auto current_location{g_mouse.location()};
+      const auto collision{move_mouse(request, g_mouse)};
 
-    const auto current_location{g_mouse.location()};
-    const auto collision{move_beast(request, g_mouse)};
-    if (current_location != g_mouse.location() &&
-        collision != Collision::FIXED_BLOCK) {
-      draw_grid_tile(current_location.x, current_location.y, BACKGROUND);
+      /* TODO we need to take action on the various collision types here... */
+
+      /* Here's the default action, i.e. mouse didn't get Eaten, Trapped, Fell
+       * In A Hole, or Ran Over By Yarn */
+      if (current_location != g_mouse.location()) {
+        g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
+                        current_location.x, current_location.y);
+        draw_beast(g_mouse, MOUSE);
+        draw_grid_tile(current_location.x, current_location.y, BACKGROUND);
+      }
     }
-    if (current_location != g_mouse.location()) {
-      draw_beast(g_mouse, MOUSE);
+
+    /* game loop, which processes the cats (that sounds inhumane) */
+    if (g_game_timer.elapsed()) {
+      g_game_timer.reset();
+      if (move_cats()) {
+        /* cat ate the mouse!  GAME OVER */
+        break;
+      }
     }
 
     sleep_us(1000);

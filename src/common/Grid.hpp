@@ -87,4 +87,24 @@ private:
                                         Grid::Location rhs) noexcept {
   return lhs.x == rhs.x && lhs.y == rhs.y;
 }
+[[nodiscard]] constexpr bool operator!=(Grid::Location lhs,
+                                        Grid::Location rhs) noexcept {
+  return !(lhs == rhs);
+}
+[[nodiscard]] constexpr bool operator<(Grid::Location lhs,
+                                       Grid::Location rhs) noexcept {
+  return lhs.x < rhs.x && lhs.y < rhs.y;
+}
+[[nodiscard]] constexpr bool operator<=(Grid::Location lhs,
+                                        Grid::Location rhs) noexcept {
+  return lhs < rhs || lhs == rhs;
+}
+[[nodiscard]] constexpr bool operator>=(Grid::Location lhs,
+                                        Grid::Location rhs) noexcept {
+  return !(lhs < rhs);
+}
+[[nodiscard]] constexpr bool operator>(Grid::Location lhs,
+                                       Grid::Location rhs) noexcept {
+  return !(lhs < rhs) && lhs != rhs;
+}
 #endif

@@ -63,6 +63,21 @@ enum struct UserInput {
   QUIT
 };
 
+[[nodiscard]] constexpr Grid::Location move(Grid::Location loc,
+                                            Direction dir) noexcept {
+  switch (dir) {
+  case Direction::UP:
+    return {.x = loc.x, .y = loc.y - 1};
+  case Direction::DOWN:
+    return {.x = loc.x, .y = loc.y + 1};
+  case Direction::LEFT:
+    return {.x = loc.x - 1, .y = loc.y};
+  case Direction::RIGHT:
+    return {.x = loc.x + 1, .y = loc.y};
+  }
+  return loc;
+}
+
 class Beast final {
 private:
   Grid::Location m_location;
@@ -75,22 +90,7 @@ public:
 
   [[nodiscard]] constexpr Grid::Location
   proposed(Direction dir) const noexcept {
-    Grid::Location result{m_location};
-    switch (dir) {
-    case Direction::UP:
-      --result.y;
-      break;
-    case Direction::DOWN:
-      ++result.y;
-      break;
-    case Direction::LEFT:
-      --result.x;
-      break;
-    case Direction::RIGHT:
-      ++result.x;
-      break;
-    }
-    return result;
+    return revenge::move(m_location, dir);
   }
   [[nodiscard]] constexpr Grid::Location location() const noexcept {
     return m_location;
