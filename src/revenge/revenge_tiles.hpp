@@ -81,7 +81,8 @@ inline constexpr auto nonmoveblock_tile{
     embp::filled<uint8_t, BTLEN>(LCYAN << 4 | LCYAN)};
 inline constexpr auto cheese_tile{
     embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
-inline constexpr auto cat_tile{embp::filled<uint8_t, BTLEN>(LRED << 4 | LRED)};
+inline constexpr auto cat_tile{embp::filled<uint8_t, BTLEN>(RED << 4 | RED)};
+inline constexpr auto sitting_cat_tile{embp::filled<uint8_t, BTLEN>(LRED << 4 | LRED)};
 inline constexpr auto mouse_tile{
     embp::filled<uint8_t, BTLEN>(GREEN << 4 | GREEN)};
 
@@ -107,6 +108,9 @@ inline constexpr screen::Tile CHEESE{.side_length = PIXELS_PER_GRID,
 inline constexpr screen::Tile CAT{.side_length = PIXELS_PER_GRID,
                                   .format = VIDEO_FORMAT,
                                   .data = std::data(cat_tile)};
+inline constexpr screen::Tile SITTING_CAT{.side_length = PIXELS_PER_GRID,
+                                  .format = VIDEO_FORMAT,
+                                  .data = std::data(sitting_cat_tile)};
 inline constexpr screen::Tile MOUSE{.side_length = PIXELS_PER_GRID,
                                     .format = VIDEO_FORMAT,
                                     .data = std::data(mouse_tile)};

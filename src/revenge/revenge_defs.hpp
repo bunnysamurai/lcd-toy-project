@@ -14,7 +14,7 @@ using Timer_t = Timer<timer_details::PicoSdk>;
 using pix_t = uint16_t;
 using grid_t = uint8_t;
 
-inline constexpr Timer_t::time_diff_t GAME_TICK_PERIOD_US{1'000'000};
+inline constexpr Timer_t::time_diff_t GAME_TICK_PERIOD_US{1'500'000};
 inline constexpr Timer_t::time_diff_t INPUT_POLL_PERIOD_US{10'000};
 
 inline constexpr uint8_t GRID_SIZE_COLS{21};
@@ -51,7 +51,16 @@ enum struct GridObject {
 
 /** @brief the directions things can move
  */
-enum struct Direction { UP, DOWN, LEFT, RIGHT };
+enum struct Direction {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+  UP_AND_LEFT,
+  UP_AND_RIGHT,
+  DOWN_AND_LEFT,
+  DOWN_AND_RIGHT
+};
 
 /** @brief Possible user inputs */
 enum struct UserInput {
@@ -74,6 +83,14 @@ enum struct UserInput {
     return {.x = loc.x - 1, .y = loc.y};
   case Direction::RIGHT:
     return {.x = loc.x + 1, .y = loc.y};
+  case Direction::UP_AND_LEFT:
+    return {.x = loc.x - 1, .y = loc.y + 1};
+  case Direction::UP_AND_RIGHT:
+    return {.x = loc.x + 1, .y = loc.y + 1};
+  case Direction::DOWN_AND_LEFT:
+    return {.x = loc.x - 1, .y = loc.y - 1};
+  case Direction::DOWN_AND_RIGHT:
+    return {.x = loc.x + 1, .y = loc.y - 1};
   }
   return loc;
 }

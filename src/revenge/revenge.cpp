@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <tuple>
+#include <utility>
 
 #include "revenge_defs.hpp"
 #include "revenge_tiles.hpp"
@@ -110,6 +111,16 @@ static Grid g_grid;
 static Beast g_mouse;
 static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
 
+void reset_global_state() noexcept {
+  g_game_timer.period(GAME_TICK_PERIOD_US);
+  g_game_timer.reset();
+  for (auto &arr : g_playfield.m_field) {
+    std::fill(std::begin(arr.m_field), std::end(arr.m_field), 0);
+  }
+  g_grid = Grid{};
+  g_mouse = Beast{};
+  g_cats.clear();
+}
 /* ===========================================================================*/
 /*                       _   _ _____ ___ _     ____                           */
 /*                      | | | |_   _|_ _| |   / ___|                          */
@@ -258,7 +269,7 @@ void draw_grid_tile(grid_t xx, grid_t yy, const screen::Tile &tile) noexcept {
 [[nodiscard]] constexpr Collision
 check_for_collision(Grid::Location proposed) noexcept {
   /* first, check for the border */
-  if (proposed.x > GRID_SIZE_COLS || proposed.y > GRID_SIZE_ROWS) {
+  if (proposed.x >= GRID_SIZE_COLS || proposed.y >= GRID_SIZE_ROWS) {
     return Collision::FIXED_BLOCK;
   }
 
@@ -299,9 +310,10 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
                          Grid::Location &point_of_encounter) noexcept {
   /* starting with start, keep moving in the 'dir' direction until one of the
    * following occurs:
-   *   a non-moveable thing is encountered (nonmove-block, trap, cat)
+   *   a non-moveable thing is encountered (nonmove-block, trap)
    *   a hole is encountered
    *   open space or cheese is encountered
+   *   also need to check for a cat
    */
   static constexpr Grid::Location LIMITS{.x = GRID_SIZE_COLS,
                                          .y = GRID_SIZE_ROWS};
@@ -321,7 +333,8 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
   }
 
   return obj == GridObject::CHEESE || obj == GridObject::HOLE ||
-         obj == GridObject::NOTHING;
+         (obj == GridObject::NOTHING &&
+          check_for_collision(point_of_encounter) != Collision::CAT);
 }
 
 [[nodiscard]] Collision move_mouse(UserInput request, Beast &beast) noexcept {
@@ -368,7 +381,158 @@ void init_cats(uint8_t number_of_cats) noexcept {
   }
 }
 
-[[nodiscard]] bool move_cats() { return false; }
+[[nodiscard]] constexpr std::pair<Direction, Direction>
+disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
+  const int32_t xdiff{static_cast<int32_t>(cat.x) -
+                      static_cast<int32_t>(mouse.x)};
+  const int32_t ydiff{static_cast<int32_t>(cat.y) -
+                      static_cast<int32_t>(mouse.y)};
+
+  const bool x_is_positive{xdiff > 0};
+  const bool y_is_positive{ydiff > 0};
+
+  const bool x_is_greater{(xdiff * (-1 * !x_is_positive)) >
+                          (ydiff * (-1 * !y_is_positive))};
+
+  const auto xypolar{
+      static_cast<uint8_t>((y_is_positive << 1) | x_is_positive)};
+  if (x_is_greater) {
+    switch (xypolar) {
+    case 0b00: /* both negative */
+               /* 4, 5 */
+      return std::make_pair(Direction::RIGHT, Direction::DOWN_AND_RIGHT);
+    case 0b01: /* x positive */
+      /* 0, 7 */
+      return std::make_pair(Direction::LEFT, Direction::DOWN_AND_LEFT);
+    case 0b10: /* y positive */
+      /* 3, 4 */
+      return std::make_pair(Direction::UP_AND_RIGHT, Direction::RIGHT);
+    case 0b11: /* both positive */
+      /* 0, 1*/
+      return std::make_pair(Direction::LEFT, Direction::UP_AND_LEFT);
+    }
+    return std::make_pair(Direction::RIGHT, Direction::LEFT);
+  } else {
+    switch (xypolar) {
+    case 0b00: /* both negative */
+      /* 5, 6*/
+      return std::make_pair(Direction::DOWN_AND_RIGHT, Direction::DOWN);
+    case 0b01: /* x positive */
+      /* 6, 7 */
+      return std::make_pair(Direction::DOWN, Direction::DOWN_AND_LEFT);
+    case 0b10: /* y positive */
+      /* 2, 3 */
+      return std::make_pair(Direction::UP, Direction::UP_AND_RIGHT);
+    case 0b11: /* both positive */
+      /* 1, 2*/
+      return std::make_pair(Direction::UP_AND_LEFT, Direction::UP);
+    }
+    return std::make_pair(Direction::UP, Direction::DOWN);
+  }
+}
+
+[[nodiscard]] bool move_cats() {
+  /* okay, so here's some real magic.
+
+  We want to path towards the mouse, but in a simplisitic way.
+  We just need to decide which 8-way adjacent grid point to move into.
+  TODO If I ever add difficulty settings, one potential knob to turn is this
+  pathing algo.
+
+  Steps:
+    take difference between cat's position and mouse position
+    use this slope to determine which pair of candidates to move into
+    pick one of the two at random
+
+  And now, a visual
+
+       +---+---+---+
+       | 1 | 2 | 3 |
+       +---+---+---+
+       | 0 | C | 4 |
+       +---+---+---+
+       | 7 | 6 | 5 |
+       +---+---+---+
+
+  slope = [cat.x, cat.y] - [mouse.x, mouse.y]
+
+  if x and y are positive(1), then
+    if x > y
+      candidates = 0, 1
+    else
+      candidates = 1, 2
+
+  if x and y are negative(5), then
+    if |x| > |y|
+      candidates = 4, 5
+    else
+      candidates = 5, 6
+
+  if only x is positive(7), then
+    if x > |y|
+      candidates = 0, 7
+    else
+      candidates = 6, 7
+
+  if only y is positive(3), then
+    if |x| > y
+      candidates = 3, 4
+    else
+      candidates = 2, 3
+
+  */
+  static constexpr std::array<Direction, 8> directions{
+      Direction::UP,
+      Direction::DOWN,
+      Direction::LEFT,
+      Direction::RIGHT,
+      Direction::UP_AND_LEFT,
+      Direction::UP_AND_RIGHT,
+      Direction::DOWN_AND_LEFT,
+      Direction::DOWN_AND_RIGHT};
+
+  static_assert(sizeof(uint32_t) * 8 > MAX_NUMBER_OF_CATS);
+  uint32_t randnum{get_rand_32()};
+  for (auto &cat : g_cats) {
+
+    bool open_found{false};
+    for (const auto dir : directions) {
+      /* first, check if there's a mouse adjacent */
+      if (cat.proposed(dir) == g_mouse.location()) {
+        draw_beast(cat, BACKGROUND);
+        cat.move(dir);
+        draw_beast(cat, CAT);
+        return true;
+      }
+      /* next, see if we are surrounded by things we can't move through */
+      open_found |= check_for_collision(cat.proposed(dir)) == Collision::NONE;
+    }
+
+    if (!open_found) {
+      draw_beast(cat, SITTING_CAT);
+      continue;
+    }
+
+    /* finally, run pathing */
+    const auto dir{[&]() {
+      const auto [dir1, dir2]{
+          disposition_a_fuzzy_move(g_mouse.location(), cat.location())};
+      if (randnum & 0b1) {
+        return dir1;
+      }
+      return dir2;
+    }()};
+
+    if (check_for_collision(cat.proposed(dir)) == Collision::NONE) {
+      draw_beast(cat, BACKGROUND);
+      cat.move(dir);
+      draw_beast(cat, CAT);
+    }
+
+    randnum >>= 1;
+  }
+  return false;
+}
 
 /* ===========================================================================*/
 /*            ____  _        _ __   ______ ____  ___ ____                     */
@@ -495,6 +659,7 @@ void game_init() noexcept {
 }
 
 void run() {
+  reset_global_state();
   screen_init();
   game_init();
   gamepad::five::init();
