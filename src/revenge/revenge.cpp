@@ -269,7 +269,7 @@ void draw_grid_tile(grid_t xx, grid_t yy, const screen::Tile &tile) noexcept {
 [[nodiscard]] constexpr Collision
 check_for_collision(Grid::Location proposed) noexcept {
   /* first, check for the border */
-  if (proposed.x >= GRID_SIZE_COLS || proposed.y >= GRID_SIZE_ROWS) {
+  if (g_grid.out_of_bounds(proposed)) {
     return Collision::FIXED_BLOCK;
   }
 
@@ -298,6 +298,21 @@ check_for_collision(Grid::Location proposed) noexcept {
 
 void draw_beast(const Beast &aminal, const screen::Tile &tile) noexcept {
   draw_grid_tile(aminal.location().x, aminal.location().y, tile);
+}
+
+/** @brief Move a cat at a particular grid point
+ *
+ * @param point Location where the cat (likely) is.
+ * @param dir Direction to move.
+ *
+ */
+[[nodiscard]] uint32_t find_cat_at(Grid::Location point) noexcept {
+  for (uint32_t idx = 0; idx < g_cats.size(); ++idx) {
+    if (g_cats[idx].location() == point) {
+      return idx;
+    }
+  }
+  return g_cats.size();
 }
 
 /** @brief traverse through the moveable block row/column, given the intended
@@ -333,8 +348,9 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
   }
 
   return obj == GridObject::CHEESE || obj == GridObject::HOLE ||
-         (obj == GridObject::NOTHING &&
-          check_for_collision(point_of_encounter) != Collision::CAT);
+         obj == GridObject::NOTHING;
+  //  (obj == GridObject::NOTHING &&
+  //   check_for_collision(point_of_encounter) != Collision::CAT);
 }
 
 [[nodiscard]] Collision move_mouse(UserInput request, Beast &beast) noexcept {
@@ -354,13 +370,30 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
     break;
   case Collision::BLOCK:
     if (traverse_moveable_blocks(proposed_location, dir, encounter)) {
-      beast.location(proposed_location);
 
-      const GridObject obj{g_playfield.get(encounter.x, encounter.y)};
-      if (obj != GridObject::HOLE) {
-        g_playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK),
-                        encounter.x, encounter.y);
-        draw_grid_tile(encounter.x, encounter.y, BLOCK);
+      const GridObject object_encountered{
+          g_playfield.get(encounter.x, encounter.y)};
+
+      const bool it_was_a_cat{(object_encountered == GridObject::NOTHING) &&
+                              check_for_collision(encounter) == Collision::CAT};
+      const bool the_cat_can_move{check_for_collision(move(encounter, dir)) ==
+                                  Collision::NONE};
+
+      if (it_was_a_cat && the_cat_can_move) {
+        const auto cat_idx{find_cat_at(encounter)};
+        if (cat_idx != g_cats.size()) {
+          draw_beast(g_cats[cat_idx], BACKGROUND);
+          g_cats[cat_idx].move(dir);
+          draw_beast(g_cats[cat_idx], CAT);
+        }
+      }
+      if (!it_was_a_cat || (it_was_a_cat && the_cat_can_move)) {
+        beast.location(proposed_location);
+        if (object_encountered != GridObject::HOLE) {
+          g_playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK),
+                          encounter.x, encounter.y);
+          draw_grid_tile(encounter.x, encounter.y, BLOCK);
+        }
       }
     }
     break;

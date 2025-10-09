@@ -79,6 +79,11 @@ public:
     return m_cfg;
   }
 
+  [[nodiscard]] constexpr bool
+  out_of_bounds(Grid::Location point) const noexcept {
+    return point.x >= m_cfg.grid_width || point.y >= m_cfg.grid_height;
+  }
+
 private:
   GridCfg m_cfg;
 };
