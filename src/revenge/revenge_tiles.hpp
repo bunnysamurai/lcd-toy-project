@@ -2,6 +2,7 @@
 #define REVENGE_TILES_HPP
 
 #include "embp/constexpr_numeric.hpp"
+#include "common/utilities.hpp"
 #include "revenge_defs.hpp"
 #include "screen/screen.hpp"
 
@@ -81,10 +82,39 @@ inline constexpr auto nonmoveblock_tile{
     embp::filled<uint8_t, BTLEN>(LCYAN << 4 | LCYAN)};
 inline constexpr auto cheese_tile{
     embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
-inline constexpr auto cat_tile{embp::filled<uint8_t, BTLEN>(RED << 4 | RED)};
+inline constexpr auto cat_tile{
+    embp::concat(
+        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW),
+        embp::pfold(LYELLOW,LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW,LYELLOW, YELLOW,LYELLOW ),
+        embp::pfold(LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
+        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW)
+    )
+};
 inline constexpr auto sitting_cat_tile{embp::filled<uint8_t, BTLEN>(LRED << 4 | LRED)};
+
+// clang-format off
 inline constexpr auto mouse_tile{
-    embp::filled<uint8_t, BTLEN>(GREEN << 4 | GREEN)};
+    embp::concat(
+        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW),
+        embp::pfold(LYELLOW,  LGREY,  LGREY,LYELLOW,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,LYELLOW,  LGREY,LYELLOW,  LGREY,LYELLOW ),
+        embp::pfold(LYELLOW,  LGREY,LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,  LGREY,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
+        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW)
+    )
+};
+// clang-format on
+
 
 /* screen::Tile objects */
 inline constexpr screen::Tile BACKGROUND{.side_length = PIXELS_PER_GRID,

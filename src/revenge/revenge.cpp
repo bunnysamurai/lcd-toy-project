@@ -526,6 +526,7 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
 
   static_assert(sizeof(uint32_t) * 8 > MAX_NUMBER_OF_CATS);
   uint32_t randnum{get_rand_32()};
+  uint32_t sitting_cats_count{};
   for (auto &cat : g_cats) {
 
     bool open_found{false};
@@ -542,6 +543,7 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
     }
 
     if (!open_found) {
+      ++sitting_cats_count;
       draw_beast(cat, SITTING_CAT);
       continue;
     }
@@ -564,6 +566,19 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
 
     randnum >>= 1;
   }
+
+  /* if the number of sitting cats is equal to the total number of cats:
+       1. turn them into cheese
+       2. reinit g_cats with 2 new cats
+  */
+  if (sitting_cats_count == std::size(g_cats)) {
+    for (auto cat : g_cats) {
+      draw_beast(cat, CHEESE);
+    }
+    g_cats.clear();
+    init_cats(2);
+  }
+
   return false;
 }
 
