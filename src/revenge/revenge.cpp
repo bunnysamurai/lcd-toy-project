@@ -598,7 +598,7 @@ constexpr void load_level_onto_playgrid(PlayGrid &playfield) noexcept {
       playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK), xx, yy);
     }
   }
-  playfield.set(static_cast<uint8_t>(GridObject::UNMOVEABLE_BLOCK), 14, 14);
+  // playfield.set(static_cast<uint8_t>(GridObject::UNMOVEABLE_BLOCK), 14, 14);
 }
 
 void render_playgrid(PlayGrid &playfield) {
@@ -672,14 +672,54 @@ void render_playgrid(PlayGrid &playfield) {
   return UserInput::NO_ACTION;
 }
 
-/* ===========================================================================*/
-/*                             ____  _   _ _   _ */
-/*                            |  _ \| | | | \ | | */
-/*                            | |_) | | | |  \| | */
-/*                            |  _ <| |_| | |\  | */
-/*                            |_| \_\\___/|_| \_| */
-/*                                                                            */
-/* ===========================================================================*/
+/* ========================================================================= */
+/*                             ____  _   _ _   _                             */
+/*                            |  _ \| | | | \ | |                            */
+/*                            | |_) | | | |  \| |                            */
+/*                            |  _ <| |_| | |\  |                            */
+/*                            |_| \_\\___/|_| \_|                            */
+/*                                                                           */
+/* ========================================================================= */
+void draw_playgrid_border(const Grid &grid,
+                          const screen::Tile border_tile) noexcept {
+  /* this function should probably check for out-of-bounds conditions on the
+   * physical screen....*/
+
+  /* we are off grid... by one ;) */
+  const auto grid_startpix_xy{grid.to_native({.x = 0, .y = 0})};
+  const auto grid_finishpix_xy{
+      grid.to_native({.x = GRID_SIZE_COLS - 1, .y = GRID_SIZE_ROWS - 1})};
+
+  const uint32_t start_row{grid_startpix_xy.y - border_tile.side_length};
+  const uint32_t start_col{grid_startpix_xy.x - border_tile.side_length};
+
+  const uint32_t finish_row{grid_finishpix_xy.y + border_tile.side_length};
+  const uint32_t finish_col{grid_finishpix_xy.x + border_tile.side_length};
+
+  /* draw top border */
+  for (uint32_t col = start_col; col <= finish_col;
+       col += border_tile.side_length) {
+    screen::draw_tile(col, start_row, border_tile);
+  }
+  /* draw bottom border */
+  for (uint32_t col = start_col; col <= finish_col;
+       col += border_tile.side_length) {
+    screen::draw_tile(col, finish_row, border_tile);
+  }
+  /* draw left border */
+  for (uint32_t row = start_row + border_tile.side_length;
+       row <= finish_row - border_tile.side_length;
+       row += border_tile.side_length) {
+    screen::draw_tile(start_col, row, border_tile);
+  }
+  /* draw right border */
+  for (uint32_t row = start_row + border_tile.side_length;
+       row <= finish_row - border_tile.side_length;
+       row += border_tile.side_length) {
+    screen::draw_tile(finish_col, row, border_tile);
+  }
+}
+
 void screen_init() noexcept {
   /* we are a color application */
   screen::set_format(revenge::VIDEO_FORMAT);
@@ -704,6 +744,11 @@ void game_init() noexcept {
   load_level_onto_playgrid(g_playfield);
 
   render_playgrid(g_playfield);
+
+  /* draw the border, which lies outside the grid
+   * This is the only time it is done for the life of the program
+   */
+  draw_playgrid_border(g_grid, UNMOVEBLOCK);
 }
 
 void run() {
@@ -735,8 +780,8 @@ void run() {
 
       /* TODO we need to take action on the various collision types here... */
 
-      /* Here's the default action, i.e. mouse didn't get Eaten, Trapped, Fell
-       * In A Hole, or Ran Over By Yarn */
+      /* Here's the action to take when the mouse didn't get Eaten, Trapped,
+       * Fell In A Hole, or Ran Over By Yarn */
       if (current_location != g_mouse.location()) {
         g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
                         current_location.x, current_location.y);
