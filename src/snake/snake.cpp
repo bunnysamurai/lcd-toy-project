@@ -27,9 +27,6 @@
 #include "snake_levels_constexpr.hpp"
 #include "snake_tiles_constexpr.hpp"
 
-#define SNAKE_USE_GAMEPAD
-#define USE_BGRID_OPTIMIZATION
-
 // #define PRINT_DEBUG_MSG
 
 namespace {
@@ -254,7 +251,6 @@ void init_level(snake::Level lvl) noexcept {
 }
 
 void render_the_level() noexcept {
-#ifdef USE_BGRID_OPTIMIZATION
   for (grid_t gridrow = 0; gridrow < std::size(g_bgrid); ++gridrow) {
     for (grid_t gridcol = 0; gridcol < snake::PLAY_SIZE; ++gridcol) {
       if (!get_border_grid_point(gridrow, gridcol)) {
@@ -266,7 +262,6 @@ void render_the_level() noexcept {
                      snake::BorderTiles[bcode]);
     }
   }
-#endif
 }
 
 void draw_structure(snake::Point point) {
@@ -355,11 +350,7 @@ void draw_points(const uint8_t *p_data, uint32_t len) {
   static constexpr auto ENCODED_LENGTH{std::size(snake::encode_point(42, 42))};
   auto p_point_data{p_data};
   for (uint32_t ii = 0; ii < len; ++ii) {
-#ifdef USE_BGRID_OPTIMIZATION
     draw_structure(snake::decode_point(p_point_data));
-#else
-    draw_structure(snake::decode_point(p_point_data), snake::BorderTiles[0]);
-#endif
     std::advance(p_point_data, ENCODED_LENGTH);
   }
 }
@@ -368,12 +359,7 @@ void draw_straight_lines(const uint8_t *p_data, uint32_t len) {
       snake::encode_straight_line(42, 42, snake::Direction::DOWN, 0))};
   auto p_line_data{p_data};
   for (uint32_t ii = 0; ii < len; ++ii) {
-#ifdef USE_BGRID_OPTIMIZATION
     draw_structure(snake::decode_straight_line(p_line_data));
-#else
-    draw_structure(snake::decode_straight_line(p_line_data),
-                   snake::BorderTiles[0]);
-#endif
     std::advance(p_line_data, ENCODED_LENGTH);
   }
 }
@@ -381,11 +367,7 @@ void draw_rectangles(const uint8_t *p_data, uint32_t len) {
   static constexpr auto ENCODED_LENGTH{
       std::size(snake::encode_rectangle(42, 42, 43, 43))};
   for (uint32_t ii = 0; ii < len; ++ii) {
-#ifdef USE_BGRID_OPTIMIZATION
     draw_structure(snake::decode_rectangle(p_data));
-#else
-    draw_structure(snake::decode_rectangle(p_data), snake::BorderTiles[0]);
-#endif
     std::advance(p_data, ENCODED_LENGTH);
   }
 }
@@ -1197,7 +1179,6 @@ enum struct UserInput { QUIT, PLAY, CHANGE_DIRECTION, NEXT_LEVEL };
 
 UserInput process_user_input() {
   UserInput user_has_input{UserInput::PLAY};
-#ifdef SNAKE_USE_GAMEPAD
   sleep_ms(KEYBOARD_POLL_MS.count());
   const gamepad::five::State key_pressed{gamepad::five::get()};
 
@@ -1221,35 +1202,6 @@ UserInput process_user_input() {
   if (change_snake_direction(user_key)) {
     user_has_input = UserInput::CHANGE_DIRECTION;
   }
-#else
-#ifdef BSIO_KEYBOARD_AVAILABLE
-  keyboard::result_t key_status;
-  const int key_pressed{keyboard::wait_key(KEYBOARD_POLL_MS, key_status)};
-  if (key_status == keyboard::result_t::SUCCESS) {
-    if (key_pressed == 'q') {
-      return UserInput::QUIT;
-    }
-    if (change_snake_direction(key_pressed)) {
-      user_has_input = UserInput::CHANGE_DIRECTION;
-    }
-  }
-#else
-  const auto key_pressed{stdio_getchar_timeout_us(
-      std::chrono::duration_cast<std::chrono::microseconds>(KEYBOARD_POLL_MS)
-          .count())};
-  if (key_pressed != PICO_ERROR_TIMEOUT) {
-    if (key_pressed == 'q') {
-      return UserInput::QUIT;
-    }
-    if (key_pressed == 'n') {
-      return UserInput::NEXT_LEVEL;
-    }
-    if (change_snake_direction(key_pressed)) {
-      user_has_input = UserInput::CHANGE_DIRECTION;
-    }
-  }
-#endif
-#endif
 
   return user_has_input;
 }
@@ -1385,6 +1337,77 @@ void update_lives_based_on_score(int8_t &lives) noexcept {
   }
 }
 
+void draw_level_name(uint32_t level_number) {
+
+  screen::letter_4bpp_array_t buffer{};
+  const screen::Tile tile_obj{.side_length = glyphs::tile::width(),
+                              .format = screen::Format::RGB565_LUT4,
+                              .data = std::data(buffer)};
+
+  /* the word 'level' is 5*tile_obj.side_length pixels wide and tall
+   * if we want it centered in the display:
+   *  xpos = (display_width / 2) - 2.5*tile_obj.side_length
+   * for the level number itself, it depends on how many digits need to be
+   *
+   * displayed row-wise, there are two lines to display.  Let's center them, as
+   * well: space_between_lines = (gridscale*gridheight -
+   * 2*tile_obj.side_length)/3 ypos_line1 = gridoffsety + space_between_lines
+   *  ypos_line2 = gridoffsety + 2*space_between_lines + tile_obj.side_length
+   *
+   *
+   */
+  const auto dims{screen::get_virtual_screen_size()};
+
+  const uint32_t xpos_line1{(dims.width - 5 * tile_obj.side_length) >> 1};
+
+  const auto gridscale{g_grid.config().ydimension.scale};
+  const auto gridoffsety{g_grid.config().ydimension.off};
+  const auto gridoffsetx{g_grid.config().ydimension.off};
+  const auto gridheight{g_grid.config().grid_height};
+  const auto gridwidth{g_grid.config().grid_width};
+
+  const auto space_between_lines{
+      (gridscale * gridheight - 2 * tile_obj.side_length) / 3};
+  const auto ypos_line1{gridoffsety + space_between_lines};
+  const auto ypos_line2{gridoffsety + 2 * space_between_lines +
+                        tile_obj.side_length};
+
+  const auto space_between_cols_line_2{
+      (gridwidth * gridscale - 2 * tile_obj.side_length) / 3};
+
+  const auto digits{screen::bcd<2>(level_number)};
+  const auto number_of_digits_to_draw{digits[0] != 0 ? 2 : 1};
+  const uint32_t xpos_incr{tile_obj.side_length + space_between_cols_line_2};
+  const uint32_t xpos_line2{
+      number_of_digits_to_draw == 1
+          ? (gridscale * gridwidth - tile_obj.side_length) >> 1
+          : space_between_cols_line_2};
+
+  /* draw the text "Level" */
+  {
+    uint32_t xpos{xpos_line1};
+    for (const char c : std::array{'L', 'e', 'v', 'e', 'l'}) {
+      screen::get_letter_data_4bpp(buffer, c, snake::WHITE, snake::BLACK);
+      screen::draw_tile(xpos, ypos_line1, tile_obj);
+      xpos += tile_obj.side_length;
+    }
+  }
+
+  /* draw the level number*/
+  {
+    uint32_t xpos{xpos_line2};
+    screen::get_letter_data_4bpp(buffer, static_cast<char>(digits[1] + 0x30),
+                                 snake::WHITE, snake::BLACK);
+    screen::draw_tile(xpos, ypos_line2, tile_obj);
+    if (number_of_digits_to_draw == 2) {
+      xpos += xpos_incr;
+      screen::get_letter_data_4bpp(buffer, static_cast<char>(digits[0] + 0x30),
+                                   snake::WHITE, snake::BLACK);
+      screen::draw_tile(xpos, ypos_line2, tile_obj);
+    }
+  }
+}
+
 } // namespace
 
 /* ==================================================================== */
@@ -1414,7 +1437,8 @@ void run() {
   static constexpr Direction SNAKE_DIR{Direction::UP};
 
   static constexpr uint8_t GROWING_START{4};
-  uint32_t lvl_idx{};
+  uint8_t plvl_idx{1};
+  uint8_t lvl_idx{};
   uint32_t growing{GROWING_START + lvl_idx};
   absolute_time_t last_time{get_absolute_time()};
   int8_t lives{3};
@@ -1423,14 +1447,24 @@ void run() {
   while (user_desires_play) {
     /* stuff that needs to happen on start of every new level */
     init_level(snake::levels[lvl_idx]);
-    // draw_level_name(lvl_idx + 1);
-    init_snake(SNAKE_START, SNAKE_DIR);
-    init_apples(); /* just places an apple somewhere */
+
+
     update_lives_on_screen(lives);
-    draw_this_level(g_level.lvl);
     reset_timer();
     draw_timer();
     draw_score();
+
+    if (plvl_idx != lvl_idx) {
+      draw_level_name(lvl_idx + 1);
+      plvl_idx = lvl_idx;
+      sleep_ms(3000);
+      clear_screen_grid();
+    }
+
+    draw_this_level(g_level.lvl);
+    init_snake(SNAKE_START, SNAKE_DIR);
+    init_apples(); /* just places an apple somewhere */
+
     uint8_t initial_tick{INITIAL_TICK_HACK_TUNING};
     bool level_is_active{true};
     while (level_is_active) {
