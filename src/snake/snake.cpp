@@ -824,16 +824,21 @@ void draw_border() {
   draw_grid_tile(0, 0, snake::BorderTiles[BR_CODE]);
 }
 
+void draw_border_exit(const Grid::Location exit_point,
+                      const bool is_in_open_state) noexcept {
+  static constexpr auto LR_CODE{0b0101};
+  const auto &tile{is_in_open_state ? snake::BackgroundTile
+                                    : snake::BorderTiles[LR_CODE]};
+  draw_grid_tile(exit_point.x, exit_point.y, tile);
+}
+
 void update_borders(Grid::Location loc) noexcept {
   static constexpr auto LR_CODE{0b0101};
   /* why the +1?  because I'm a hack... also, the fix for a render bug on the
    * snake's entry to the level was to start the snake head one row up.  we need
    * to compensate for this here.*/
   draw_grid_tile(loc.x, loc.y + 1, snake::BorderTiles[LR_CODE]);
-
-  const auto &tile{g_level.exit_is_open ? snake::BackgroundTile
-                                        : snake::BorderTiles[LR_CODE]};
-  draw_grid_tile(g_level.exit.x, g_level.exit.y, tile);
+  draw_border_exit(g_level.exit, g_level.exit_is_open);
 }
 
 bool init_the_screen() noexcept {
@@ -1439,7 +1444,7 @@ void run() {
   static constexpr uint8_t GROWING_START{4};
   uint8_t plvl_idx{1};
   uint8_t lvl_idx{};
-  uint32_t growing{GROWING_START + lvl_idx};
+  uint8_t growing{static_cast<uint8_t>(GROWING_START + lvl_idx)};
   absolute_time_t last_time{get_absolute_time()};
   int8_t lives{3};
   reset_score();
@@ -1448,7 +1453,6 @@ void run() {
     /* stuff that needs to happen on start of every new level */
     init_level(snake::levels[lvl_idx]);
 
-
     update_lives_on_screen(lives);
     reset_timer();
     draw_timer();
@@ -1456,8 +1460,9 @@ void run() {
 
     if (plvl_idx != lvl_idx) {
       draw_level_name(lvl_idx + 1);
-      plvl_idx = lvl_idx;
+      draw_border_exit(g_level.exit, false);
       sleep_ms(3000);
+      plvl_idx = lvl_idx;
       clear_screen_grid();
     }
 
