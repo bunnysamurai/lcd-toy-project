@@ -1222,6 +1222,8 @@ UserInput process_user_input() {
 /* 8 times the side length of the play area */
 constexpr uint32_t TIMER_BIT_DEPTH{8};
 constexpr int TIMER_START_VALUE{1 << TIMER_BIT_DEPTH}; /* aka, 32*8 = 256 */
+constexpr int TIMER_WARN_THRESHOLD{(1 << TIMER_BIT_DEPTH) >>
+                                   3}; /* aka, 256/8 = 32 */
 
 int g_timer{TIMER_START_VALUE};
 
@@ -1248,6 +1250,8 @@ void draw_timer() noexcept {
    * green timer_pixel_width - length of bar that is green == length of bar
    * that is black
    *
+   * in addition, if below a certain threshold, the green timer bar turns
+   * REDFORPANIC!!!
    */
 
   const uint32_t row_start{g_top_panel_cfg.row_start_timer};
@@ -1261,16 +1265,22 @@ void draw_timer() noexcept {
   const uint32_t black_length{g_top_panel_cfg.timer_col_length - green_length};
 
   static constexpr uint8_t timer_green_idx{snake::TIMEGRN};
+  static constexpr uint8_t timer_red_idx{snake::RED};
   static constexpr uint8_t timer_black_idx{snake::BLACK};
   static constexpr screen::Tile black_pix{
       .side_length = 1, .format = snake::TILE_FORMAT, .data = &timer_black_idx};
   static constexpr screen::Tile green_pix{
       .side_length = 1, .format = snake::TILE_FORMAT, .data = &timer_green_idx};
+  static constexpr screen::Tile red_pix{
+      .side_length = 1, .format = snake::TILE_FORMAT, .data = &timer_red_idx};
+
+  const auto &timer_pix{green_length < TIMER_WARN_THRESHOLD ? red_pix
+                                                            : green_pix};
 
   /* draw green first, then black */
   for (uint32_t yy = row_start; yy < row_stop; ++yy) {
     for (uint32_t xx = col_start; xx < col_start + green_length; ++xx) {
-      screen::draw_tile(xx, yy, green_pix);
+      screen::draw_tile(xx, yy, timer_pix);
     }
   }
   for (uint32_t yy = row_start; yy < row_stop; ++yy) {
