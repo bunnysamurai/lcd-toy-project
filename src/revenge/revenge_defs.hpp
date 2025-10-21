@@ -15,6 +15,7 @@ using pix_t = uint16_t;
 using grid_t = uint8_t;
 
 inline constexpr Timer_t::time_diff_t GAME_TICK_PERIOD_US{1'500'000};
+inline constexpr Timer_t::time_diff_t STUCK_IN_HOLE_PERIOD_US{5'000'000};
 inline constexpr Timer_t::time_diff_t INPUT_POLL_PERIOD_US{10'000};
 
 inline constexpr uint8_t GRID_SIZE_COLS{21};
@@ -72,6 +73,16 @@ enum struct UserInput {
   QUIT
 };
 
+/** @brief to make iterating over Direction easier */
+static constexpr std::array<Direction, 8> DIRECTIONS_ARRAY{
+    Direction::UP,
+    Direction::DOWN,
+    Direction::LEFT,
+    Direction::RIGHT,
+    Direction::UP_AND_LEFT,
+    Direction::UP_AND_RIGHT,
+    Direction::DOWN_AND_LEFT,
+    Direction::DOWN_AND_RIGHT};
 [[nodiscard]] constexpr Grid::Location move(Grid::Location loc,
                                             Direction dir) noexcept {
   switch (dir) {

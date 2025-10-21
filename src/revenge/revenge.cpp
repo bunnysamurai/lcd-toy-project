@@ -110,6 +110,8 @@ static PlayGrid g_playfield;
 static Grid g_grid;
 static Beast g_mouse;
 static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
+static Timer_t g_stuck_timer{STUCK_IN_HOLE_PERIOD_US};
+static bool g_stuck_in_hole{false};
 
 void reset_global_state() noexcept {
   g_game_timer.period(GAME_TICK_PERIOD_US);
@@ -120,6 +122,9 @@ void reset_global_state() noexcept {
   g_grid = Grid{};
   g_mouse = Beast{};
   g_cats.clear();
+  g_stuck_timer.period(STUCK_IN_HOLE_PERIOD_US);
+  g_stuck_timer.reset();
+  g_stuck_in_hole = false;
 }
 /* ===========================================================================*/
 /*                       _   _ _____ ___ _     ____                           */
@@ -349,10 +354,10 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
 
   return obj == GridObject::CHEESE || obj == GridObject::HOLE ||
          obj == GridObject::NOTHING;
-  //  (obj == GridObject::NOTHING &&
-  //   check_for_collision(point_of_encounter) != Collision::CAT);
 }
 
+/** @brief do collision detection and move the mouse
+ */
 [[nodiscard]] Collision move_mouse(UserInput request, Beast &beast) noexcept {
   const Direction dir{static_cast<Direction>(request)};
   const Grid::Location proposed_location{beast.proposed(dir)};
@@ -514,15 +519,6 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
       candidates = 2, 3
 
   */
-  static constexpr std::array<Direction, 8> directions{
-      Direction::UP,
-      Direction::DOWN,
-      Direction::LEFT,
-      Direction::RIGHT,
-      Direction::UP_AND_LEFT,
-      Direction::UP_AND_RIGHT,
-      Direction::DOWN_AND_LEFT,
-      Direction::DOWN_AND_RIGHT};
 
   static_assert(sizeof(uint32_t) * 8 > MAX_NUMBER_OF_CATS);
   uint32_t randnum{get_rand_32()};
@@ -530,7 +526,7 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
   for (auto &cat : g_cats) {
 
     bool open_found{false};
-    for (const auto dir : directions) {
+    for (const auto dir : DIRECTIONS_ARRAY) {
       /* first, check if there's a mouse adjacent */
       if (cat.proposed(dir) == g_mouse.location()) {
         draw_beast(cat, BACKGROUND);
@@ -598,7 +594,7 @@ constexpr void load_level_onto_playgrid(PlayGrid &playfield) noexcept {
       playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK), xx, yy);
     }
   }
-  // playfield.set(static_cast<uint8_t>(GridObject::UNMOVEABLE_BLOCK), 14, 14);
+  playfield.set(static_cast<uint8_t>(GridObject::HOLE), 14, 14);
 }
 
 void render_playgrid(PlayGrid &playfield) {
@@ -671,6 +667,35 @@ void render_playgrid(PlayGrid &playfield) {
 
   return UserInput::NO_ACTION;
 }
+/* ========================================================================= */
+/*                     _   _  ___  _     _____                               */
+/*                    | | | |/ _ \| |   | ____|                              */
+/*                    | |_| | | | | |   |  _|                                */
+/*                    |  _  | |_| | |___| |___                               */
+/*                    |_| |_|\___/|_____|_____|                              */
+/*                                                                           */
+/* ========================================================================= */
+void unstuck_the_mouse() noexcept {
+  /* search for the first (or random?  or previous?) open spot to place the
+   * mouse */
+  const auto hole_location{g_mouse.location()};
+  for (const auto dir : DIRECTIONS_ARRAY) {
+    const Grid::Location proposed_location{g_mouse.proposed(dir)};
+    const Collision collide{check_for_collision(proposed_location)};
+    if (collide == Collision::NONE) {
+      g_mouse.location(proposed_location);
+      draw_beast(g_mouse, MOUSE);
+      draw_grid_tile(hole_location.x, hole_location.y, HOLE);
+      return;
+    }
+  }
+}
+void process_stuck_in_hole() noexcept {
+  if (g_stuck_in_hole && g_stuck_timer.elapsed()) {
+    g_stuck_in_hole = false;
+    unstuck_the_mouse();
+  }
+}
 
 /* ========================================================================= */
 /*                             ____  _   _ _   _                             */
@@ -728,6 +753,7 @@ void screen_init() noexcept {
   /* we use a black background */
   screen::clear_screen();
 }
+
 void game_init() noexcept {
   const auto dims{screen::get_virtual_screen_size()};
 
@@ -774,19 +800,48 @@ void run() {
     if (request == UserInput::QUIT) {
       break;
     }
-    if (request != UserInput::NO_ACTION) {
-      const auto current_location{g_mouse.location()};
+    if (request != UserInput::NO_ACTION && !g_stuck_in_hole) {
+      const auto location_before_move{g_mouse.location()};
       const auto collision{move_mouse(request, g_mouse)};
 
       /* TODO we need to take action on the various collision types here... */
 
       /* Here's the action to take when the mouse didn't get Eaten, Trapped,
        * Fell In A Hole, or Ran Over By Yarn */
-      if (current_location != g_mouse.location()) {
+      if (location_before_move != g_mouse.location()) {
+        /* the mouse has moved.  now we need to decide a few things:
+              did the mouse die?
+              if not, then decide
+                how to draw the mouse
+                process other side effects (namely, stuck-in-a-hole)
+           */
+        bool mouse_died = false;
+
+        switch (collision) {
+        case Collision::TRAP:
+          mouse_died = true;
+          break;
+        case Collision::HOLE:
+          g_stuck_in_hole = true;
+          g_stuck_timer.reset();
+          break;
+        case Collision::NONE:
+        case Collision::CHEESE:
+        case Collision::BLOCK:
+        case Collision::FIXED_BLOCK:
+        case Collision::CAT:
+        case Collision::MOUSE:
+          break;
+        }
+
+        if (mouse_died) {
+          break;
+        }
         g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
-                        current_location.x, current_location.y);
-        draw_beast(g_mouse, MOUSE);
-        draw_grid_tile(current_location.x, current_location.y, BACKGROUND);
+                        location_before_move.x, location_before_move.y);
+        draw_beast(g_mouse, g_stuck_in_hole ? MOUSE_IN_HOLE : MOUSE);
+        draw_grid_tile(location_before_move.x, location_before_move.y,
+                       BACKGROUND);
       }
     }
 
@@ -797,6 +852,7 @@ void run() {
         /* cat ate the mouse!  GAME OVER */
         break;
       }
+      process_stuck_in_hole();
     }
 
     sleep_us(1000);

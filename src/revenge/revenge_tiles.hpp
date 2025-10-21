@@ -77,7 +77,19 @@ inline constexpr auto block_tile{
 inline constexpr auto trap_tile{
     embp::filled<uint8_t, BTLEN>(LGREY << 4 | LGREY)};
 inline constexpr auto hole_tile{
-    embp::filled<uint8_t, BTLEN>(DRKGRY << 4 | DRKGRY)};
+    embp::concat(
+        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
+        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW )
+    )
+};
 inline constexpr auto nonmoveblock_tile{
     embp::filled<uint8_t, BTLEN>(LCYAN << 4 | LCYAN)};
 inline constexpr auto cheese_tile{
@@ -113,6 +125,20 @@ inline constexpr auto mouse_tile{
         embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW)
     )
 };
+inline constexpr auto mouse_stuck_tile{
+    embp::concat(
+        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW ),
+        embp::pfold(LYELLOW,  LGREY,  LGREY, DRKGRY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
+        embp::pfold( DRKGRY, DRKGRY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY,  LGREY, DRKGRY ),
+        embp::pfold( DRKGRY,  LGREY, DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY, DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY ),
+        embp::pfold( DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY ),
+        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
+        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW )
+    )
+};
 // clang-format on
 
 
@@ -144,6 +170,9 @@ inline constexpr screen::Tile SITTING_CAT{.side_length = PIXELS_PER_GRID,
 inline constexpr screen::Tile MOUSE{.side_length = PIXELS_PER_GRID,
                                     .format = VIDEO_FORMAT,
                                     .data = std::data(mouse_tile)};
+inline constexpr screen::Tile MOUSE_IN_HOLE{.side_length = PIXELS_PER_GRID,
+                                    .format = VIDEO_FORMAT,
+                                    .data = std::data(mouse_stuck_tile)};
 } // namespace revenge
 
 #endif
