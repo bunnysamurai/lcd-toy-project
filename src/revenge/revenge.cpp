@@ -595,6 +595,7 @@ constexpr void load_level_onto_playgrid(PlayGrid &playfield) noexcept {
     }
   }
   playfield.set(static_cast<uint8_t>(GridObject::HOLE), 14, 14);
+  playfield.set(static_cast<uint8_t>(GridObject::UNMOVEABLE_BLOCK), 6, 6);
 }
 
 void render_playgrid(PlayGrid &playfield) {

@@ -14,21 +14,21 @@ inline constexpr std::array Palette{
     /* clang-format off */
     screen::Clut{.r = 0, .g = 0, .b = 0},           /* black */
     screen::Clut{.r = 255, .g = 0, .b = 0},         /* red */
-    screen::Clut{.r = 0, .g = 220, .b = 0},         /* green */
+    screen::Clut{.r = 0, .g = 245, .b = 0},         /* green */
     screen::Clut{.r = 0, .g = 0, .b = 255},         /* blue */
     screen::Clut{.r = 0, .g = 220, .b = 220},       /* cyan */
     screen::Clut{.r = 220, .g = 220, .b = 0},       /* yellow */
     screen::Clut{.r = 245, .g = 0, .b = 245},       /* magenta */
-    screen::Clut{.r = 84, .g = 84, .b = 84},        /* dark grey */
+    screen::Clut{.r = 100, .g = 100, .b = 100},        /* dark grey */
 
     screen::Clut{.r = 255, .g = 255, .b = 255},     /* white */
     screen::Clut{.r = 255, .g = 128, .b = 128},     /* light red */
-    screen::Clut{.r = 200, .g = 255, .b = 200},     /* light green */
+    screen::Clut{.r = 245, .g = 255, .b = 245},     /* light green */
     screen::Clut{.r = 128, .g = 128, .b = 255},     /* light blue */
     screen::Clut{.r = 200, .g = 255, .b = 255},     /* light cyan */
     screen::Clut{.r = 255, .g = 255, .b = 200},     /* light yellow */
     screen::Clut{.r = 255, .g = 128, .b = 255},     /* light magenta */
-    screen::Clut{.r = 188, .g = 188, .b = 188},     /* light grey */
+    screen::Clut{.r = 200, .g = 200, .b = 200},     /* light grey */
     /* clang-format on */
 };
 
@@ -49,6 +49,7 @@ inline constexpr uint8_t LYELLOW{13};
 inline constexpr uint8_t LMAGENTA{14};
 inline constexpr uint8_t LGREY{15};
 
+inline constexpr uint8_t BKGRND{YELLOW};
 /*
 tiles required:
   NOTHING = 0b000,
@@ -70,73 +71,99 @@ mouse
 inline constexpr size_t BTLEN{(PIXELS_PER_GRID / 2) * PIXELS_PER_GRID};
 
 /* tile data */
+
+// clang-format off
 inline constexpr auto background_tile{
-    embp::filled<uint8_t, BTLEN>(LYELLOW << 4 | LYELLOW)};
+    embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
 inline constexpr auto block_tile{
-    embp::filled<uint8_t, BTLEN>(LGREEN << 4 | LGREEN)};
+    embp::concat(
+        embp::pfold(LGREEN, LGREEN,  LGREY, LGREEN, LGREEN, LGREEN,  LGREY, LGREEN, LGREEN, LGREEN),
+        embp::pfold(LGREEN,  GREEN,  LGREY,  GREEN,  GREEN,  GREEN,  LGREY,  GREEN,  GREEN, DRKGRY),
+        embp::pfold( LGREY,  GREEN,  LGREY,  GREEN,  GREEN,  LGREY,  GREEN,  LGREY,  GREEN, DRKGRY),
+        embp::pfold(LGREEN,  LGREY,  GREEN,  LGREY,  LGREY,  GREEN,  GREEN,  LGREY,  GREEN, DRKGRY),
+        embp::pfold(LGREEN,  GREEN,  LGREY,  LGREY,  GREEN,  GREEN,  GREEN,  LGREY,  GREEN, DRKGRY),
+        embp::pfold(LGREEN,  GREEN,  LGREY,  GREEN,  GREEN,  GREEN,  GREEN,  GREEN,  LGREY, DRKGRY),
+        embp::pfold( LGREY,  LGREY,  LGREY,  GREEN,  GREEN,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY),
+        embp::pfold(LGREEN,  GREEN,  LGREY,  LGREY,  LGREY,  GREEN,  GREEN,  LGREY,  GREEN, DRKGRY),
+        embp::pfold(LGREEN,  GREEN,  GREEN,  LGREY,  GREEN,  GREEN,  LGREY,  GREEN,  GREEN, DRKGRY),
+        embp::pfold(DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY)
+    )
+};
 inline constexpr auto trap_tile{
     embp::filled<uint8_t, BTLEN>(LGREY << 4 | LGREY)};
 inline constexpr auto hole_tile{
     embp::concat(
-        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
-        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  BLACK,  BLACK,  BLACK, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW )
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, DRKGRY, DRKGRY, DRKGRY, DRKGRY, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND )
     )
 };
 inline constexpr auto nonmoveblock_tile{
-    embp::filled<uint8_t, BTLEN>(LCYAN << 4 | LCYAN)};
+    embp::concat(
+        embp::pfold(  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN),
+        embp::pfold(  LCYAN,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LCYAN,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LCYAN,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LCYAN,  LGREY,  LCYAN,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LCYAN,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LCYAN,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY),
+        embp::pfold(  LCYAN,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY),
+        embp::pfold( DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY)
+    )
+
+};
 inline constexpr auto cheese_tile{
     embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
 inline constexpr auto cat_tile{
     embp::concat(
-        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW),
-        embp::pfold(LYELLOW,LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW,LYELLOW, YELLOW,LYELLOW ),
-        embp::pfold(LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW, YELLOW, YELLOW,LYELLOW,LYELLOW ),
-        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW)
+        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND),
+        embp::pfold( BKGRND, BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND,LYELLOW, BKGRND,LYELLOW, BKGRND ),
+        embp::pfold( BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND ),
+        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND)
     )
 };
 inline constexpr auto sitting_cat_tile{embp::filled<uint8_t, BTLEN>(LRED << 4 | LRED)};
 
-// clang-format off
 inline constexpr auto mouse_tile{
     embp::concat(
-        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW),
-        embp::pfold(LYELLOW,  LGREY,  LGREY,LYELLOW,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,LYELLOW,  LGREY,LYELLOW,  LGREY,LYELLOW ),
-        embp::pfold(LYELLOW,  LGREY,LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,  LGREY,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW,LYELLOW,  LGREY,  LGREY,  LGREY,LYELLOW,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,  LGREY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,  LGREY,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW ),
-        embp::filled<uint8_t, PIXELS_PER_GRID>(LYELLOW << 4 | LYELLOW)
+        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND),
+        embp::pfold( BKGRND,  LGREY, DRKGRY, BKGRND, DRKGRY,  LGREY, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,  LGREY,  LGREY,  LGREY,  BLACK,  LGREY,  BLACK, DRKGRY, BKGRND ),
+        embp::pfold( BKGRND,  BLACK,  BLACK, BKGRND,  LGREY,  LGREY,  LGREY,  LGREY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND,  LGREY,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,  LGREY,  BLACK,  BLACK,  BLACK,  LGREY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,  LGREY,  BLACK, BKGRND, BKGRND, BKGRND,  BLACK,  LGREY, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND)
     )
 };
 inline constexpr auto mouse_stuck_tile{
     embp::concat(
-        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW ),
-        embp::pfold(LYELLOW,  LGREY,  LGREY, DRKGRY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
-        embp::pfold( DRKGRY, DRKGRY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY, DRKGRY,  LGREY, DRKGRY,  LGREY, DRKGRY ),
-        embp::pfold( DRKGRY,  LGREY, DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY, DRKGRY, DRKGRY,  LGREY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY ),
-        embp::pfold( DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY ),
-        embp::pfold(LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW ),
-        embp::pfold(LYELLOW,LYELLOW, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY, DRKGRY,LYELLOW,LYELLOW )
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,  LGREY,  LGREY, BKGRND,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,  LGREY,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,  LGREY,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND,  LGREY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, DRKGRY, DRKGRY, DRKGRY,  LGREY,  LGREY, DRKGRY, DRKGRY, DRKGRY, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, DRKGRY,  LGREY,  LGREY,  LGREY,  LGREY, DRKGRY, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND,  LGREY,  LGREY,  LGREY,  LGREY, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
+        embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND )
     )
 };
 // clang-format on
