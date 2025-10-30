@@ -886,14 +886,15 @@ void commit_tetrimino() {
 /** @brief Fill the screen with a solid color.
  *  This is a primitive that needs to move to a different module.
  */
-void fill_screen_with_background_tile(
-    [[maybe_unused]] const uint8_t level) noexcept {
+void fill_screen_with_background_tile(uint8_t level) noexcept {
   const auto dims{screen::get_virtual_screen_size()};
 #if 1
-  const auto &tile{BACKGROUND_TILES[0]};
-  for (uint32_t yy = 0; yy < dims.height; yy += tile.side_length) {
-    for (uint32_t xx = 0; xx < dims.width; xx += tile.side_length) {
-      screen::draw_tile(xx, yy, tile);
+  if (level < std::size(BACKGROUND_TILES)) {
+    const auto &tile{BACKGROUND_TILES[level]};
+    for (uint32_t yy = 0; yy < dims.height; yy += tile.side_length) {
+      for (uint32_t xx = 0; xx < dims.width; xx += tile.side_length) {
+        screen::draw_tile(xx, yy, tile);
+      }
     }
   }
 #else // the old "fill screen with solid color" approach
