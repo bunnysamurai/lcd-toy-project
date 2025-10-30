@@ -695,7 +695,8 @@ void process_level_change(uint32_t lines) noexcept {
     if (g_level < std::size(g_level_thresholds)) {
       ++g_level;
       g_game_tick_us -= 100'000; /* 100 ms */
-      change_background_color(g_level_color[g_level]);
+      // change_background_color(g_level_color[g_level]);
+      change_background_color(g_level);
       // draw_level_score();
     }
   }
@@ -885,17 +886,17 @@ void commit_tetrimino() {
 /** @brief Fill the screen with a solid color.
  *  This is a primitive that needs to move to a different module.
  */
-void fill_screen_with_color(const uint8_t palette_index) noexcept {
+void fill_screen_with_background_tile(
+    [[maybe_unused]] const uint8_t level) noexcept {
   const auto dims{screen::get_virtual_screen_size()};
-#if 0
-  const screen::Tile tile{
-      .side_length = 1, .format = VIDEO_FORMAT, .data = &palette_index};
-  for (uint32_t yy = 0; yy < dims.height; ++yy) {
-    for (uint32_t xx = 0; xx < dims.width; ++xx) {
+#if 1
+  const auto &tile{BACKGROUND_TILES[0]};
+  for (uint32_t yy = 0; yy < dims.height; yy += tile.side_length) {
+    for (uint32_t xx = 0; xx < dims.width; xx += tile.side_length) {
       screen::draw_tile(xx, yy, tile);
     }
   }
-#else
+#else // the old "fill screen with solid color" approach
   /* seems to take forever, which is unsurprising... let's try something else */
   uint8_t *buf{screen::get_video_buffer()};
   for (uint32_t idx = 0, limit = dims.height * dims.width; idx < limit;
@@ -904,7 +905,7 @@ void fill_screen_with_color(const uint8_t palette_index) noexcept {
   }
 #endif
 }
-void change_background_color(const uint8_t palette_index) noexcept {
+void change_background_color(const uint8_t level) noexcept {
   /* background is anywhere where the playfield and score gui are not
     probably easiest to just iterate through the image
 
@@ -914,7 +915,8 @@ void change_background_color(const uint8_t palette_index) noexcept {
       draw scoring text and scores
       draw playfield
   */
-  fill_screen_with_color(palette_index);
+  // fill_screen_with_color(level);
+  fill_screen_with_background_tile(level);
   init_gui();
   draw_level_score();
   draw_line_score();
@@ -986,7 +988,8 @@ void init_play_config() {
            ((score_gui_width - g_gui.piece_preview_width) >> 1),
       .y = g_gui.scoring_box_start.y + glyphs::tile::height() * 6 + 6};
 
-  fill_screen_with_color(g_level_color[g_level]);
+  // fill_screen_with_color(g_level_color[g_level]);
+  fill_screen_with_background_tile(g_level);
   init_playfield();
   init_gui();
 }

@@ -54,7 +54,7 @@ if __name__ == "__main__":
     img = to_numpy(Image.open(args.PNG))
 
     name = args.NAME
-    header = f'#ifndef {name}_HPP\n#define {name}_HPP\n\n#include <array>\n#include "common/utilities.hpp"\n\ninline constexpr std::array {name} {{ embp::pfold('
+    header = f'#ifndef {name}_HPP\n#define {name}_HPP\n\n#include <array>\n#include "common/utilities.hpp"\n#include "../tetris_defs.hpp"\n\nnamespace tetris {{\n\ninline constexpr std::array {name} {{ embp::pfold('
 
     # convert image data to a long list of pallete identifier strings
     resultstring = header
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # now add the tile struct
 
-    resultstring +=f"\n\ninline constexpr screen::Tile {name}_TILE {{\n    .side_length = {img.shape[0]},\n    .format = VIDEO_FORMAT,\n    .data = std::data({name})\n}};"
+    resultstring +=f"\n\ninline constexpr screen::Tile {name}_TILE {{\n    .side_length = {img.shape[0]},\n    .format = VIDEO_FORMAT,\n    .data = std::data({name})\n}};\n\n}} // namespace tetris"
 
     # and close the header guard
     resultstring += '\n#endif'
