@@ -6,7 +6,7 @@
 #include "tetris_bkgrnd_lvl_1.hpp"
 #include "tetris_bkgrnd_lvl_2.hpp"
 #include "tetris_bkgrnd_lvl_3.hpp"
-// #include "tetris_bkgrnd_lvl_4.hpp"
+#include "tetris_bkgrnd_lvl_4.hpp"
 // #include "tetris_bkgrnd_lvl_5.hpp"
 // #include "tetris_bkgrnd_lvl_6.hpp"
 // #include "tetris_bkgrnd_lvl_7.hpp"
@@ -21,7 +21,7 @@ inline constexpr std::array BACKGROUND_TILES{
     TETRIS_BKGRND_LVL_1_TILE,
     TETRIS_BKGRND_LVL_2_TILE,
     TETRIS_BKGRND_LVL_3_TILE,
-    // TETRIS_BKGRND_LVL_4_TILE,
+    TETRIS_BKGRND_LVL_4_TILE,
     // TETRIS_BKGRND_LVL_5_TILE,
     // TETRIS_BKGRND_LVL_6_TILE,
     // TETRIS_BKGRND_LVL_7_TILE,
