@@ -9,9 +9,11 @@
 #include "revenge_tiles.hpp"
 
 #include "common/BitImage.hpp"
+#include "common/screen_utils.hpp"
 #include "embp/circular_array.hpp"
 #include "gamepad/gamepad.hpp"
 #include "revenge_tiles.hpp"
+#include "screen/glyphs/letters.hpp"
 #include "screen/screen.hpp"
 
 #include "pico/rand.h"
@@ -112,6 +114,7 @@ static Beast g_mouse;
 static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
 static Timer_t g_stuck_timer{STUCK_IN_HOLE_PERIOD_US};
 static bool g_stuck_in_hole{false};
+static uint8_t g_counter;
 
 void reset_global_state() noexcept {
   g_game_timer.period(GAME_TICK_PERIOD_US);
@@ -125,6 +128,7 @@ void reset_global_state() noexcept {
   g_stuck_timer.period(STUCK_IN_HOLE_PERIOD_US);
   g_stuck_timer.reset();
   g_stuck_in_hole = false;
+  g_counter = 0;
 }
 /* ===========================================================================*/
 /*                       _   _ _____ ___ _     ____                           */
@@ -398,6 +402,8 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
           g_playfield.set(static_cast<uint8_t>(GridObject::MOVABLE_BLOCK),
                           encounter.x, encounter.y);
           draw_grid_tile(encounter.x, encounter.y, BLOCK);
+        } else {
+          g_counter++;
         }
       }
     }
@@ -698,6 +704,78 @@ void process_stuck_in_hole() noexcept {
   }
 }
 
+void process_easter_egg() {
+  static constexpr std::array LIST_OF_NAMES{"Ben",  "Mark", "Tim",
+                                            "Noah", "Gabe", "Christian"};
+  embp::variable_array<uint8_t, std::size(LIST_OF_NAMES)> ordered{};
+  ordered.push_back(0);
+  ordered.push_back(1);
+  ordered.push_back(2);
+  ordered.push_back(3);
+  ordered.push_back(4);
+  ordered.push_back(5);
+
+  std::array<uint8_t, std::size(LIST_OF_NAMES)> rolls{};
+  // don't care about performance here!  so hack this in
+  for (uint32_t oidx = 0; oidx < std::size(LIST_OF_NAMES); ++oidx) {
+    const auto idx{get_rand_32() % std::size(ordered)};
+    rolls[oidx] = ordered[idx];
+    ordered.erase(std::next(std::begin(ordered), idx));
+  }
+
+  /* now that we have our ordering, draw right over the screen */
+
+  /* create a blank slate */
+  static_assert(VIDEO_FORMAT == screen::Format::RGB565_LUT4);
+  static constexpr uint32_t ROWOFF{10};
+  static constexpr uint32_t COLOFF{10};
+  static constexpr uint8_t BLACK4BPP{};
+
+  const auto dims{screen::get_virtual_screen_size()};
+  auto *vidbuf{screen::get_video_buffer()};
+  for (uint32_t yy = ROWOFF; yy < dims.height - ROWOFF; ++yy) {
+    const uint32_t rowstart{yy * dims.width};
+    for (uint32_t linidx = rowstart + COLOFF;
+         linidx < rowstart + (dims.width - COLOFF); linidx += 2) {
+      vidbuf[linidx >> 1] = BLACK4BPP;
+    }
+  }
+
+  /* draw each name in 'rolls' */
+  screen::letter_4bpp_array_t buffer{};
+  const screen::Tile tile_obj{.side_length = glyphs::tile::width(),
+                              .format = screen::Format::RGB565_LUT4,
+                              .data = std::data(buffer)};
+  auto &&draw_name{
+      [&](const char *str, const uint32_t row_start, const uint32_t col_start) {
+        const auto ypos{row_start};
+        auto xpos{col_start};
+
+        for (size_t idx{0};; ++idx) {
+          if (str[idx] == '\0') {
+            break;
+          }
+          screen::get_letter_data_4bpp(buffer, str[idx], WHITE, BLACK);
+          screen::draw_tile(xpos, ypos, tile_obj);
+          xpos += glyphs::tile::width();
+        }
+      }};
+
+  for (uint32_t idx = 0; idx < std::size(rolls); ++idx) {
+    const auto nameidx{rolls[idx]};
+    draw_name(LIST_OF_NAMES[nameidx], ROWOFF + 5 + idx * glyphs::tile::width(),
+              COLOFF + 5);
+  }
+
+  /* wait for user input of any kind */
+  for (;;) {
+    const UserInput request{process_user_input()};
+    if (request != UserInput::NO_ACTION) {
+      break;
+    }
+  }
+}
+
 /* ========================================================================= */
 /*                             ____  _   _ _   _                             */
 /*                            |  _ \| | | | \ | |                            */
@@ -778,6 +856,16 @@ void game_init() noexcept {
   draw_playgrid_border(g_grid, UNMOVEBLOCK);
 }
 
+void restore_entire_screen_state() {
+  screen::clear_screen();
+  render_playgrid(g_playfield);
+  draw_playgrid_border(g_grid, UNMOVEBLOCK);
+  draw_beast(g_mouse, g_stuck_in_hole ? MOUSE_IN_HOLE : MOUSE);
+  for (auto &cat : g_cats) {
+    draw_beast(cat, CAT);
+  }
+}
+
 void run() {
   reset_global_state();
   screen_init();
@@ -800,6 +888,11 @@ void run() {
     const UserInput request{process_user_input()};
     if (request == UserInput::QUIT) {
       break;
+    }
+    if (g_counter == 6) {
+      process_easter_egg();
+      g_counter = 0;
+      restore_entire_screen_state();
     }
     if (request != UserInput::NO_ACTION && !g_stuck_in_hole) {
       const auto location_before_move{g_mouse.location()};
