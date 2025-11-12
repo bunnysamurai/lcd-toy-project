@@ -2,6 +2,7 @@
 #define SCREEN_HPP
 
 #include <cstdint>
+#include <limits>
 
 #include "TileDef.h"
 #include "screen_def.h"
@@ -13,7 +14,7 @@ namespace screen {
 [[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
                         Format format) noexcept;
 
-void init_clut(const Clut* entries, uint32_t length) noexcept;
+void init_clut(const Clut *entries, uint32_t length) noexcept;
 
 [[nodiscard]] uint32_t get_buf_len();
 
@@ -48,13 +49,45 @@ void set_virtual_screen_size(Position new_topleft,
 /* =====================================================================================
  */
 
-/** @brief Switch to video-buffer mode
- * The most basic interface, you can gain access to the raw video buffer.
- * It also has one bell, a convenience function to blit-in a Tile
+/** @brief Clear the screen to black
+ *  For most screen pixel formats, what this value actually needs to be is
+ * pretty clear. For any lookup-table ones (RGB656_LUT4, for example), this
+ * choice is less clear. By convention, the first index into any lookup-table is
+ * the "clear" color.
+ *
+ *  If this is too restrictive, consider using fill_screen instead.
  */
 void clear_screen();
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
-void fill_screen(uint32_t raw_value); /* does not take bpp into account, so be aware */
+void fill_screen(
+    uint32_t raw_value); /* does not take bpp into account, so be aware */
+
+/** @brief Quickly fill a bunch of continguous rows, or lines, on the screen.
+ */
+void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
+              uint32_t column_start = std::numeric_limits<uint32_t>::min(),
+              uint32_t column_finish = std::numeric_limits<uint32_t>::max());
+
+/** @brief copy one line of the frame to another
+ *    Does the right thing, regardless of display pixel format
+ *    Option to specify a cropped extent
+ *  If either begin or end column is out of the image frame, will clamp
+ * appropriately.
+ * Note the following: column offsets into the row must be byte-aligned relative
+ * to the screen format.
+ */
+void copyrow(const uint32_t dst, const uint32_t src,
+             uint32_t column_start = std::numeric_limits<uint32_t>::min(),
+             uint32_t column_finish = std::numeric_limits<uint32_t>::max());
+
+/** @brief Melt the screen, DOOM style
+ *
+ *  This is a very simple implementation; when melting we only replace the
+ * background with a constant color value.
+ *
+ * @param replacement_value Pixel value to make the background. Is screen format aware.
+ */
+void melt(uint32_t replacement_value);
 
 /** @brief Switch to text-only mode
  *

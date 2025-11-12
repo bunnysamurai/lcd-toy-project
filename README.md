@@ -28,6 +28,10 @@ By default, keyboard inputs are processed via tinyusb, with stdout being directe
   * `$ minicom -D /dev/ttyACM0`
 * Useful for development and debugging.
 
+### `-DLCD_USES_WB_MODE`
+
+The LCD supports a White/Black binary mode, where 0 == white instead of black.
+
 ## reports
 
 Uses `elf-size-analyze` from [jedrzejbocar](https://github.com/jedrzejboczar/elf-size-analyze) and `size` from GNU.

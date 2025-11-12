@@ -253,12 +253,8 @@ int main() {
     Shell_RegisterInterface(my_interface);
   }
 
-  // start by running the demo
-  {
-    // const char *argvs[2] = {"demo", "rando"};
-    // ShellCmd_Demo(2, argvs);
-    ShellCmd_Menu(0, nullptr);
-  }
+  /* we enter the menu.  This could, in theory, return */
+  ShellCmd_Menu(0, nullptr);
 
   /* launch the shell... does not return */
   ShellTask(&shell_buffer[0], SHELL_BUFFER_LEN, &argument_values[0], ARGV_LEN);

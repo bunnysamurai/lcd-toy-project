@@ -1072,6 +1072,8 @@ void run() {
         }
       } else {
         if (start_a_new_tetrimino()) {
+          /* couldn't start a new tetrimino? game over*/
+          screen::melt(BLACK);
           break;
         }
         draw_tetrimino();

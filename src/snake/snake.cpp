@@ -1549,7 +1549,8 @@ void run() {
            * instead */
           // if (!level_is_active) {
           if (lives == 0) {
-            lives = 3;
+            user_desires_play = false;
+            screen::melt(BLACK);
           }
           continue;
         case Collision::NONE:

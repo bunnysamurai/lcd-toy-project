@@ -31,6 +31,7 @@ void fill_routine(const screen::Tile &tile) noexcept {
 
 static constexpr std::array Demo_Palette{
     /* clang-format off */
+  screen::Clut{.r = 0, .g = 0, .b = 0}, /* Black */
   screen::Clut{.r = 255, .g = 0, .b = 255}, /* Magenta */
   screen::Clut{.r = 255, .g = 255, .b = 0 }, /* Yellow */
   screen::Clut{.r = 0, .g = 255, .b = 255}, /* Cyan */
@@ -39,12 +40,13 @@ static constexpr std::array Demo_Palette{
   screen::Clut{.r = 0, .g = 0, .b = 255}, /* Blue */
     /* clang-format on */
 };
-static constexpr uint32_t MAGENTA{0};
-static constexpr uint32_t YELLOW{1};
-static constexpr uint32_t CYAN{2};
-static constexpr uint32_t RED{3};
-static constexpr uint32_t GREEN{4};
-static constexpr uint32_t BLUE{5};
+static constexpr uint32_t BLACK{0};
+static constexpr uint32_t MAGENTA{1};
+static constexpr uint32_t YELLOW{2};
+static constexpr uint32_t CYAN{3};
+static constexpr uint32_t RED{4};
+static constexpr uint32_t GREEN{5};
+static constexpr uint32_t BLUE{6};
 
 /* I think 8x8 tiles are okay? */
 static constexpr auto magenta_data{embp::pfold(
@@ -154,6 +156,8 @@ void run_color_rando_art() noexcept {
       break;
     }
   }
+
+  screen::melt(BLACK);
 
   gamepad::five::deinit();
 }

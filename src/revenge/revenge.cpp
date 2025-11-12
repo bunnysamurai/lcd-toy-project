@@ -944,6 +944,7 @@ void run() {
       g_game_timer.reset();
       if (move_cats()) {
         /* cat ate the mouse!  GAME OVER */
+        screen::melt(BLACK);
         break;
       }
       process_stuck_in_hole();

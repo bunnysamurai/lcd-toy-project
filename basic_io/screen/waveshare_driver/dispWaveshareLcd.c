@@ -416,9 +416,11 @@ static void dispPrvPioProgram421bpp(uint_fast8_t bpp) {
 
   lblMore = pc;
   pio0_hw->instr_mem[pc++] = I_OUT(0, 0, OUT_DST_Y, bpp);
+#if defined(LCD_USES_WB_MODE)
   pio0_hw->instr_mem[pc++] =
       I_MOV(0, 0, MOV_DST_Y, MOV_OP_INVERT,
             MOV_SRC_Y); // we want 0 = white, 15 = black, as G&W LCDs do
+#endif
   pio0_hw->instr_mem[pc++] = I_SET(0, 4, SET_DST_X, 12 / bpp - 1);
   lblAgain = pc;
   pio0_hw->instr_mem[pc++] = I_IN(0, 0, IN_SRC_Y, bpp);
