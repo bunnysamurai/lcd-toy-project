@@ -14,6 +14,8 @@ using Timer_t = Timer<timer_details::PicoSdk>;
 using pix_t = uint16_t;
 using grid_t = uint8_t;
 
+inline constexpr Timer_t::time_diff_t STOPWATCH_TIMEOUT_PERIOD_US{30'000'000};
+inline constexpr Timer_t::time_diff_t PROCESS_STOPWATCH_PERIOD_US{1'000'000};
 inline constexpr Timer_t::time_diff_t GAME_TICK_PERIOD_US{1'500'000};
 inline constexpr Timer_t::time_diff_t STUCK_IN_HOLE_PERIOD_US{5'000'000};
 inline constexpr Timer_t::time_diff_t INPUT_POLL_PERIOD_US{10'000};
@@ -22,7 +24,8 @@ inline constexpr uint8_t GRID_SIZE_COLS{21};
 inline constexpr uint8_t GRID_SIZE_ROWS{21};
 inline constexpr uint8_t PIXELS_PER_GRID{10};
 
-inline constexpr uint32_t MAX_NUMBER_OF_CATS{16};
+// inline constexpr uint32_t MAX_NUMBER_OF_CATS{16};
+inline constexpr uint32_t MAX_NUMBER_OF_CATS{4};
 
 using PlayGrid = ThreeBitImage<GRID_SIZE_COLS, GRID_SIZE_ROWS>;
 
@@ -127,6 +130,17 @@ public:
   constexpr void location(Grid::Location new_location) noexcept {
     m_location = new_location;
   }
+};
+
+struct TopPanelCfg {
+  struct Point {
+    uint16_t x;
+    uint16_t y;
+  };
+  Point lives_draw_start;
+  Point lives_draw_finish;
+  Point timer_center;
+  Point score_start;
 };
 
 } // namespace revenge

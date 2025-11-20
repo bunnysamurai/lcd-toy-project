@@ -157,6 +157,7 @@ void reset_all_global_state() {
   g_play_cfg = TileGridCfg{};
   g_lines_scored = 0;
   g_gui = GuiCfg{};
+  g_game_tick_us = INITIAL_GAME_TICK_US;
   g_points_scored = 0;
 }
 
@@ -695,9 +696,7 @@ void process_level_change(uint32_t lines) noexcept {
     if (g_level < std::size(g_level_thresholds)) {
       ++g_level;
       g_game_tick_us -= 100'000; /* 100 ms */
-      // change_background_color(g_level_color[g_level]);
       change_background_color(g_level);
-      // draw_level_score();
     }
   }
 }

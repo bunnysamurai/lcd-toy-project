@@ -154,11 +154,15 @@ void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile) {
     break;
   }
 }
+void draw_tile_with_replacement(uint32_t xpos, uint32_t ypos, Tile tile,
+                                uint32_t pattern, uint32_t replacement) {}
 
 void fill_screen(uint32_t raw_value) {
-  for (auto &pix : frame_buffer) {
-    pix = static_cast<uint8_t>(raw_value);
-  }
+  auto *p_vbuf{std::data(frame_buffer)};
+  memset(p_vbuf, static_cast<uint8_t>(raw_value), std::size(frame_buffer));
+  // for (auto &pix : frame_buffer) {
+  //   pix = static_cast<uint8_t>(raw_value);
+  // }
 }
 
 /** @brief compute the byte offset into a row */
@@ -313,7 +317,8 @@ void melt(uint32_t replacement_value) {
       --scroll_start;
     }
     /* fill the rows that weren't mutated with the replacement value */
-    fillrows(replacement_value, FIXED_SCROLL-1, FIXED_SCROLL, colstrt, colend);
+    fillrows(replacement_value, FIXED_SCROLL - 1, FIXED_SCROLL, colstrt,
+             colend);
   }};
 
   /* we'll try 8 different sections */
@@ -323,12 +328,11 @@ void melt(uint32_t replacement_value) {
   std::array<uint8_t, SECARRLEN> counter{};
   // std::array<uint8_t, SECARRLEN> velocity{24, 22, 20, 18, 16, 14, 12, 10,
   //                                         12, 14, 16, 18, 20, 22, 24, 26};
-  std::array<uint8_t, SECARRLEN> velocity{24, 20, 16, 12, 
-                                          14, 18, 22, 26};
+  std::array<uint8_t, SECARRLEN> velocity{24, 20, 16, 12, 14, 18, 22, 26};
   const auto secwidth{dims.width >> SECLEN};
 
   for (;;) {
-    sleep_us(10);
+    // sleep_us(10);
     bool we_are_done{true};
     for (uint32_t idx = 0; idx < SECARRLEN; ++idx) {
       const bool done{position[idx] == dims.height};

@@ -58,8 +58,6 @@ void blit_1bpp(uint8_t *__restrict buffer, size_t width, size_t x, size_t y,
    */
 
   auto &&mod0{[&]() {
-    /* TODO broken at the moment.  but once it gets working, I feel like the
-     * interpolator could help out here. */
     for (size_t yy = 0; yy < tile.side_length; ++yy) {
       for (size_t xx = 0; xx < tile.side_length; xx += 8) {
         const size_t bufidx{(yy + y) * width + (xx + x)};

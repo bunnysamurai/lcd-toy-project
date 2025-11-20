@@ -1,8 +1,8 @@
 #if !defined(REVENGE_TILES_HPP)
 #define REVENGE_TILES_HPP
 
-#include "embp/constexpr_numeric.hpp"
 #include "common/utilities.hpp"
+#include "embp/constexpr_numeric.hpp"
 #include "revenge_defs.hpp"
 #include "screen/screen.hpp"
 
@@ -19,7 +19,7 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 0, .g = 220, .b = 220},       /* cyan */
     screen::Clut{.r = 220, .g = 220, .b = 0},       /* yellow */
     screen::Clut{.r = 245, .g = 0, .b = 245},       /* magenta */
-    screen::Clut{.r = 100, .g = 100, .b = 100},        /* dark grey */
+    screen::Clut{.r = 100, .g = 100, .b = 100},     /* dark grey */
 
     screen::Clut{.r = 255, .g = 255, .b = 255},     /* white */
     screen::Clut{.r = 255, .g = 128, .b = 128},     /* light red */
@@ -50,24 +50,6 @@ inline constexpr uint8_t LMAGENTA{14};
 inline constexpr uint8_t LGREY{15};
 
 inline constexpr uint8_t BKGRND{YELLOW};
-/*
-tiles required:
-  NOTHING = 0b000,
-  MOVABLE_BLOCK = 0b001,
-  TRAP = 0b010,
-  HOLE = 0b011,
-  UNMOVEABLE_BLOCK = 0b100,
-  CHEESE = 0b101
-cat
-mouse
-
-
-     screen::Tile{.side_length = TetriminoTile_SideLength,
-                             .format = VIDEO_FORMAT,
-                             .data = std::data(Tetrimino_Tile_Data)},
-
-*/
-
 inline constexpr size_t BTLEN{(PIXELS_PER_GRID / 2) * PIXELS_PER_GRID};
 
 /* tile data */
@@ -75,6 +57,7 @@ inline constexpr size_t BTLEN{(PIXELS_PER_GRID / 2) * PIXELS_PER_GRID};
 // clang-format off
 inline constexpr auto background_tile{
     embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
+
 inline constexpr auto block_tile{
     embp::concat(
         embp::pfold(LGREEN, LGREEN,  LGREY, LGREEN, LGREEN, LGREEN,  LGREY, LGREEN, LGREEN, LGREEN),
@@ -89,8 +72,10 @@ inline constexpr auto block_tile{
         embp::pfold(DRKGRY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY,  LGREY, DRKGRY, DRKGRY, DRKGRY)
     )
 };
+
 inline constexpr auto trap_tile{
     embp::filled<uint8_t, BTLEN>(LGREY << 4 | LGREY)};
+
 inline constexpr auto hole_tile{
     embp::concat(
         embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND ),
@@ -120,23 +105,32 @@ inline constexpr auto nonmoveblock_tile{
     )
 
 };
-inline constexpr auto cheese_tile{
-    embp::filled<uint8_t, BTLEN>(YELLOW << 4 | YELLOW)};
-inline constexpr auto cat_tile{
-    embp::concat(
-        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND),
-        embp::pfold( BKGRND, BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND,LYELLOW, BKGRND,LYELLOW, BKGRND ),
-        embp::pfold( BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND ),
-        embp::pfold( BKGRND, BKGRND,LYELLOW, BKGRND, BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND ),
-        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND ),
-        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND ),
-        embp::pfold( BKGRND, BKGRND, BKGRND,LYELLOW,LYELLOW,LYELLOW,LYELLOW, BKGRND, BKGRND, BKGRND ),
-        embp::pfold( BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND ),
-        embp::pfold( BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND,LYELLOW,LYELLOW, BKGRND, BKGRND ),
-        embp::filled<uint8_t, PIXELS_PER_GRID>(BKGRND << 4 | BKGRND)
-    )
-};
-inline constexpr auto sitting_cat_tile{embp::filled<uint8_t, BTLEN>(LRED << 4 | LRED)};
+
+inline constexpr std::array CAT_STANDING_DATA { embp::pfold(
+    BKGRND,BKGRND,DRKGRY,BKGRND,BKGRND,BKGRND,DRKGRY,BKGRND,DRKGRY,BKGRND,
+    BKGRND,BKGRND,LYELLOW,DRKGRY,BKGRND,DRKGRY,LYELLOW,DRKGRY,LYELLOW,BKGRND,
+    BKGRND,LYELLOW,DRKGRY,BKGRND,BKGRND,BKGRND,BKGRND,LYELLOW,LYELLOW,DRKGRY,
+    BKGRND,BKGRND,LYELLOW,DRKGRY,DRKGRY,DRKGRY,DRKGRY,LYELLOW,LYELLOW,DRKGRY,
+    BKGRND,BKGRND,DRKGRY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,DRKGRY,BKGRND,
+    BKGRND,BKGRND,DRKGRY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,DRKGRY,BKGRND,
+    BKGRND,BKGRND,DRKGRY,LYELLOW,LYELLOW,DRKGRY,LYELLOW,DRKGRY,BKGRND,BKGRND,
+    BKGRND,DRKGRY,LYELLOW,DRKGRY,DRKGRY,BKGRND,LYELLOW,DRKGRY,BKGRND,BKGRND,
+    BKGRND,DRKGRY,LYELLOW,DRKGRY,BKGRND,BKGRND,LYELLOW,DRKGRY,BKGRND,BKGRND,
+    BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND
+)};
+
+inline constexpr std::array CAT_SITTING_DATA { embp::pfold(
+    BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,
+    BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,DRKGRY,BKGRND,DRKGRY,BKGRND,
+    BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,DRKGRY,LYELLOW,DRKGRY,LYELLOW,BKGRND,
+    BKGRND,BKGRND,DRKGRY,BKGRND,BKGRND,BKGRND,BKGRND,LYELLOW,LYELLOW,DRKGRY,
+    BKGRND,LYELLOW,LYELLOW,DRKGRY,DRKGRY,DRKGRY,DRKGRY,LYELLOW,LYELLOW,DRKGRY,
+    BKGRND,LYELLOW,DRKGRY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,DRKGRY,BKGRND,
+    LYELLOW,BKGRND,DRKGRY,LYELLOW,LYELLOW,LYELLOW,LYELLOW,LYELLOW,DRKGRY,BKGRND,
+    BKGRND,BKGRND,DRKGRY,LYELLOW,LYELLOW,DRKGRY,LYELLOW,DRKGRY,BKGRND,BKGRND,
+    BKGRND,LYELLOW,LYELLOW,DRKGRY,BKGRND,BKGRND,LYELLOW,LYELLOW,DRKGRY,BKGRND,
+    BKGRND,LGREY,LGREY,LGREY,BKGRND,BKGRND,LGREY,LGREY,LGREY,BKGRND
+)};
 
 inline constexpr auto mouse_tile{
     embp::concat(
@@ -166,8 +160,21 @@ inline constexpr auto mouse_stuck_tile{
         embp::pfold( BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND, BKGRND )
     )
 };
-// clang-format on
 
+/* generated by tools/revenge_img_to_cpp.py */
+inline constexpr std::array CHEESE_TILE_DATA { embp::pfold(
+BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,DRKGRY,DRKGRY,BKGRND,
+BKGRND,BKGRND,BKGRND,BKGRND,DRKGRY,DRKGRY,DRKGRY,LYELLOW,LYELLOW,DRKGRY,
+BKGRND,BKGRND,DRKGRY,DRKGRY,BKGRND,LYELLOW,LYELLOW,BKGRND,DRKGRY,DRKGRY,
+BKGRND,DRKGRY,BKGRND,LYELLOW,LYELLOW,DRKGRY,DRKGRY,DRKGRY,LYELLOW,DRKGRY,
+BKGRND,DRKGRY,DRKGRY,DRKGRY,DRKGRY,LYELLOW,LYELLOW,BKGRND,LYELLOW,DRKGRY,
+BKGRND,DRKGRY,LYELLOW,LYELLOW,LYELLOW,BKGRND,LYELLOW,LYELLOW,LYELLOW,DRKGRY,
+BKGRND,DRKGRY,LYELLOW,BKGRND,LYELLOW,LYELLOW,LYELLOW,BKGRND,LYELLOW,DRKGRY,
+BKGRND,DRKGRY,BKGRND,LYELLOW,LYELLOW,LYELLOW,DRKGRY,DRKGRY,DRKGRY,BKGRND,
+BKGRND,LGREY,DRKGRY,DRKGRY,DRKGRY,DRKGRY,BKGRND,BKGRND,BKGRND,BKGRND,
+BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND,BKGRND
+)};
+// clang-format on
 
 /* screen::Tile objects */
 inline constexpr screen::Tile BACKGROUND{.side_length = PIXELS_PER_GRID,
@@ -187,19 +194,20 @@ inline constexpr screen::Tile UNMOVEBLOCK{.side_length = PIXELS_PER_GRID,
                                           .data = std::data(nonmoveblock_tile)};
 inline constexpr screen::Tile CHEESE{.side_length = PIXELS_PER_GRID,
                                      .format = VIDEO_FORMAT,
-                                     .data = std::data(cheese_tile)};
+                                     .data = std::data(CHEESE_TILE_DATA)};
 inline constexpr screen::Tile CAT{.side_length = PIXELS_PER_GRID,
                                   .format = VIDEO_FORMAT,
-                                  .data = std::data(cat_tile)};
+                                  .data = std::data(CAT_STANDING_DATA)};
 inline constexpr screen::Tile SITTING_CAT{.side_length = PIXELS_PER_GRID,
-                                  .format = VIDEO_FORMAT,
-                                  .data = std::data(sitting_cat_tile)};
+                                          .format = VIDEO_FORMAT,
+                                          .data = std::data(CAT_SITTING_DATA)};
 inline constexpr screen::Tile MOUSE{.side_length = PIXELS_PER_GRID,
                                     .format = VIDEO_FORMAT,
                                     .data = std::data(mouse_tile)};
 inline constexpr screen::Tile MOUSE_IN_HOLE{.side_length = PIXELS_PER_GRID,
-                                    .format = VIDEO_FORMAT,
-                                    .data = std::data(mouse_stuck_tile)};
+                                            .format = VIDEO_FORMAT,
+                                            .data =
+                                                std::data(mouse_stuck_tile)};
 } // namespace revenge
 
 #endif

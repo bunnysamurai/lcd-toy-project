@@ -15,6 +15,7 @@
 #include "revenge_tiles.hpp"
 #include "screen/glyphs/letters.hpp"
 #include "screen/screen.hpp"
+#include "screen/tile.hpp"
 
 #include "pico/rand.h"
 #include "pico/time.h"
@@ -98,6 +99,8 @@ namespace revenge {
 /*                                                                            */
 /* ===========================================================================*/
 
+static Timer_t g_process_stopwatch_timer{PROCESS_STOPWATCH_PERIOD_US};
+static Timer_t g_stopwatch_timer{STOPWATCH_TIMEOUT_PERIOD_US};
 static Timer_t g_game_timer{GAME_TICK_PERIOD_US};
 static PlayGrid g_playfield;
 /* our playfield keeps track of these tile types:
@@ -115,8 +118,15 @@ static embp::circular_array<Beast, MAX_NUMBER_OF_CATS> g_cats;
 static Timer_t g_stuck_timer{STUCK_IN_HOLE_PERIOD_US};
 static bool g_stuck_in_hole{false};
 static uint8_t g_counter;
+static uint8_t g_lives{2};
+static TopPanelCfg g_top_panel;
 
 void reset_global_state() noexcept {
+  g_process_stopwatch_timer.period(
+      PROCESS_STOPWATCH_PERIOD_US);                      /* aka 1 second */
+  g_process_stopwatch_timer.reset();                     /* aka 1 second */
+  g_stopwatch_timer.period(STOPWATCH_TIMEOUT_PERIOD_US); /* aka 1 second */
+  g_stopwatch_timer.reset();                             /* aka 1 second */
   g_game_timer.period(GAME_TICK_PERIOD_US);
   g_game_timer.reset();
   for (auto &arr : g_playfield.m_field) {
@@ -129,6 +139,8 @@ void reset_global_state() noexcept {
   g_stuck_timer.reset();
   g_stuck_in_hole = false;
   g_counter = 0;
+  g_lives = 2;
+  g_top_panel = TopPanelCfg{};
 }
 /* ===========================================================================*/
 /*                       _   _ _____ ___ _     ____                           */
@@ -418,10 +430,12 @@ traverse_moveable_blocks(Grid::Location start, const Direction dir,
   return collide;
 }
 
-void init_cats(uint8_t number_of_cats) noexcept {
+void add_cats_to_play(uint8_t number_of_cats) noexcept {
   for (uint8_t idx = 0; idx < number_of_cats; ++idx) {
-    g_cats.push_back(Beast{find_suitable_cat_spawn()});
-    draw_beast(g_cats.back(), CAT);
+    if (!g_cats.full()) {
+      g_cats.push_back(Beast{find_suitable_cat_spawn()});
+      draw_beast(g_cats.back(), CAT);
+    }
   }
 }
 
@@ -578,7 +592,7 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
       draw_beast(cat, CHEESE);
     }
     g_cats.clear();
-    init_cats(2);
+    add_cats_to_play(2);
   }
 
   return false;
@@ -777,6 +791,54 @@ void process_easter_egg() {
 }
 
 /* ========================================================================= */
+/*                    _     _____     _______ ____                           */
+/*                   | |   |_ _\ \   / / ____/ ___|                          */
+/*                   | |    | | \ \ / /|  _| \___ \                          */
+/*                   | |___ | |  \ V / | |___ ___) |                         */
+/*                   |_____|___|  \_/  |_____|____/                          */
+/*                                                                           */
+/* ========================================================================= */
+void draw_lives(uint8_t life_count) {
+  std::array<uint8_t, BTLEN> mouse_with_grey_background{};
+
+  screen::Tile mousetile{MOUSE};
+  mousetile.data = std::data(mouse_with_grey_background);
+
+  if (!screen::copy_with_replacement(MOUSE, mouse_with_grey_background, BKGRND,
+                                     LGREY)) {
+    printf("Unable to draw lives??\n");
+  }
+
+  /* clear the whole thing */
+  screen::fillrows(
+      LGREY, g_top_panel.lives_draw_start.y, g_top_panel.lives_draw_finish.y,
+      g_top_panel.lives_draw_start.x, g_top_panel.lives_draw_finish.x);
+
+  /* redraw all the lives */
+  for (uint8_t ii = 0; ii < life_count; ++ii) {
+    const auto xpos{ii * PIXELS_PER_GRID + g_top_panel.lives_draw_start.x};
+    if (xpos > g_top_panel.lives_draw_finish.x) {
+      break;
+    }
+    screen::draw_tile(xpos, g_top_panel.lives_draw_start.y, mousetile);
+  }
+}
+
+/* ========================================================================= */
+/*            ____ _____ ___  ______        ___  _____ ____ _   _            */
+/*           / ___|_   _/ _ \|  _ \ \      / / \|_   _/ ___| | | |           */
+/*           \___ \ | || | | | |_) \ \ /\ / / _ \ | || |   | |_| |           */
+/*            ___) || || |_| |  __/ \ V  V / ___ \| || |___|  _  |           */
+/*           |____/ |_| \___/|_|     \_/\_/_/   \_\_| \____|_| |_|           */
+/*                                                                           */
+/* ========================================================================= */
+
+/** @brief update everything about that stopwatch
+ * @return True if stop watch has expired, false otherwise.
+ */
+bool update_stopwatch() { return true; }
+
+/* ========================================================================= */
 /*                             ____  _   _ _   _                             */
 /*                            |  _ \| | | | \ | |                            */
 /*                            | |_) | | | |  \| |                            */
@@ -830,12 +892,14 @@ void screen_init() noexcept {
   screen::init_clut(revenge::Palette.data(), revenge::Palette.size());
 
   /* we use a black background */
-  screen::clear_screen();
+  screen::fill_screen((LGREY << 4) | LGREY);
 }
 
 void game_init() noexcept {
   const auto dims{screen::get_virtual_screen_size()};
 
+  /* g_grid is the playing grid, which constrains how and where the mouse can
+   * move */
   g_grid = Grid{Grid::GridCfg{
       .xdimension = {.off =
                          (dims.width - GRID_SIZE_COLS * PIXELS_PER_GRID) >> 1,
@@ -845,6 +909,36 @@ void game_init() noexcept {
                      .scale = PIXELS_PER_GRID},
       .grid_width = GRID_SIZE_COLS,
       .grid_height = GRID_SIZE_ROWS}};
+
+  /* g_top_panel will have the timer, lives, and score.  It is defined as all
+     the area above the grid.
+
+        +----------------------------------------------------------+
+        |                                                          |
+        |  m m m                    |                  567         |
+        |                            \                             |
+        +----------------------------------------------------------+
+
+  */
+  const auto top_panel_width{dims.width};
+  const auto top_panel_height{g_grid.config().ydimension.off};
+  g_top_panel = TopPanelCfg{
+      .lives_draw_start = {.x = static_cast<uint16_t>(PIXELS_PER_GRID >> 1),
+                           .y = static_cast<uint16_t>((top_panel_height >> 1) -
+                                                      (PIXELS_PER_GRID))},
+      .lives_draw_finish = {.x = static_cast<uint16_t>((PIXELS_PER_GRID >> 1) +
+                                                       (PIXELS_PER_GRID * 6)),
+                            .y = static_cast<uint16_t>(top_panel_height >> 1)},
+      .timer_center = {.x = static_cast<uint16_t>(top_panel_width >> 1),
+                       .y = static_cast<uint16_t>(top_panel_height >> 1)},
+      .score_start = {
+          .x = static_cast<uint16_t>(
+              top_panel_width -
+              (6 * glyphs::tile::width() + (glyphs::tile::width() >> 1))),
+          .y = static_cast<uint16_t>((top_panel_height >> 1) -
+                                     (glyphs::tile::width() >> 1))}};
+
+  draw_lives(g_lives);
 
   load_level_onto_playgrid(g_playfield);
 
@@ -857,13 +951,23 @@ void game_init() noexcept {
 }
 
 void restore_entire_screen_state() {
-  screen::clear_screen();
+  screen::fill_screen((LGREY << 4) | LGREY);
+  draw_lives(g_lives);
   render_playgrid(g_playfield);
   draw_playgrid_border(g_grid, UNMOVEBLOCK);
   draw_beast(g_mouse, g_stuck_in_hole ? MOUSE_IN_HOLE : MOUSE);
   for (auto &cat : g_cats) {
     draw_beast(cat, CAT);
   }
+}
+
+void respawn_mouse()
+{
+  /* initalize where the mouse goes */
+  g_mouse.location({.x = GRID_SIZE_COLS >> 1, .y = GRID_SIZE_ROWS >> 1});
+  g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
+                  GRID_SIZE_COLS >> 1, GRID_SIZE_ROWS >> 1);
+  draw_beast(g_mouse, MOUSE);
 }
 
 void run() {
@@ -873,14 +977,12 @@ void run() {
   gamepad::five::init();
 
   /* initalize where the mouse goes */
-  g_mouse.location({.x = GRID_SIZE_COLS >> 1, .y = GRID_SIZE_ROWS >> 1});
-  g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
-                  GRID_SIZE_COLS >> 1, GRID_SIZE_ROWS >> 1);
-  draw_beast(g_mouse, MOUSE);
+  respawn_mouse();
 
   /* initialize the cats */
-  init_cats(2);
+  add_cats_to_play(2);
 
+  g_stopwatch_timer.reset();
   g_game_timer.reset();
   for (;;) {
 
@@ -944,11 +1046,22 @@ void run() {
       g_game_timer.reset();
       if (move_cats()) {
         /* cat ate the mouse!  GAME OVER */
-        screen::melt(BLACK);
-        break;
+        if (g_lives == 0) {
+          screen::melt(BLACK);
+          break;
+        }
+        --g_lives;
+        draw_lives(g_lives);
+        respawn_mouse();
       }
       process_stuck_in_hole();
     }
+    // if (g_stopwatch_timer.elapsed()) {
+    //   g_stopwatch_timer.reset();
+    //   if (update_stopwatch()) {
+    //     add_cats_to_play(2);
+    //   }
+    // }
 
     sleep_us(1000);
   }

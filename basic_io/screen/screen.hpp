@@ -58,11 +58,18 @@ void set_virtual_screen_size(Position new_topleft,
  *  If this is too restrictive, consider using fill_screen instead.
  */
 void clear_screen();
+
+/** @brief Draw a tile to the video buffer
+ */
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
-void fill_screen(
-    uint32_t raw_value); /* does not take bpp into account, so be aware */
+
+/** @brief fill the video buffer DIRECTLY
+ *  does not take the screen's format into account, so be aware
+ */
+void fill_screen(uint32_t raw_value);
 
 /** @brief Quickly fill a bunch of continguous rows, or lines, on the screen.
+ *  This is screen format aware.
  */
 void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
               uint32_t column_start = std::numeric_limits<uint32_t>::min(),
@@ -85,7 +92,8 @@ void copyrow(const uint32_t dst, const uint32_t src,
  *  This is a very simple implementation; when melting we only replace the
  * background with a constant color value.
  *
- * @param replacement_value Pixel value to make the background. Is screen format aware.
+ * @param replacement_value Pixel value to make the background. Is screen format
+ * aware.
  */
 void melt(uint32_t replacement_value);
 
@@ -106,6 +114,8 @@ void clear_console();
  */
 [[nodiscard]] Dimensions get_console_width_and_height() noexcept;
 
+/** @brief Draw a character to the console.
+ */
 void draw_letter(uint32_t column, uint32_t line, char c);
 
 /** @brief Scroll the text on the screen
