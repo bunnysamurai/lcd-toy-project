@@ -120,6 +120,7 @@ static bool g_stuck_in_hole{false};
 static uint8_t g_counter;
 static uint8_t g_lives{2};
 static TopPanelCfg g_top_panel;
+static uint32_t g_score;
 
 void reset_global_state() noexcept {
   g_process_stopwatch_timer.period(
@@ -141,6 +142,7 @@ void reset_global_state() noexcept {
   g_counter = 0;
   g_lives = 2;
   g_top_panel = TopPanelCfg{};
+  g_score = 0;
 }
 /* ===========================================================================*/
 /*                       _   _ _____ ___ _     ____                           */
@@ -590,6 +592,8 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
   if (sitting_cats_count == std::size(g_cats)) {
     for (auto cat : g_cats) {
       draw_beast(cat, CHEESE);
+      g_playfield.set(static_cast<uint8_t>(GridObject::CHEESE),
+                      cat.location().x, cat.location().y);
     }
     g_cats.clear();
     add_cats_to_play(2);
@@ -798,7 +802,7 @@ void process_easter_egg() {
 /*                   |_____|___|  \_/  |_____|____/                          */
 /*                                                                           */
 /* ========================================================================= */
-void draw_lives(uint8_t life_count) {
+void draw_lives(uint8_t life_count) noexcept {
   std::array<uint8_t, BTLEN> mouse_with_grey_background{};
 
   screen::Tile mousetile{MOUSE};
@@ -821,6 +825,53 @@ void draw_lives(uint8_t life_count) {
       break;
     }
     screen::draw_tile(xpos, g_top_panel.lives_draw_start.y, mousetile);
+  }
+}
+
+/* ========================================================================= */
+/*                     ____   ____ ___  ____  _____                          */
+/*                    / ___| / ___/ _ \|  _ \| ____|                         */
+/*                    \___ \| |  | | | | |_) |  _|                           */
+/*                     ___) | |__| |_| |  _ <| |___                          */
+/*                    |____/ \____\___/|_| \_\_____|                         */
+/*                                                                           */
+/* ========================================================================= */
+
+void draw_score(uint32_t score) {
+  /* convert integral score into 6 decimal digits */
+  const auto digits{screen::bcd<6>(score)};
+
+  /* convert the existing 1bpp number glyphs into double-sized 4bpp versions */
+  screen::letter_4bpp_array_t letter_4bpp_data{};
+  const screen::Tile letter_tile{.side_length = glyphs::tile::width(),
+                                 .format = screen::Format::RGB565_LUT4,
+                                 .data = std::data(letter_4bpp_data)};
+
+  // constexpr void
+  // copy_1bpptile_to_4bpp_buffer(letter_4bpp_array_t &tile_4bpp,
+  //                              const screen::Tile &tile_1bpp,
+  //                              const uint8_t set_word = 0b1111,
+  //                              const uint8_t unset_word = 0b0000) noexcept {
+  /* go from msd to lsd */
+
+  // struct TopPanelCfg {
+  //   struct Point {
+  //     uint16_t x;
+  //     uint16_t y;
+  //   };
+  //   Point lives_draw_start;
+  //   Point lives_draw_finish;
+  //   Point timer_center;
+  //   Point score_start;
+  // };
+  const auto row_start{g_top_panel.score_start.y};
+  auto col_start{g_top_panel.score_start.x};
+  for (const auto digit : digits) {
+    const auto tile_1bpp{
+        glyphs::tile::decode_ascii(static_cast<char>(digit + 0x30))};
+    copy_1bpptile_to_4bpp_buffer(letter_4bpp_data, tile_1bpp, BLACK, LGREY);
+    screen::draw_tile(col_start, row_start, letter_tile);
+    col_start += letter_tile.side_length;
   }
 }
 
@@ -925,18 +976,17 @@ void game_init() noexcept {
   g_top_panel = TopPanelCfg{
       .lives_draw_start = {.x = static_cast<uint16_t>(PIXELS_PER_GRID >> 1),
                            .y = static_cast<uint16_t>((top_panel_height >> 1) -
-                                                      (PIXELS_PER_GRID))},
+                                                      PIXELS_PER_GRID)},
       .lives_draw_finish = {.x = static_cast<uint16_t>((PIXELS_PER_GRID >> 1) +
-                                                       (PIXELS_PER_GRID * 6)),
+                                                       PIXELS_PER_GRID * 6),
                             .y = static_cast<uint16_t>(top_panel_height >> 1)},
       .timer_center = {.x = static_cast<uint16_t>(top_panel_width >> 1),
                        .y = static_cast<uint16_t>(top_panel_height >> 1)},
-      .score_start = {
-          .x = static_cast<uint16_t>(
-              top_panel_width -
-              (6 * glyphs::tile::width() + (glyphs::tile::width() >> 1))),
-          .y = static_cast<uint16_t>((top_panel_height >> 1) -
-                                     (glyphs::tile::width() >> 1))}};
+      .score_start = {.x = static_cast<uint16_t>(
+                          top_panel_width - (6 * glyphs::tile::width() +
+                                             (glyphs::tile::width() >> 1))),
+                      .y = static_cast<uint16_t>((top_panel_height >> 1) -
+                                                 PIXELS_PER_GRID)}};
 
   draw_lives(g_lives);
 
@@ -959,10 +1009,10 @@ void restore_entire_screen_state() {
   for (auto &cat : g_cats) {
     draw_beast(cat, CAT);
   }
+  draw_score(g_score);
 }
 
-void respawn_mouse()
-{
+void respawn_mouse() {
   /* initalize where the mouse goes */
   g_mouse.location({.x = GRID_SIZE_COLS >> 1, .y = GRID_SIZE_ROWS >> 1});
   g_playfield.set(static_cast<uint8_t>(GridObject::NOTHING),
@@ -981,6 +1031,8 @@ void run() {
 
   /* initialize the cats */
   add_cats_to_play(2);
+
+  draw_score(g_score);
 
   g_stopwatch_timer.reset();
   g_game_timer.reset();
@@ -1021,8 +1073,11 @@ void run() {
           g_stuck_in_hole = true;
           g_stuck_timer.reset();
           break;
-        case Collision::NONE:
         case Collision::CHEESE:
+          g_score += 100;
+          draw_score(g_score);
+          break;
+        case Collision::NONE:
         case Collision::BLOCK:
         case Collision::FIXED_BLOCK:
         case Collision::CAT:
