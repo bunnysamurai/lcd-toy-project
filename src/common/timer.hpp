@@ -9,13 +9,14 @@ public:
   explicit constexpr Timer(time_diff_t period)
       : m_period{period}, m_last_touch{TimerDetails::now()} {}
 
-  [[nodiscard]] constexpr time_base_t time() const noexcept {
-    TimerDetails::now();
+  [[nodiscard]] constexpr time_diff_t time() const noexcept {
+    return TimerDetails::time_diff(m_last_touch, TimerDetails::now());
   }
+
   [[nodiscard]] constexpr bool elapsed() const noexcept {
-    return TimerDetails::time_diff(m_last_touch, TimerDetails::now()) >
-           m_period;
+    return time() > m_period;
   }
+
   constexpr void reset() noexcept { m_last_touch = TimerDetails::now(); }
 
   [[nodiscard]] constexpr time_diff_t period() const noexcept {

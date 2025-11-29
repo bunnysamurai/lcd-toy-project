@@ -63,6 +63,12 @@ void clear_screen();
  */
 void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
 
+/** @brief Change a pixel in memory, format-aware */
+void poke(uint32_t xpos, uint32_t ypos, uint32_t value) noexcept;
+
+/** @brief Read a pixel in memory, format-aware */
+[[nodiscard]] uint32_t peek(uint32_t xpos, uint32_t ypos) noexcept;
+
 /** @brief fill the video buffer DIRECTLY
  *  does not take the screen's format into account, so be aware
  */
@@ -70,6 +76,7 @@ void fill_screen(uint32_t raw_value);
 
 /** @brief Quickly fill a bunch of continguous rows, or lines, on the screen.
  *  This is screen format aware.
+ *  Column start and finish must be byte-aligned.
  */
 void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
               uint32_t column_start = std::numeric_limits<uint32_t>::min(),

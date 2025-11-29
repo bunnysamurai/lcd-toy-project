@@ -16,6 +16,7 @@ using grid_t = uint8_t;
 
 inline constexpr Timer_t::time_diff_t STOPWATCH_TIMEOUT_PERIOD_US{30'000'000};
 inline constexpr Timer_t::time_diff_t PROCESS_STOPWATCH_PERIOD_US{1'000'000};
+inline constexpr Timer_t::time_diff_t CHEESE_TIMER_INCREMENT_AMOUNT{30'000'000};
 inline constexpr Timer_t::time_diff_t GAME_TICK_PERIOD_US{1'500'000};
 inline constexpr Timer_t::time_diff_t STUCK_IN_HOLE_PERIOD_US{5'000'000};
 inline constexpr Timer_t::time_diff_t INPUT_POLL_PERIOD_US{10'000};

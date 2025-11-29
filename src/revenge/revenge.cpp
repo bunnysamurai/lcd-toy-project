@@ -99,8 +99,10 @@ namespace revenge {
 /*                                                                            */
 /* ===========================================================================*/
 
+#ifdef STOPWATCH_IS_READY
 static Timer_t g_process_stopwatch_timer{PROCESS_STOPWATCH_PERIOD_US};
 static Timer_t g_stopwatch_timer{STOPWATCH_TIMEOUT_PERIOD_US};
+#endif
 static Timer_t g_game_timer{GAME_TICK_PERIOD_US};
 static PlayGrid g_playfield;
 /* our playfield keeps track of these tile types:
@@ -123,11 +125,13 @@ static TopPanelCfg g_top_panel;
 static uint32_t g_score;
 
 void reset_global_state() noexcept {
+#ifdef STOPWATCH_IS_READY
   g_process_stopwatch_timer.period(
       PROCESS_STOPWATCH_PERIOD_US);                      /* aka 1 second */
   g_process_stopwatch_timer.reset();                     /* aka 1 second */
   g_stopwatch_timer.period(STOPWATCH_TIMEOUT_PERIOD_US); /* aka 1 second */
   g_stopwatch_timer.reset();                             /* aka 1 second */
+#endif
   g_game_timer.period(GAME_TICK_PERIOD_US);
   g_game_timer.reset();
   for (auto &arr : g_playfield.m_field) {
@@ -588,6 +592,7 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
   /* if the number of sitting cats is equal to the total number of cats:
        1. turn them into cheese
        2. reinit g_cats with 2 new cats
+       3. Update the stopwatch timer
   */
   if (sitting_cats_count == std::size(g_cats)) {
     for (auto cat : g_cats) {
@@ -597,6 +602,9 @@ disposition_a_fuzzy_move(Grid::Location mouse, Grid::Location cat) noexcept {
     }
     g_cats.clear();
     add_cats_to_play(2);
+#ifdef STOPWATCH_IS_READY
+    increment_stopwatch_timer_period(CHEESE_TIMER_INCREMENT_AMOUNT);
+#endif
   }
 
   return false;
@@ -841,29 +849,12 @@ void draw_score(uint32_t score) {
   /* convert integral score into 6 decimal digits */
   const auto digits{screen::bcd<6>(score)};
 
-  /* convert the existing 1bpp number glyphs into double-sized 4bpp versions */
+  /* tile and buffer to hold the 4bpp version of the character set */
   screen::letter_4bpp_array_t letter_4bpp_data{};
   const screen::Tile letter_tile{.side_length = glyphs::tile::width(),
                                  .format = screen::Format::RGB565_LUT4,
                                  .data = std::data(letter_4bpp_data)};
 
-  // constexpr void
-  // copy_1bpptile_to_4bpp_buffer(letter_4bpp_array_t &tile_4bpp,
-  //                              const screen::Tile &tile_1bpp,
-  //                              const uint8_t set_word = 0b1111,
-  //                              const uint8_t unset_word = 0b0000) noexcept {
-  /* go from msd to lsd */
-
-  // struct TopPanelCfg {
-  //   struct Point {
-  //     uint16_t x;
-  //     uint16_t y;
-  //   };
-  //   Point lives_draw_start;
-  //   Point lives_draw_finish;
-  //   Point timer_center;
-  //   Point score_start;
-  // };
   const auto row_start{g_top_panel.score_start.y};
   auto col_start{g_top_panel.score_start.x};
   for (const auto digit : digits) {
@@ -883,11 +874,47 @@ void draw_score(uint32_t score) {
 /*           |____/ |_| \___/|_|     \_/\_/_/   \_\_| \____|_| |_|           */
 /*                                                                           */
 /* ========================================================================= */
+/* stopwatch initializes to Y seconds
+   When level starts, start running down
+   when it runs out, 2 new cats spawn
+   every X seconds, the score increments by one
+   whenever cats get turned into chesse, increase stopwatch timer by Z seconds
+   */
 
-/** @brief update everything about that stopwatch
- * @return True if stop watch has expired, false otherwise.
- */
-bool update_stopwatch() { return true; }
+#ifdef STOPWATCH_IS_READY
+void draw_stopwatch(Timer_t::time_diff_t amount_on_the_clock,
+                    Timer_t::time_diff_t timeout_time) {
+  /* time_point seconds have elapsed.  Let's draw that
+   our clock to display is configured such that 64 ticks is one revolution.
+   There are two hands, one for seconds, the other for minutes
+   so the clock supports displaying an hour and 1 minute?  Is that enough?
+   *shrug*
+   we will also draw, as a red dot, the minute and second mark for "timeout", as
+   a convenience for the user
+   */
+
+  const auto [seconds, minutes]{decompose(amount_on_the_clock)};
+  const auto [tseconds, tminutes]{decompose(timeout_time)};
+
+  /* now its just about drawing points and lines... */
+  const screen::gfx::Point center{.x = g_top_panel.timer_center.x,
+                                  .y = g_top_panel.timer_center.y};
+
+  const screen::gfx::Point secondsPt{compute_seconds_hand(center, seconds)};
+  const screen::gfx::Point minutePt{compute_minute_hand(center, minutes)};
+  screen::gfx::draw_line(center, secondsPt, BLACK, 1);
+  screen::gfx::draw_line(center, minutePt, BLACK, 1);
+
+  const screen::gfx::Point tsecondsPt{compute_seconds_hand(center, tseconds)};
+  const screen::gfx::Point tminutePt{compute_minute_hand(center, tminutes)};
+  screen::gfx::draw_point(tsecondsPt, BLUE, 3);
+  screen::gfx::draw_point(tminutePt, RED, 3);
+}
+
+void increment_stopwatch_timer_period(Timer_t::time_diff_t amount) {
+  g_stopwatch_timer.period(g_stopwatch_timer.period() + amount);
+}
+#endif
 
 /* ========================================================================= */
 /*                             ____  _   _ _   _                             */
@@ -1034,7 +1061,10 @@ void run() {
 
   draw_score(g_score);
 
+#ifdef STOPWATCH_IS_READY
+  g_process_stopwatch_timer.reset();
   g_stopwatch_timer.reset();
+#endif
   g_game_timer.reset();
   for (;;) {
 
@@ -1111,12 +1141,15 @@ void run() {
       }
       process_stuck_in_hole();
     }
-    // if (g_stopwatch_timer.elapsed()) {
-    //   g_stopwatch_timer.reset();
-    //   if (update_stopwatch()) {
-    //     add_cats_to_play(2);
-    //   }
-    // }
+
+#ifdef STOPWATCH_IS_READY
+    if (g_process_stopwatch_timer.elapsed()) {
+      draw_stopwatch(g_stopwatch_timer.time(), g_stopwatch_timer.period());
+    }
+    if (g_stopwatch_timer.elapsed()) {
+      add_cats_to_play(2);
+    }
+#endif
 
     sleep_us(1000);
   }

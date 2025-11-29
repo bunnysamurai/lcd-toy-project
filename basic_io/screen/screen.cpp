@@ -351,6 +351,45 @@ void melt(uint32_t replacement_value) {
   }
 }
 
+/** @brief Change a pixel in memory, format-aware */
+void poke(uint32_t xpos, uint32_t ypos, uint32_t value) noexcept {
+
+  const auto fmt{get_format()};
+  const auto dims{get_virtual_screen_size()};
+  const auto rowstart{ypos * dims.width};
+  const auto linidx{xpos + rowstart};
+  const uint32_t mask{(1 << bitsizeof(fmt)) - 1};
+  const auto byteidx{align_byte(linidx, fmt)};
+
+  const auto shift{screen::subbyte_index(linidx, fmt) * screen::bitsizeof(fmt)};
+  const uint8_t setval{value << shift};
+  const uint32_t clearmask{~(mask << shift)};
+
+  auto *pbuf{get_video_buffer()};
+
+  /* op is to clear the relevant bits, then set the relevant bits */
+  pbuf[byteidx] &= clearmask;
+  pbuf[byteidx] |= setval;
+}
+
+/** @brief Read a pixel in memory, format-aware */
+uint32_t peek(uint32_t xpos, uint32_t ypos) noexcept {
+
+  const auto fmt{get_format()};
+  const auto dims{get_virtual_screen_size()};
+  const auto rowstart{ypos * dims.width};
+  const auto linidx{xpos + rowstart};
+  const uint32_t mask{(1 << bitsizeof(fmt)) - 1};
+  const auto byteidx{align_byte(linidx, fmt)};
+
+  const auto shift{screen::subbyte_index(linidx, fmt) * screen::bitsizeof(fmt)};
+  const uint32_t clearmask{mask << shift};
+
+  const auto *pbuf{get_video_buffer()};
+
+  return (pbuf[byteidx] & clearmask) >> shift;
+}
+
 /* =========================================================== */
 /*                   Text-Only Mode                            */
 /* =========================================================== */

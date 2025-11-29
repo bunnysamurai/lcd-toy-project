@@ -14,8 +14,11 @@
 #include "gamepad/gamepad.hpp"
 #include "screen/TileDef.h"
 #include "screen/constexpr_tile_utils.hpp"
+#include "screen/gfx/shapes.hpp"
 #include "screen/screen.hpp"
 
+#include "common/pico_sdk_timer_details.hpp"
+#include "common/timer.hpp"
 #include "common/utilities.hpp"
 
 namespace demo {
@@ -43,10 +46,10 @@ static constexpr std::array Demo_Palette{
 static constexpr uint32_t BLACK{0};
 static constexpr uint32_t MAGENTA{1};
 static constexpr uint32_t YELLOW{2};
-static constexpr uint32_t CYAN{3};
+static constexpr uint32_t BLUE{3};
 static constexpr uint32_t RED{4};
 static constexpr uint32_t GREEN{5};
-static constexpr uint32_t BLUE{6};
+static constexpr uint32_t CYAN{6};
 
 /* I think 8x8 tiles are okay? */
 static constexpr auto magenta_data{embp::pfold(
@@ -121,33 +124,66 @@ void run_color_rando_art() noexcept {
                                                         gold};
   const auto dims{screen::get_virtual_screen_size()};
 
-  auto &&random_routine{[&]() {
-    for (size_t yy = 0; yy < (dims.height >> 1);
-         yy += tilelist[0].side_length) {
-      for (size_t xx = 0; xx < (dims.width >> 1);
-           xx += tilelist[0].side_length) {
-        const auto r{get_rand_32() & 0b11};
-        const auto &rtile{tilelist[r]};
-        screen::draw_tile(xx, yy, rtile);
-        screen::draw_tile(dims.width - xx - rtile.side_length, yy, rtile);
-        screen::draw_tile(xx, dims.height - yy - rtile.side_length, rtile);
-        screen::draw_tile(dims.width - xx - rtile.side_length,
-                          dims.height - yy - rtile.side_length, rtile);
+  auto &&random_routine{[&](uint32_t rando_select) {
+    if (rando_select == 0) {
+      for (size_t yy = 0; yy < (dims.height >> 1);
+           yy += tilelist[0].side_length) {
+        for (size_t xx = 0; xx < (dims.width >> 1);
+             xx += tilelist[0].side_length) {
+          const auto r{get_rand_32() & 0b11};
+          const auto &rtile{tilelist[r]};
+          screen::draw_tile(xx, yy, rtile);
+          screen::draw_tile(dims.width - xx - rtile.side_length, yy, rtile);
+          screen::draw_tile(xx, dims.height - yy - rtile.side_length, rtile);
+          screen::draw_tile(dims.width - xx - rtile.side_length,
+                            dims.height - yy - rtile.side_length, rtile);
+        }
       }
+    } else if (rando_select == 1) {
+      const auto r{get_rand_32() & 0b1111};
+      const auto color{(r & 0b11) + 1};
+      screen::fill_screen(CYAN);
+
+      for (uint32_t ii = 50; ii < 100; ii += 7) {
+        screen::gfx::draw_line({.x = ii, .y = ii}, {.x = ii + 50, .y = ii},
+                               color, 1 + (r >> 2));
+        screen::gfx::draw_line({.x = ii, .y = ii}, {.x = ii, .y = ii + 50},
+                               color, 1 + (r >> 2));
+      }
+
+      /* test all 8 octets */
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 175, .y = 110}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 175, .y = 90}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 110, .y = 175}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 110, .y = 25}, color,
+                             1);
+
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 25, .y = 110}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 25, .y = 90}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 90, .y = 175}, color,
+                             1);
+      screen::gfx::draw_line({.x = 100, .y = 100}, {.x = 90, .y = 25}, color,
+                             1);
     }
   }};
 
   screen::clear_screen();
   screen::set_format(screen::Format::RGB565_LUT4);
   screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
+  screen::fill_screen(CYAN | (CYAN << 4));
 
-  fill_routine(emerald);
   absolute_time_t prev_time{get_absolute_time()};
-  random_routine();
+  uint32_t selection_idx{1};
+  random_routine(selection_idx);
   while (true) {
     const auto now{get_absolute_time()};
     if (absolute_time_diff_us(prev_time, now) > 2000000) {
-      random_routine();
+      random_routine(selection_idx);
       prev_time += 2000000;
     }
     sleep_ms(1);
@@ -155,11 +191,100 @@ void run_color_rando_art() noexcept {
     if (state.etc) {
       break;
     }
+    if (state.left || state.right) {
+      selection_idx = (selection_idx + 1) & 0b1;
+      screen::fill_screen(CYAN | (CYAN << 4));
+    }
   }
 
   screen::melt(BLACK);
 
   gamepad::five::deinit();
+}
+
+struct Velocity {
+  int32_t dx;
+  int32_t dy;
+};
+struct Position {
+  uint32_t x;
+  uint32_t y;
+};
+void run_linebounce_screensaver() noexcept {
+  const auto dim{screen::get_virtual_screen_size()};
+
+  /* we'll use S18.14 format for the position and velocity */
+  std::array<Position, 4> linep{
+      Position{.x = 10 << 14, .y = 11 << 14},
+      Position{.x = 20 << 14, .y = 300 << 14},
+      Position{.x = 200 << 14, .y = 300 << 14},
+      Position{.x = 200 << 14, .y = 30 << 14},
+  };
+
+  /* in pixels per update tick */
+  std::array<Velocity, 4> linev{
+      Velocity{.dx = 10000, .dy = 11000},
+      Velocity{.dx = -10000, .dy = -11000},
+      Velocity{.dx = 10000, .dy = 11000},
+      Velocity{.dx = -10000, .dy = -11000},
+  };
+
+  screen::clear_screen();
+  screen::set_format(screen::Format::RGB565_LUT4);
+  screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
+  screen::fill_screen(BLACK | (BLACK << 4));
+
+  Timer<timer_details::PicoSdk> button_timer{1000};
+  /* timer kicks every 1/60 seconds. */
+  Timer<timer_details::PicoSdk> update_timer{1 << 14};
+  std::array<screen::gfx::Point, 4> prvpoints{};
+  std::array<screen::gfx::Point, 4> points{};
+  auto color{RED};
+  for (;;) {
+    if (update_timer.elapsed()) {
+      update_timer.reset();
+
+      for (int ii = 0; ii < std::size(linep); ++ii) {
+        linep[ii].x += linev[ii].dx;
+        if ((linep[ii].x >> 14) >= dim.width) {
+          linep[ii].x = linev[ii].dx < 0 ? 0 : (dim.width - 1) << 14;
+          linev[ii].dx = -linev[ii].dx;
+          const auto r{get_rand_32() & 0b11};
+          color = r + 1;
+        }
+        linep[ii].y += linev[ii].dy;
+        if ((linep[ii].y >> 14) >= dim.height) {
+          linep[ii].y = linev[ii].dy < 0 ? 0 : (dim.height - 1) << 14;
+          linev[ii].dy = -linev[ii].dy;
+          const auto r{get_rand_32() & 0b11};
+          color = r + 1;
+        }
+        points[ii].x = linep[ii].x >> 14;
+        points[ii].y = linep[ii].y >> 14;
+      }
+
+      screen::gfx::draw_line(prvpoints[0], prvpoints[1], BLACK, 1);
+      screen::gfx::draw_line(points[0], points[1], color, 1);
+      screen::gfx::draw_line(prvpoints[1], prvpoints[2], BLACK, 1);
+      screen::gfx::draw_line(points[1], points[2], color, 1);
+      screen::gfx::draw_line(prvpoints[2], prvpoints[3], BLACK, 1);
+      screen::gfx::draw_line(points[2], points[3], color, 1);
+      screen::gfx::draw_line(prvpoints[3], prvpoints[0], BLACK, 1);
+      screen::gfx::draw_line(points[3], points[0], color, 1);
+      prvpoints[0] = points[0];
+      prvpoints[1] = points[1];
+      prvpoints[2] = points[2];
+      prvpoints[3] = points[3];
+    }
+
+    if (button_timer.elapsed()) {
+      button_timer.reset();
+      const auto state{gamepad::five::get()};
+      if (state.etc) {
+        break;
+      }
+    }
+  }
 }
 
 void run_text_animation() noexcept {

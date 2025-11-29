@@ -54,7 +54,7 @@ std::array<std::pair<const char *, void (*)(void)>, 5> g_f_table{
                      sleep_ms(100);
                    }),
 
-    std::make_pair("Screen Saver", [] { demo::run_color_rando_art(); }),
+    std::make_pair("Screen Saver", [] { demo::run_linebounce_screensaver(); }),
     std::make_pair("Exit to Shell", [] {
       g_keep_running = false;
     }) /* keep this one at the bottom */};

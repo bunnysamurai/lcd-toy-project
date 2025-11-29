@@ -7,6 +7,7 @@ set_property(CACHE SCREEN_CONFIG PROPERTY STRINGS "waveshare240p")
 add_library(${PROJECT_NAME} STATIC 
     screen.cpp
     tile_blitting.cpp
+    gfx/shapes.cpp
 )
 target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 target_link_options(${PROJECT_NAME} PUBLIC -flto)

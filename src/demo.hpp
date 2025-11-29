@@ -10,6 +10,8 @@ void run_text_animation() noexcept;
 
 void run_color_rando_art() noexcept;
 
+void run_linebounce_screensaver() noexcept;
+
 struct TouchConfig {
   uint32_t touch_poll_interval_ms{10};
   dispTouchCfg_t touchcfg;
