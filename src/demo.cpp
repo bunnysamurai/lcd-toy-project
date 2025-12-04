@@ -214,63 +214,96 @@ void run_linebounce_screensaver() noexcept {
   const auto dim{screen::get_virtual_screen_size()};
 
   /* we'll use S18.14 format for the position and velocity */
-  std::array<Position, 4> linep{
+  std::array<Position, 4> position{
       Position{.x = 10 << 14, .y = 11 << 14},
       Position{.x = 20 << 14, .y = 300 << 14},
       Position{.x = 200 << 14, .y = 300 << 14},
       Position{.x = 200 << 14, .y = 30 << 14},
   };
 
-  /* in pixels per update tick */
-  std::array<Velocity, 4> linev{
+  /* in pixels per update tick, in S18.14 format */
+  std::array<Velocity, 4> velocity{
       Velocity{.dx = 10000, .dy = 11000},
       Velocity{.dx = -10000, .dy = -11000},
       Velocity{.dx = 10000, .dy = 11000},
       Velocity{.dx = -10000, .dy = -11000},
   };
+  static_assert(std::size(position) == std::size(velocity));
 
   screen::clear_screen();
   screen::set_format(screen::Format::RGB565_LUT4);
   screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
   screen::fill_screen(BLACK | (BLACK << 4));
 
+  static constexpr uint16_t CONSTANT_RADIUS{32};
   Timer<timer_details::PicoSdk> button_timer{1000};
-  /* timer kicks every 1/60 seconds. */
-  Timer<timer_details::PicoSdk> update_timer{1 << 14};
+  /* timer kicks every 1/60 seconds-ish. */
+  Timer<timer_details::PicoSdk> update_timer{1 << 20};
   std::array<screen::gfx::Point, 4> prvpoints{};
   std::array<screen::gfx::Point, 4> points{};
+  static_assert(std::size(prvpoints) == std::size(position));
+  static_assert(std::size(points) == std::size(position));
   auto color{RED};
   for (;;) {
     if (update_timer.elapsed()) {
       update_timer.reset();
 
-      for (int ii = 0; ii < std::size(linep); ++ii) {
-        linep[ii].x += linev[ii].dx;
-        if ((linep[ii].x >> 14) >= dim.width) {
-          linep[ii].x = linev[ii].dx < 0 ? 0 : (dim.width - 1) << 14;
-          linev[ii].dx = -linev[ii].dx;
+      for (int ii = 0; ii < std::size(position); ++ii) {
+        position[ii].x += velocity[ii].dx;
+        if ((position[ii].x >> 14) >= dim.width) {
+          position[ii].x = velocity[ii].dx < 0 ? 0 : (dim.width - 1) << 14;
+          velocity[ii].dx = -velocity[ii].dx;
           const auto r{get_rand_32() & 0b11};
           color = r + 1;
         }
-        linep[ii].y += linev[ii].dy;
-        if ((linep[ii].y >> 14) >= dim.height) {
-          linep[ii].y = linev[ii].dy < 0 ? 0 : (dim.height - 1) << 14;
-          linev[ii].dy = -linev[ii].dy;
+        position[ii].y += velocity[ii].dy;
+        if ((position[ii].y >> 14) >= dim.height) {
+          position[ii].y = velocity[ii].dy < 0 ? 0 : (dim.height - 1) << 14;
+          velocity[ii].dy = -velocity[ii].dy;
           const auto r{get_rand_32() & 0b11};
           color = r + 1;
         }
-        points[ii].x = linep[ii].x >> 14;
-        points[ii].y = linep[ii].y >> 14;
+        points[ii].x = position[ii].x >> 14;
+        points[ii].y = position[ii].y >> 14;
       }
 
-      screen::gfx::draw_line(prvpoints[0], prvpoints[1], BLACK, 1);
-      screen::gfx::draw_line(points[0], points[1], color, 1);
-      screen::gfx::draw_line(prvpoints[1], prvpoints[2], BLACK, 1);
-      screen::gfx::draw_line(points[1], points[2], color, 1);
-      screen::gfx::draw_line(prvpoints[2], prvpoints[3], BLACK, 1);
-      screen::gfx::draw_line(points[2], points[3], color, 1);
-      screen::gfx::draw_line(prvpoints[3], prvpoints[0], BLACK, 1);
-      screen::gfx::draw_line(points[3], points[0], color, 1);
+      if (points[0] != prvpoints[0] || points[1] != prvpoints[1]) {
+        screen::gfx::draw_line(prvpoints[0], prvpoints[1], BLACK, 1);
+        screen::gfx::draw_line(points[0], points[1], color, 1);
+      }
+
+      if (points[1] != prvpoints[1] | points[2] != prvpoints[2]) {
+        screen::gfx::draw_line(prvpoints[1], prvpoints[2], BLACK, 1);
+        screen::gfx::draw_line(points[1], points[2], color, 1);
+      }
+
+      if (points[2] != prvpoints[2] | points[3] != prvpoints[3]) {
+        screen::gfx::draw_line(prvpoints[2], prvpoints[3], BLACK, 1);
+        screen::gfx::draw_line(points[2], points[3], color, 1);
+      }
+
+      if (points[3] != prvpoints[3] | points[0] != prvpoints[0]) {
+        screen::gfx::draw_line(prvpoints[3], prvpoints[0], BLACK, 1);
+        screen::gfx::draw_line(points[3], points[0], color, 1);
+      }
+
+      if (points[0] != prvpoints[0]) {
+        screen::gfx::draw_circle(prvpoints[0], CONSTANT_RADIUS, BLACK, 1);
+        screen::gfx::draw_circle(points[0], CONSTANT_RADIUS, color, 1);
+      }
+      if (points[1] != prvpoints[1]) {
+        screen::gfx::draw_circle(prvpoints[1], CONSTANT_RADIUS, BLACK, 5);
+        screen::gfx::draw_circle(points[1], CONSTANT_RADIUS, color, 5);
+      }
+      if (points[2] != prvpoints[2]) {
+        screen::gfx::draw_circle(prvpoints[2], CONSTANT_RADIUS, BLACK, 7);
+        screen::gfx::draw_circle(points[2], CONSTANT_RADIUS, color, 7);
+      }
+      if (points[3] != prvpoints[3]) {
+        screen::gfx::draw_circle(prvpoints[3], CONSTANT_RADIUS, BLACK, 0);
+        screen::gfx::draw_circle(points[3], CONSTANT_RADIUS, color, 0);
+      }
+
       prvpoints[0] = points[0];
       prvpoints[1] = points[1];
       prvpoints[2] = points[2];

@@ -201,10 +201,23 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
   /* a whole bunch of setup stuff... */
   const auto dims{get_virtual_screen_size()};
 
-  if (column_start >= dims.width || column_start >= column_finish) {
+  if (column_start == dims.width || row_start > dims.height) {
     return;
   }
+  /* we might be relying on overflow behaviours here a bit too much... maybe
+   * this isn't the most intuitive behaviour for this function. */
+  column_start = {column_start > dims.width
+                      ? 0
+                      : column_start}; /* clamp a negative column request */
   column_finish = {column_finish < dims.width ? column_finish : dims.width};
+  if (column_start >= column_finish) {
+    return;
+  }
+
+  row_finish = {row_finish < dims.height ? row_finish : dims.height};
+  if (row_start >= row_finish) {
+    return;
+  }
 
   const auto fmt{screen::get_format()};
 

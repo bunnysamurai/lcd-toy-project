@@ -82,7 +82,7 @@ static inline void handle_vertical_line_case(uint32_t ystart, uint32_t ystop,
  * @param thickenss Border thickness.  A value of '0' is undefined.
  */
 void draw_line(Point p1, Point p2, uint32_t value,
-               uint32_t thickness) noexcept {
+               uint16_t thickness) noexcept {
 
   const auto dim{screen::get_virtual_screen_size()};
 
@@ -189,7 +189,7 @@ void draw_line(Point p1, Point p2, uint32_t value,
  * format.
  * @param thickenss Border thickness.  A value of '0' means 'filled'.
  */
-void draw_rect(Rect r, uint32_t value, uint32_t thickness) noexcept {
+void draw_rect(Rect r, uint32_t value, uint16_t thickness) noexcept {
   if (thickness == 0) {
     screen::fillrows(value, r.topleft.y, r.size.height, r.topleft.x,
                      r.size.width);
@@ -208,6 +208,149 @@ void draw_rect(Rect r, uint32_t value, uint32_t thickness) noexcept {
   draw_line(botright, botleft, value, thickness);
 }
 
+static inline void draw_circle_filled(Point center, uint16_t radius,
+                                      uint32_t value) noexcept {
+
+  const auto dims{screen::get_virtual_screen_size()};
+
+  int32_t t1{radius >> 4};
+  int32_t t2{0};
+  int32_t prevx{radius};
+  int32_t x{radius};
+  int32_t y{0};
+
+  while (!(x < y)) {
+    const uint32_t posx{center.x + x};
+    const uint32_t negx{center.x - x};
+    const uint32_t posy{center.y + y};
+    const uint32_t negy{center.y - y};
+
+    const uint32_t iposx{center.x + y};
+    const uint32_t inegx{center.x - y};
+    const uint32_t iposy{center.y + x};
+    const uint32_t inegy{center.y - x};
+
+    /* these fillrows on every iteration */
+    screen::fillrows(value, negy, negy + 1, negx, posx);
+    screen::fillrows(value, posy, posy + 1, negx, posx);
+
+    /* these only fillrows when there's a change in 'x'
+     * otherwise, we just color the single pixels
+     */
+    if (prevx != x) {
+      screen::fillrows(value, iposy, iposy + 1, inegx, iposx);
+      screen::fillrows(value, inegy, inegy + 1, inegx, iposx);
+    } else {
+      const bool iposx_good{iposx < dims.width};
+      const bool iposy_good{iposy < dims.height};
+      const bool inegx_good{inegx < dims.width};
+      const bool inegy_good{inegy < dims.height};
+      if (iposx_good) {
+        if (iposy_good) {
+          screen::poke(iposx, iposy, value);
+        }
+        if (inegy_good) {
+          screen::poke(iposx, inegy, value);
+        }
+      }
+      if (inegx_good) {
+        if (iposy_good) {
+          screen::poke(inegx, iposy, value);
+        }
+        if (inegy_good) {
+          screen::poke(inegx, inegy, value);
+        }
+      }
+    }
+
+    /* compute the next point in the octant */
+    ++y;
+    t1 += y;
+    t2 = t1 - x;
+    if (t2 >= 0) {
+      t1 = t2;
+      prevx = x;
+      --x;
+    }
+  }
+}
+
+static inline void draw_circle_outline_only(Point center, uint16_t radius,
+                                            uint32_t value) noexcept {
+
+  const auto dims{screen::get_virtual_screen_size()};
+
+  int32_t t1{radius >> 4};
+  int32_t t2{0};
+  int32_t x{radius};
+  int32_t y{0};
+
+  while (!(x < y)) {
+    const uint32_t posx{center.x + x};
+    const uint32_t negx{center.x - x};
+    const uint32_t posy{center.y + y};
+    const uint32_t negy{center.y - y};
+
+    const uint32_t iposx{center.x + y};
+    const uint32_t inegx{center.x - y};
+    const uint32_t iposy{center.y + x};
+    const uint32_t inegy{center.y - x};
+
+    const bool posx_good{posx < dims.width};
+    const bool posy_good{posy < dims.height};
+    const bool negx_good{negx < dims.width};
+    const bool negy_good{negy < dims.height};
+
+    const bool iposx_good{iposx < dims.width};
+    const bool iposy_good{iposy < dims.height};
+    const bool inegx_good{inegx < dims.width};
+    const bool inegy_good{inegy < dims.height};
+
+    if (posx_good) {
+      if (posy_good) {
+        screen::poke(posx, posy, value);
+      }
+      if (negy_good) {
+        screen::poke(posx, negy, value);
+      }
+    }
+    if (negx_good) {
+      if (posy_good) {
+        screen::poke(negx, posy, value);
+      }
+      if (negy_good) {
+        screen::poke(negx, negy, value);
+      }
+    }
+
+    if (iposx_good) {
+      if (iposy_good) {
+        screen::poke(iposx, iposy, value);
+      }
+      if (inegy_good) {
+        screen::poke(iposx, inegy, value);
+      }
+    }
+    if (inegx_good) {
+      if (iposy_good) {
+        screen::poke(inegx, iposy, value);
+      }
+      if (inegy_good) {
+        screen::poke(inegx, inegy, value);
+      }
+    }
+
+    /* compute the next point in the octant */
+    ++y;
+    t1 += y;
+    t2 = t1 - x;
+    if (t2 >= 0) {
+      t1 = t2;
+      --x;
+    }
+  }
+}
+
 /** @brief Draw a circle on the screen
  * @param center of the circle
  * @param radius of the circle
@@ -215,6 +358,26 @@ void draw_rect(Rect r, uint32_t value, uint32_t thickness) noexcept {
  * format.
  * @param thickenss Border thickness.  A value of '0' means 'filled'.
  */
-void draw_circle(Point center, uint32_t radius, uint32_t value,
-                 uint32_t thickness) noexcept {}
+void draw_circle(Point center, uint16_t radius, uint32_t value,
+                 uint16_t thickness) noexcept {
+
+  /* handle special case */
+  if (thickness == 0) {
+    draw_circle_filled(center, radius, value);
+    return;
+  }
+
+  if (thickness == 1) {
+    draw_circle_outline_only(center, radius, value);
+    return;
+  }
+
+  const auto start{-(thickness << 1)};
+  for (int16_t offset = start; offset < start + thickness; ++offset) {
+    const int16_t newradius{radius + offset};
+    if (newradius > 0) {
+      draw_circle_outline_only(center, newradius, value);
+    }
+  }
+}
 } // namespace screen::gfx

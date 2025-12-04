@@ -12,7 +12,7 @@ namespace screen::gfx {
  * format.
  * @param thickenss Border thickness.  A value of '0' is undefined.
  */
-void draw_line(Point p1, Point p2, uint32_t value, uint32_t thickness) noexcept;
+void draw_line(Point p1, Point p2, uint32_t value, uint16_t thickness) noexcept;
 
 /** @brief Draw a rectangle on the screen
  * @param rect Rectangle definition.
@@ -20,7 +20,7 @@ void draw_line(Point p1, Point p2, uint32_t value, uint32_t thickness) noexcept;
  * format.
  * @param thickenss Border thickness.  A value of '0' means 'filled'.
  */
-void draw_rect(Rect r, uint32_t value, uint32_t thickness) noexcept;
+void draw_rect(Rect r, uint32_t value, uint16_t thickness) noexcept;
 
 /** @brief Draw a circle on the screen
  * @param center of the circle
@@ -29,7 +29,7 @@ void draw_rect(Rect r, uint32_t value, uint32_t thickness) noexcept;
  * format.
  * @param thickenss Border thickness.  A value of '0' means 'filled'.
  */
-void draw_circle(Point center, uint32_t radius, uint32_t value,
-                 uint32_t thickness) noexcept;
+void draw_circle(Point center, uint16_t radius, uint32_t value,
+                 uint16_t thickness) noexcept;
 } // namespace screen::gfx
 #endif

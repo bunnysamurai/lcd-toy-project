@@ -77,6 +77,7 @@ void fill_screen(uint32_t raw_value);
 /** @brief Quickly fill a bunch of continguous rows, or lines, on the screen.
  *  This is screen format aware.
  *  Column start and finish must be byte-aligned.
+ *  Does boundary checking.
  */
 void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
               uint32_t column_start = std::numeric_limits<uint32_t>::min(),
