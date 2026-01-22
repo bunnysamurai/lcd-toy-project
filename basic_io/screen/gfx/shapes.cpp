@@ -372,9 +372,9 @@ void draw_circle(Point center, uint16_t radius, uint32_t value,
     return;
   }
 
-  const auto start{-(thickness << 1)};
-  for (int16_t offset = start; offset < start + thickness; ++offset) {
-    const int16_t newradius{radius + offset};
+  // const auto start{-(thickness / 2)};
+  for (int16_t offset = 0; offset < thickness; ++offset) {
+    const int16_t newradius{radius - offset};
     if (newradius > 0) {
       draw_circle_outline_only(center, newradius, value);
     }

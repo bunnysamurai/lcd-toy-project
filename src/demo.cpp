@@ -235,10 +235,10 @@ void run_linebounce_screensaver() noexcept {
   screen::init_clut(std::data(Demo_Palette), std::size(Demo_Palette));
   screen::fill_screen(BLACK | (BLACK << 4));
 
-  static constexpr uint16_t CONSTANT_RADIUS{32};
+  static constexpr uint16_t CONSTANT_RADIUS{31};
   Timer<timer_details::PicoSdk> button_timer{1000};
   /* timer kicks every 1/60 seconds-ish. */
-  Timer<timer_details::PicoSdk> update_timer{1 << 20};
+  Timer<timer_details::PicoSdk> update_timer{1 << 14};
   std::array<screen::gfx::Point, 4> prvpoints{};
   std::array<screen::gfx::Point, 4> points{};
   static_assert(std::size(prvpoints) == std::size(position));
@@ -267,6 +267,7 @@ void run_linebounce_screensaver() noexcept {
         points[ii].y = position[ii].y >> 14;
       }
 
+      /* draw the parallelogram */
       if (points[0] != prvpoints[0] || points[1] != prvpoints[1]) {
         screen::gfx::draw_line(prvpoints[0], prvpoints[1], BLACK, 1);
         screen::gfx::draw_line(points[0], points[1], color, 1);
@@ -287,22 +288,23 @@ void run_linebounce_screensaver() noexcept {
         screen::gfx::draw_line(points[3], points[0], color, 1);
       }
 
-      if (points[0] != prvpoints[0]) {
-        screen::gfx::draw_circle(prvpoints[0], CONSTANT_RADIUS, BLACK, 1);
-        screen::gfx::draw_circle(points[0], CONSTANT_RADIUS, color, 1);
-      }
-      if (points[1] != prvpoints[1]) {
-        screen::gfx::draw_circle(prvpoints[1], CONSTANT_RADIUS, BLACK, 5);
-        screen::gfx::draw_circle(points[1], CONSTANT_RADIUS, color, 5);
-      }
-      if (points[2] != prvpoints[2]) {
-        screen::gfx::draw_circle(prvpoints[2], CONSTANT_RADIUS, BLACK, 7);
-        screen::gfx::draw_circle(points[2], CONSTANT_RADIUS, color, 7);
-      }
-      if (points[3] != prvpoints[3]) {
-        screen::gfx::draw_circle(prvpoints[3], CONSTANT_RADIUS, BLACK, 0);
-        screen::gfx::draw_circle(points[3], CONSTANT_RADIUS, color, 0);
-      }
+      // /* and some circles */
+      // if (points[0] != prvpoints[0]) {
+      //   screen::gfx::draw_circle(prvpoints[0], CONSTANT_RADIUS, BLACK, 1);
+      //   screen::gfx::draw_circle(points[0], CONSTANT_RADIUS, color, 1);
+      // }
+      // if (points[1] != prvpoints[1]) {
+      //   screen::gfx::draw_circle(prvpoints[1], CONSTANT_RADIUS, BLACK, 5);
+      //   screen::gfx::draw_circle(points[1], CONSTANT_RADIUS, color, 5);
+      // }
+      // if (points[2] != prvpoints[2]) {
+      //   screen::gfx::draw_circle(prvpoints[2], CONSTANT_RADIUS, BLACK, 7);
+      //   screen::gfx::draw_circle(points[2], CONSTANT_RADIUS, color, 7);
+      // }
+      // if (points[3] != prvpoints[3]) {
+      //   screen::gfx::draw_circle(prvpoints[3], CONSTANT_RADIUS, BLACK, 0);
+      //   screen::gfx::draw_circle(points[3], CONSTANT_RADIUS, color, 0);
+      // }
 
       prvpoints[0] = points[0];
       prvpoints[1] = points[1];
