@@ -1,4 +1,5 @@
 #include <numeric>
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "variable_array.hpp"

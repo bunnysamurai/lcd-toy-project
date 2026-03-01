@@ -11,11 +11,11 @@ function(add_gtest_executable target)
 endfunction(add_gtest_executable)
 
 function(run_all_tests)
-    add_custom_target( embp_all_tests ALL
+    add_custom_target( all_tests ALL
         DEPENDS ${UNIT_TEST_TARGETS}
         )
 
-    add_custom_command(TARGET embp_all_tests
+    add_custom_command(TARGET all_tests
         COMMENT "Run tests"
         POST_BUILD COMMAND ctest ARGS --output-on-failure
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

@@ -24,7 +24,7 @@ endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_include_directories(basic_io PUBLIC ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(basic_io PUBLIC  ${BASIC_IO_DEPS})
+target_link_libraries(basic_io PUBLIC ${BASIC_IO_DEPS})
 
 add_subdirectory(screen)
 add_subdirectory(gamepad)

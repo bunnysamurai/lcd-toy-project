@@ -14,9 +14,16 @@ Requires:
 
 Install the Pico SDK (to `~/sw/pico-sdk`, for example), then build:
 ```bash
-$ cmake -G Ninja -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH=~/sw/pico-sdk
+$ cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DPICO_SDK_PATH=~/sw/pico-sdk -DBUILD_TESTS=OFF -DSCREEN_CONFIG="waveshare240p" -G Ninja
 $ cmake --build build
 ```
+
+To build and run the tests, try:
+```bash
+$ cmake -S. -Bbuild_test -DBUILD_TESTS=ON -DSCREEN_CONFIG="dummy"
+$ cmake --build build_test
+```
+
 
 ## configurations
 
@@ -38,4 +45,4 @@ Uses `elf-size-analyze` from [jedrzejbocar](https://github.com/jedrzejboczar/elf
 
 # Think thoughts and TODOs
 
-* Modify the waveshare driver to include options for 2bit and 4bit color LUTs
+* Modify the waveshare driver to include options for 2bit color LUT

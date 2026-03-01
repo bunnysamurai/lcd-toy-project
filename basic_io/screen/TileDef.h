@@ -5,12 +5,20 @@
 
 #include "screen_def.h"
 
-namespace screen {
+namespace screen
+{
 
-struct Tile {
-  uint8_t side_length;
-  Format format;
-  const uint8_t *data;
+struct Tile final
+{
+    uint8_t side_length;
+    Format format;
+    const uint8_t *data;
+};
+
+struct TransparencyTile final
+{
+    Tile obj;
+    uint32_t transparency_value;
 };
 
 } // namespace screen

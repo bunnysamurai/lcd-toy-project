@@ -12,7 +12,6 @@ struct Point {
   [[nodiscard]] constexpr bool operator!=(const Point&) const noexcept = default;
 };
 
-
 struct Size {
   uint32_t width;
   uint32_t height;
@@ -20,6 +19,7 @@ struct Size {
   [[nodiscard]] constexpr bool operator==(const Size&) const noexcept = default;
   [[nodiscard]] constexpr bool operator!=(const Size&) const noexcept = default;
 };
+
 struct Rect {
   Point topleft;
   Size size;
@@ -27,5 +27,6 @@ struct Rect {
   [[nodiscard]] constexpr bool operator==(const Rect&) const noexcept = default;
   [[nodiscard]] constexpr bool operator!=(const Rect&) const noexcept = default;
 };
+
 } // namespace screen::gfx
 #endif
