@@ -419,13 +419,111 @@ void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
 
 void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, TransparencyTile tile) noexcept
 {
+    const bool nibbles_match{0 ==
+                             (x & 0b1)}; /* TODO this test and others like it restrict frame widths to an even number */
+    const int rem{tile.side_length & 0b1};
+    const int tile_pitch{tile.side_length + rem};
+    if (nibbles_match)
+    {
+#ifdef PRINT_DEBUG
+        std::cerr << "nibbles match\n";
+#endif
+        static_assert(sizeof(uint32_t) == 4);
+        uint32_t yy = 0;
+        uint32_t xx = 0;
+        for (; yy < tile.side_length; ++yy)
+        {
+            for (; xx < tile.side_length - rem; xx += 2)
+            {
+                const uint32_t idx{align_byte((yy + y) * width + (xx + x), Format::GREY4)};
+                const uint32_t idx2{align_byte(yy * tile_pitch + xx, Format::GREY4)};
+                const auto tilebyte{tile.data[idx2]};
+                auto &outbyte{buffer[idx]};
+                switch ((((tilebyte & 0xF0) != 0) << 1) + ((tilebyte & 0x0F) != 0))
+                {
+                case 0: /* assign neither */
+                    break;
+                case 1: /* assign lsn */
+                    outbyte = (outbyte & 0xF0) | (tilebyte & 0x0F);
+                    break;
+                case 2: /* assign msn */
+                    outbyte = (outbyte & 0x0F) | (tilebyte & 0xF0);
+                    break;
+                case 3: /* assign both */
+                    outbyte = tilebyte;
+                    break;
+                }
+            }
+            if (rem)
+            {
+                const uint32_t idx{align_byte((yy + y) * width + (xx + x + rem), Format::GREY4)};
+                const uint32_t idx2{align_byte(yy * tile_pitch + xx + rem, Format::GREY4)};
+                const auto tilebyte{tile.data[idx2] & 0b00001111};
+                if (tilebyte)
+                {
+                    buffer[idx] &= 0b11110000;
+                    buffer[idx] |= tilebyte;
+                }
+            }
+            xx = 0;
+        }
+    }
+    else
+    {
+#ifdef PRINT_DEBUG
+        std::cerr << "nibbles dont match\n";
+#endif
+        uint32_t yy = 0;
+        uint32_t xx = 0;
+        for (; yy < tile.side_length; ++yy)
+        {
+            for (; xx < tile.side_length - rem; xx += 2)
+            {
+                const uint32_t idx{align_byte((yy + y) * width + (xx + x), Format::GREY4)};
+                const uint32_t idx2{align_byte(yy * tile_pitch + xx, Format::GREY4)};
+                const uint8_t lsn{static_cast<uint8_t>(tile.data[idx2] & 0b1111U)};
+                const uint8_t msn{static_cast<uint8_t>(((tile.data[idx2]) >> 4) & 0b1111U)};
 
+                switch (((msn != 0) << 1) + (lsn != 0))
+                {
+                case 0: /* assign neither */
+                    break;
+                case 1: /* assign lsn */
+                    buffer[idx] &= 0b00001111;
+                    buffer[idx] |= (lsn << 4);
+                    break;
+                case 2: /* assign msn */
+                    buffer[idx + 1] &= 0b11110000;
+                    buffer[idx + 1] |= msn;
+                    break;
+                case 3: /* assign both */
+                    buffer[idx] &= 0b00001111;
+                    buffer[idx] |= (lsn << 4);
+                    buffer[idx + 1] &= 0b11110000;
+                    buffer[idx + 1] |= msn;
+                    break;
+                }
+            }
+            if (rem)
+            {
+                const uint32_t idx{align_byte((yy + y) * width + (xx + x), Format::GREY4)};
+                const uint32_t idx2{align_byte(yy * tile_pitch + xx + rem, Format::GREY4)};
+                const uint8_t lsn{static_cast<uint8_t>(tile.data[idx2] & 0b1111U)};
+                if (lsn)
+                {
+                    buffer[idx] &= 0b00001111;
+                    buffer[idx] |= (lsn << 4);
+                }
+            }
+            xx = 0;
+        }
+    }
 }
 
 void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
     uint32_t iidx{y * width + x};
-    for (uint32_t tidx = 0; tidx < tile.side_length; tidx += tile.side_length)
+    for (uint32_t tidx = 0; tidx < tile.side_length * tile.side_length; tidx += tile.side_length)
     {
         std::memcpy(&buffer[iidx], &tile.data[tidx], tile.side_length);
         iidx += width;
@@ -434,17 +532,29 @@ void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
 
 void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, TransparencyTile tile) noexcept
 {
-
+    uint32_t iidx{y * width + x};
+    for (uint32_t rowidx = 0; rowidx < tile.side_length * tile.side_length; rowidx += tile.side_length)
+    {
+        for (uint32_t tidx = rowidx; tidx < tile.side_length + rowidx; ++tidx)
+        {
+            if (!tile.data[tidx])
+            {
+                continue;
+            }
+            buffer[iidx + tidx - rowidx] = tile.data[tidx];
+        }
+        iidx += width;
+    }
 }
 
 void blit_16bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
     uint32_t iidx{y * width + x};
-    for (uint32_t tidx = 0; tidx < tile.side_length; tidx += tile.side_length)
+    for (uint32_t tidx = 0; tidx < tile.side_length * tile.side_length; tidx += tile.side_length)
     {
-        std::memcpy(&buffer[iidx * 2], &tile.data[tidx * 2], tile.side_length);
+        std::memcpy(&buffer[align_byte(iidx, Format::RGB565)], &tile.data[align_byte(tidx, Format::RGB565)],
+                    tile.side_length * 2);
         iidx += width;
     }
 }
-
 } // namespace screen

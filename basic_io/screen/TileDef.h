@@ -15,10 +15,12 @@ struct Tile final
     const uint8_t *data;
 };
 
+/* a pixel value of 0 is considered transparent */
 struct TransparencyTile final
 {
-    Tile obj;
-    uint32_t transparency_value;
+    uint8_t side_length;
+    Format format;
+    const uint8_t *data;
 };
 
 } // namespace screen
