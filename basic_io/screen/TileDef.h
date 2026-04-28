@@ -10,15 +10,8 @@ namespace screen
 
 struct Tile final
 {
-    uint8_t side_length;
-    Format format;
-    const uint8_t *data;
-};
-
-/* a pixel value of 0 is considered transparent */
-struct TransparencyTile final
-{
-    uint8_t side_length;
+    uint8_t side_length : 7;
+    uint8_t transparent : 1; /* a pixel value of 0 will be considered transparent */
     Format format;
     const uint8_t *data;
 };

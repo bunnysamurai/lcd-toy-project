@@ -317,7 +317,27 @@ void blit_2bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
     }
 }
 
+/*
+ _  _   _
+| || | | |__  _ __  _ __
+| || |_| '_ \| '_ \| '_ \
+|__   _| |_) | |_) | |_) |
+   |_| |_.__/| .__/| .__/
+             |_|   |_|
+
+*/
 void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
+{
+    if (tile.transparent)
+    {
+        impl_blit_4bpp_with_transparency(buffer, width, x, y, tile);
+        return;
+    }
+
+    impl_blit_4bpp(buffer, width, x, y, tile);
+}
+
+void impl_blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
     /* lsn is pixel 0, msn is pixel 1, etc
      * this only applies to columns, not rows
@@ -417,7 +437,8 @@ void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
     }
 }
 
-void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, TransparencyTile tile) noexcept
+void impl_blit_4bpp_with_transparency(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y,
+                                      Tile tile) noexcept
 {
     const bool nibbles_match{0 ==
                              (x & 0b1)}; /* TODO this test and others like it restrict frame widths to an even number */
@@ -522,6 +543,17 @@ void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
 
 void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
+    if (tile.transparent)
+    {
+        impl_blit_8bpp_with_transparency(buffer, width, x, y, tile);
+        return;
+    }
+
+    impl_blit_8bpp(buffer, width, x, y, tile);
+}
+
+void impl_blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
+{
     uint32_t iidx{y * width + x};
     for (uint32_t tidx = 0; tidx < tile.side_length * tile.side_length; tidx += tile.side_length)
     {
@@ -530,7 +562,8 @@ void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
     }
 }
 
-void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, TransparencyTile tile) noexcept
+void impl_blit_8bpp_with_transparency(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y,
+                                      Tile tile) noexcept
 {
     uint32_t iidx{y * width + x};
     for (uint32_t rowidx = 0; rowidx < tile.side_length * tile.side_length; rowidx += tile.side_length)
