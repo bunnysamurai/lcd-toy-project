@@ -2,8 +2,9 @@
 #if !defined(BASIC_ENTITY_HPP)
 #define BASIC_ENTITY_HPP
 
-#include "../paint_utils.hpp"
-#include "../view_grid.hpp"
+#include "../chippie_common.hpp"
+#include "../render/paint_utils.hpp"
+#include "../render/view_grid.hpp"
 #include "common/Grid.hpp"
 #include "entity_types.hpp"
 
@@ -12,42 +13,29 @@ namespace chippie
 
 struct entity
 {
-  public:
     Grid::Location loc;
     entity_type identity;
-    bool alive;
-
-    entity(Grid::Location location, entity_type id) noexcept : loc{location}, identity{id}, alive{true}
-    {
-    }
-
-    void process() noexcept
-    {
-        /* compute where the next location will be
-            How this computation is done is entity specific
-        */
-        const auto nextloc{compute_next_location()};
-        const collision_status collision{check_for_collision(this, nextloc)};
-        /* if there is a collision, handle it, which is specific to each entity type */
-        handle_collision(collision, nextloc);
-    }
-
-    void paint() const noexcept
-    {
-        if (within_view_grid(loc))
-        {
-            draw();
-        }
-    }
-
-  protected:
-    [[nodiscard]] virtual Grid::Location compute_next_location() const noexcept = 0;
-    virtual void handle_collision(collision_status, Grid::Location) noexcept = 0;
-    virtual void draw() const noexcept
-    {
-        draw_tile_index(loc, identity);
-    };
+    uint16_t velocity_ticks;
+    direction facing;
+    bool alive{true};
 };
+
+using compute_next_fun_t = Grid::Location (*)(const entity &) noexcept;
+using handle_collision_fun_t = collision_action (*)(const entity &, collision_status) noexcept;
+
+/* entity manipulating functions... leaving these free for now as that makes things less complicated.  I might be a C
+ * programmer now :() */
+
+void paint_entity(const entity &ent) const noexcept
+{
+    if (within_view_grid(ent.loc))
+    {
+        draw_tile_index(ent.loc, ent.identity);
+    }
+}
+constexpr void move_relative_direction(entity &ent, relative_direction dir) noexcept
+{
+}
 
 } // namespace chippie
 

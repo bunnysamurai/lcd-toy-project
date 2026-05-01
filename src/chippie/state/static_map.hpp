@@ -64,14 +64,38 @@ struct square_tile
     uint32_t render_tile_index;
 };
 
-struct static_map
+class static_map
 {
+  public:
+    struct map_data_element_t
+    {
+        uint8_t idx0 : 4;
+        uint8_t idx1 : 4;
+    };
     static constexpr uint32_t map_width{32};
     static constexpr uint32_t map_height{32};
-    std::array<uint8_t, map_width * map_height / 2> map_data; /* 4 bit lookup entry per location on the map */
+    std::array<map_data_element_t, map_width * map_height / 2>
+        map_data; /* 4 bit lookup entry per location on the map */
     std::array<square_tile, 16U> square_tile_lut{};
 
-    [[nodiscard]] square_tile peek_square_tile(Grid::Location) const noexcept;
+    [[nodiscard]] square_tile peek_square_tile(Grid::Location xy) const noexcept
+    {
+        return square_tile_lut[demodulo_item(map_data[to_linear_idx(xy)], xy.x)];
+    }
+
+  private:
+    [[nodiscard]] uint8_t demodulo_item(map_data_element_t elem, uint32_t idx) const noexcept
+    {
+        if ((idx & 0x1) == 0)
+        {
+            return elem.idx0;
+        }
+        return elem.idx1;
+    }
+    [[nodiscard]] uint32_t to_linear_idx(Grid::Location xy) const noexcept
+    {
+        return xy.y * map_width + xy.x;
+    }
 };
 
 } // namespace chippie

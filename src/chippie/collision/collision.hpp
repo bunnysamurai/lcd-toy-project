@@ -9,6 +9,23 @@
 namespace chippie
 {
 
+enum struct collision_action
+{
+    NO_ACTION_NEEDED,
+    MOVE_FORWARD,
+    MOVE_BACKWARD,
+    MOVE_RIGHT,
+    MOVE_LEFT,
+    APPLY_NEXT_MOVE,
+    MARK_DEAD
+};
+
+/* some common things, like what happens to a bomb */
+collision_action always_dies(const entity &, const entity &)
+{
+    return collision_action::MARK_DEAD;
+}
+
 struct collision_status
 {
     entity_type type;

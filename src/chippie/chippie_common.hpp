@@ -1,6 +1,8 @@
 #if !defined(CHIPPIE_COMMON_HPP)
 #define CHIPPIE_COMMON_HPP
 
+#include "common/Grid.hpp"
+
 namespace chippie
 {
 
@@ -26,6 +28,15 @@ enum struct direction
         return direction::RIGHT;
     }
 }
+
+enum struct relative_direction
+{
+    FORWARD,
+    BACKWARD,
+    RIGHT,
+    LEFT
+};
+
 
 } // namespace chippie
 
