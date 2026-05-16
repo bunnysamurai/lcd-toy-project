@@ -2,6 +2,8 @@
 #define STATIC_MAP_HPP
 
 #include "common/Grid.hpp"
+#include "terrain_types.hpp"
+
 #include <array>
 #include <cstdint>
 
@@ -51,48 +53,25 @@
 namespace chippie
 {
 
-enum struct square_tile_types
-{
-    CLEAR,
-    WALL,
-    BUTTON
-};
-
-struct square_tile
-{
-    square_tile_types type;
-    uint32_t render_tile_index;
-};
-
 class static_map
 {
   public:
-    struct map_data_element_t
-    {
-        uint8_t idx0 : 4;
-        uint8_t idx1 : 4;
-    };
     static constexpr uint32_t map_width{32};
     static constexpr uint32_t map_height{32};
-    std::array<map_data_element_t, map_width * map_height / 2>
-        map_data; /* 4 bit lookup entry per location on the map */
-    std::array<square_tile, 16U> square_tile_lut{};
+    std::array<terrain_type, map_width * map_height>
+        map_data; /* to be loaded into RAM from ROM, as it'll just be easier if it can be mutable */
 
-    [[nodiscard]] square_tile peek_square_tile(Grid::Location xy) const noexcept
+    [[nodiscard]] constexpr terrain_type &operator[](Grid::Location xy) noexcept
     {
-        return square_tile_lut[demodulo_item(map_data[to_linear_idx(xy)], xy.x)];
+        return map_data[to_linear_idx(xy)];
+    }
+    [[nodiscard]] constexpr const terrain_type &operator[](Grid::Location xy) const noexcept
+    {
+        return map_data[to_linear_idx(xy)];
     }
 
   private:
-    [[nodiscard]] uint8_t demodulo_item(map_data_element_t elem, uint32_t idx) const noexcept
-    {
-        if ((idx & 0x1) == 0)
-        {
-            return elem.idx0;
-        }
-        return elem.idx1;
-    }
-    [[nodiscard]] uint32_t to_linear_idx(Grid::Location xy) const noexcept
+    [[nodiscard]] constexpr uint32_t to_linear_idx(Grid::Location xy) const noexcept
     {
         return xy.y * map_width + xy.x;
     }

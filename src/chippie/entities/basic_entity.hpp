@@ -11,6 +11,9 @@
 namespace chippie
 {
 
+/** entities are anything in the game that can "move"
+    This includes purple balls, frog monsters, and bacteria, among others.
+ */
 struct entity
 {
     Grid::Location loc;
@@ -18,10 +21,12 @@ struct entity
     uint16_t velocity_ticks;
     direction facing;
     bool alive{true};
+    bool trapped{false};
 };
 
 using compute_next_fun_t = Grid::Location (*)(const entity &) noexcept;
-using handle_collision_fun_t = collision_action (*)(const entity &, collision_status) noexcept;
+using handle_collision_fun_t = collision_action (*)(entity &this_entity, entity *collided_entity,
+                                                    terrain_type &collided_terrain) noexcept;
 
 /* entity manipulating functions... leaving these free for now as that makes things less complicated.  I might be a C
  * programmer now :() */

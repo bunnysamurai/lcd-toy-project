@@ -83,7 +83,7 @@ Side-effects will be registered as events, and an event processing loop will app
 A tiled playfield with sprites for moving around.  There are two kinds:
 
 * Sprites that move (Entities)
-* Sprites that don't move (Entities)
+* Sprites that don't move (Terrain Types)
 
 They can be moved, something *happens* when another entity collides with them, and they can be drawn on the screen.
 
@@ -117,32 +117,47 @@ What needs to be seen on the screen?
 * There are 3 three-digit numerical displays, for Level, Timer, and Chips.  They are rendered as seven-segment displays... would be cool to replicate that.
 * There is a 2x4 grid of items Chip is currently carrying, of the same tile size as the playfield.
 
-Our waveshare jobby is 240 rows by 320 columns.
+Our waveshare jobby is 320 rows by 240 columns.
 
 An example of what will be seen:
 
 ```
-+-+--+--+--+--+--+--+--+--+--+---------------+
->*|  |  |  |  |  |  |  |  |  |*             *<
->*+--+--+--+--+--+--+--+--+--+*+--+--+--+--+*<
->*|  |  |  |  |  |  |  |  |  |*|  |  |  |  |*<                   
->*+--+--+--+--+--+--+--+--+--+*+--+--+--+--+*<
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*
->*|  |  |  |  |  |  |  |  |  |*                    
->*+--+--+--+--+--+--+--+--+--+*--------------------+
-```
-If we do 0.5 + 9 + 0.5 + 4 + 0.5 "tiles" across
-and 0.5 + 9 + 0.5 "tiles" down
 
-we have a tiled-up screen size of 14.5 tiles wide by 10 tiles high
+
++-------------------------------------------+
+
+  +--------------------------------------+
+  |                                      |
+  |                                      |
+  |     9x9 tiles of viewable area       |
+  |                                      |
+  |                                      |
+  |                                      |
+  |                                      | some margin around the viewable area
+  |                                      |
+  |                                      |
+  |                                      |
+  |                                      |
+  |                                      |
+  |                                      |
+  |                                      |
+  +--------------------------------------+
+
+  +--------------------------------------+
+  |  timer, level,                       |
+  |         and chip count down here     |
+  +--------------------------------------+
+
++---------------------------------------------+
+```
+
+The width is the constraint.  Let's pick and choose the tile size for the viewable area.
+
+| Tile Size | ViewAreaWidth | LeftMargin | RightMargin |
+| --- | --- | --- | --- |
+| 26 | 234 | 3 | 3 |
+| 25 | 225 | 7 | 8 |
+| 24 | 216 | 12 | 12 |
+| 20 | 180 | 30 | 30 |
+
+We'll go with 24 pixel tile sizes.

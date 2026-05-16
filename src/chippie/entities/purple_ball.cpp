@@ -36,23 +36,29 @@ constexpr uint16_t PURPLE_BALL_VELOCITY{100}; /* TODO totally made up */
     return nextloc;
 }
 
-collision_action handle_collision(const entity &ent, collision_status collision) noexcept
+[[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
+                                                terrain_type &collided_terrain) noexcept
 {
     /* in the case of the purple ball:
             if it's clear, allow the move,
             if it's the player, game over,
             otherwise, reverse facing and move again
     */
-    switch (collision.type)
+    if (collided_entity != nullptr)
     {
-    case entity_type::CHIPPIE:
-        register_event(event::event_type::GAME_OVER);
-        break;
-    case entity_type::WALL:
-        return collision_action::MOVE_BACKWARD;
-    default:
-        return collision_action::MOVE_FORWARD;
+        switch (collided_entity->identity)
+        {
+        case entity_type::CHIPPIE:
+            register_event(event::event_type::GAME_OVER);
+            break;
+        case entity_type::WALL:
+            return collision_action::MOVE_BACKWARD;
+        default:
+            return collision_action::MOVE_FORWARD;
+        }
     }
+
+    apply_terrain_effect(ent, collided_terrain);
 }
 
 [[nodiscard]] entity create(Grid::Location xy, direction dir) noexcept

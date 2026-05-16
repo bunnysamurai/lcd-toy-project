@@ -12,6 +12,9 @@ enum struct event_type
     GREEN_BUTTON,
     BLUE_BUTTON,
     RED_BUTTON,
+    NEXT_LEVEL,
+    RELEASE_ALL_TRAPS,
+    GAME_COMPLETE,
     GAME_OVER
 };
 

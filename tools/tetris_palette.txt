@@ -1,0 +1,17 @@
+; Hexadecimal format: aarrggbb
+FF000000 ; black
+FFFF0000 ; red
+FF00DC00 ; green
+FF0000FF ; blue
+FF00DCDC ; cyan
+FFDCDC00 ; yellow
+FFF500F5 ; magenta
+FF545454 ; dark grey
+FFFFFFFF ; white
+FFFF8080 ; light red
+FFC8FFC8 ; light green
+FF8080FF ; light blue
+FFC8FFFF ; light cyan
+FFFFFFC8 ; light yellow
+FFFF80FF ; light magenta
+FFBCBCBC ; light grey
