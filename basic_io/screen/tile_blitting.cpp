@@ -326,17 +326,6 @@ void blit_2bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t 
              |_|   |_|
 
 */
-void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
-{
-    if (tile.transparent)
-    {
-        impl_blit_4bpp_with_transparency(buffer, width, x, y, tile);
-        return;
-    }
-
-    impl_blit_4bpp(buffer, width, x, y, tile);
-}
-
 void impl_blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
     /* lsn is pixel 0, msn is pixel 1, etc
@@ -541,15 +530,15 @@ void impl_blit_4bpp_with_transparency(uint8_t *__restrict buffer, uint32_t width
     }
 }
 
-void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
+void blit_4bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
 {
     if (tile.transparent)
     {
-        impl_blit_8bpp_with_transparency(buffer, width, x, y, tile);
+        impl_blit_4bpp_with_transparency(buffer, width, x, y, tile);
         return;
     }
 
-    impl_blit_8bpp(buffer, width, x, y, tile);
+    impl_blit_4bpp(buffer, width, x, y, tile);
 }
 
 void impl_blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
@@ -578,6 +567,17 @@ void impl_blit_8bpp_with_transparency(uint8_t *__restrict buffer, uint32_t width
         }
         iidx += width;
     }
+}
+
+void blit_8bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept
+{
+    if (tile.transparent)
+    {
+        impl_blit_8bpp_with_transparency(buffer, width, x, y, tile);
+        return;
+    }
+
+    impl_blit_8bpp(buffer, width, x, y, tile);
 }
 
 void blit_16bpp(uint8_t *__restrict buffer, uint32_t width, uint32_t x, uint32_t y, Tile tile) noexcept

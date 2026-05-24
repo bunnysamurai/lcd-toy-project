@@ -4,8 +4,9 @@
 #include <cstdint>
 
 #include "common/Grid.hpp"
-#include "entities/entity_types.hpp"
+#include "chippie/entities/entity_types.hpp"
 #include "screen/TileDef.h"
+#include "chippie/textures/texture.hpp"
 
 namespace chippie
 {
@@ -15,6 +16,21 @@ enum struct mapping_result
     SUCCESS,
     FAIL_MAP_FULL
 };
+
+/**
+    @brief Draw the entity on the screen directly.
+        Does require some setup, see set_tile_to_entity_mapping below.
+
+        internally there is an array that maps entity_type to a tile data structure
+        (see TETRIMINO_TILES in tetris_tiles_constexpr.hpp)
+        This mapping array should be runtime configurable.
+ */
+void draw_tile_index(uint32_t left_column, uint32_t top_row, texture::texture_type text) noexcept;
+
+/**
+    @brief Draw entity on the screen, using the grid overlay.
+ */
+void draw_tile_index(const Grid &grid_def, Grid::Location location, texture::texture_type text) noexcept;
 
 /**
     @brief Draw the entity on the screen directly.

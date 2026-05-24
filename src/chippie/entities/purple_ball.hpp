@@ -2,22 +2,22 @@
 #define PURPLE_BALL_HPP
 
 #include "basic_entity.hpp"
-#include "chippie/chippie_common.hpp"
-#include "chippie/collision.hpp"
 #include "chippie/events/event.hpp"
 #include "chippie/state/static_map.hpp"
 
-namespace chippie
+namespace chippie::purple_ball
 {
-namespace purple_ball
-{
+
 [[nodiscard]] entity create(Grid::Location, direction) noexcept;
-[[nodiscard]] Grid::Location compute_next_location(entity ent) noexcept;
-[[nodiscard]] collision_action handle_collision(const entity &ent, entity *collided_entity,
-                                                terrain_type &collided_terrain) noexcept;
+[[nodiscard]] entity_state_machine get_state_functions() noexcept;
 
-} // namespace purple_ball
+/**
+    @brief Retrieve velocity for moves of a purple ball.
 
-} // namespace chippie
+    @return Period between individual moves, in microseconds.
+ */
+[[nodiscard]] uint64_t get_velocity() noexcept;
+
+} // namespace chippie::entity::purple_ball
 
 #endif

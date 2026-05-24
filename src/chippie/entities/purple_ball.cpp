@@ -1,19 +1,25 @@
 #include "purple_ball.hpp"
-#include "chippie/collision/collision.hpp"
+#include "chippie/chippie_common.hpp"
 #include "chippie/entities/entity_types.hpp"
-#include "chippie_common.hpp"
+#include "chippie/state/terrain_effects.hpp"
 
-namespace chippie
+namespace chippie::purple_ball
 {
 
+/*
+ ____       _            _
+|  _ \ _ __(_)_   ____ _| |_ ___
+| |_) | '__| \ \ / / _` | __/ _ \
+|  __/| |  | |\ V / (_| | ||  __/
+|_|   |_|  |_| \_/ \__,_|\__\___|
+
+*/
 namespace
 {
 
-constexpr uint16_t PURPLE_BALL_VELOCITY{100}; /* TODO totally made up */
+constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
 
-} // namespace
-
-[[nodiscard]] Grid::Location compute_next_location(entity ent) noexcept
+[[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
     auto nextloc{ent.loc};
 
@@ -33,7 +39,7 @@ constexpr uint16_t PURPLE_BALL_VELOCITY{100}; /* TODO totally made up */
         break;
     }
 
-    return nextloc;
+    return std::make_pair(nextloc, ent.facing);
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
@@ -46,27 +52,61 @@ constexpr uint16_t PURPLE_BALL_VELOCITY{100}; /* TODO totally made up */
     */
     if (collided_entity != nullptr)
     {
-        switch (collided_entity->identity)
+        if (collided_entity->identity == entity_type::CHIPPIE)
         {
-        case entity_type::CHIPPIE:
             register_event(event::event_type::GAME_OVER);
-            break;
-        case entity_type::WALL:
+        }
+        else
+        {
             return collision_action::MOVE_BACKWARD;
-        default:
-            return collision_action::MOVE_FORWARD;
         }
     }
 
-    apply_terrain_effect(ent, collided_terrain);
+    if (!check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::MOVE_FORWARD;
+    }
+    else
+    {
+        return collision_action::MOVE_BACKWARD;
+    }
 }
 
-[[nodiscard]] entity create(Grid::Location xy, direction dir) noexcept
+} // namespace
+
+/*
+ ____        _     _ _
+|  _ \ _   _| |__ | (_) ___
+| |_) | | | | '_ \| | |/ __|
+|  __/| |_| | |_) | | | (__
+|_|    \__,_|_.__/|_|_|\___|
+
+*/
+[[nodiscard]] entity create(Grid::Location xy, direction dir, uint8_t uuid) noexcept
 {
-    return entity{.identity = entity_type::PURPLE_BALL,
-                  .alive = true,
-                  .facing = dir,
-                  .loc = xy,
-                  .velocity_ticks = PURPLE_BALL_VELOCITY};
+    return {
+        .loc = xy,
+        .identity = entity_type::PURPLE_BALL,
+        .facing = dir,
+        .alive = true,
+        .trapped = false,
+        .uuid = uuid,
+    };
 }
-} // namespace chippie
+
+entity_state_machine get_state_functions() noexcept
+{
+    return {
+        .entry_handler = nullptr,
+        .process_move_handler = compute_next_location,
+        .entity_collision_handler = handle_collision,
+        .exit_handler = nullptr,
+    };
+}
+
+[[nodiscard]] uint64_t get_velocity() noexcept
+{
+    return PURPLE_BALL_VELOCITY_US;
+}
+
+} // namespace chippie::purple_ball

@@ -1,8 +1,5 @@
-#include "revenge/revenge_tiles.hpp"
 #if !defined(ENTITY_TYPES_HPP)
 #define ENTITY_TYPES_HPP
-
-#include <array>
 
 namespace chippie
 {

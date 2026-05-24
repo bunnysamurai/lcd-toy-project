@@ -14,6 +14,7 @@ enum struct event_type
     RED_BUTTON,
     NEXT_LEVEL,
     RELEASE_ALL_TRAPS,
+    OPEN_MENU,
     GAME_COMPLETE,
     GAME_OVER
 };

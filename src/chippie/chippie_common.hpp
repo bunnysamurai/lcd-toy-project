@@ -29,6 +29,27 @@ enum struct direction
     }
 }
 
+[[nodiscard]] constexpr Grid::Location move(Grid::Location loc, direction facing) noexcept
+{
+    Grid::Location result{loc};
+    switch (facing)
+    {
+    case direction::UP:
+        --result.y;
+        break;
+    case direction::DOWN:
+        ++result.y;
+        break;
+    case direction::RIGHT:
+        ++result.x;
+        break;
+    case direction::LEFT:
+        --result.x;
+        break;
+    }
+    return result;
+}
+
 enum struct relative_direction
 {
     FORWARD,
@@ -36,7 +57,6 @@ enum struct relative_direction
     RIGHT,
     LEFT
 };
-
 
 } // namespace chippie
 

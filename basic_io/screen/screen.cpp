@@ -132,6 +132,22 @@ void set_video_buffer(const uint8_t *buffer) noexcept
     return screen_impl::get_touch_report(out);
 }
 
+/**
+    @brief Disable updates to the screen.  Useful when there's no double-buffering.
+ */
+void pause_screen() noexcept
+{
+    screen_impl::pause_screen();
+}
+
+/**
+    @brief Resume updates to the screen.  Useful when there's no double-buffering.
+ */
+void resume_screen() noexcept
+{
+    screen_impl::resume_screen();
+}
+
 /* =========================================================== */
 /*                  Video-Only Mode                            */
 /* =========================================================== */

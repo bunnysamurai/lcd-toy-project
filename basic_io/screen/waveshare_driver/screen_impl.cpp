@@ -164,4 +164,14 @@ extern "C"
     }
 }
 
+void pause_screen() noexcept
+{
+    dispOff();
+}
+
+void resume_screen() noexcept
+{
+    dispOn();
+}
+
 } // namespace screen_impl

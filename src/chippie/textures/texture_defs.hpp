@@ -9,12 +9,12 @@
 
 namespace chippie
 {
-constexpr uint8_t TILE_SCREEN_FORMAT{screen::Format::RGB565_LUT4};
+constexpr screen::Format TILE_SCREEN_FORMAT{screen::Format::RGB565_LUT4};
 constexpr uint8_t TILE_SIDE_LENGTH{24}; /* global for all sprites */
 
 inline constexpr std::array Palette{
     /* clang-format off */
-    screen::Clut{.r = 0, .g = 0, .b = 0},           /* black */
+    screen::Clut{.r = 188, .g = 188, .b = 188},     /* light grey, which is also the transparency color */
     screen::Clut{.r = 255, .g = 0, .b = 0},         /* red */
     screen::Clut{.r = 0, .g = 220, .b = 0},         /* green */
 
@@ -34,11 +34,11 @@ inline constexpr std::array Palette{
     screen::Clut{.r = 255, .g = 255, .b = 200},     /* light yellow */
     screen::Clut{.r = 255, .g = 128, .b = 255},     /* light magenta */
 
-    screen::Clut{.r = 188, .g = 188, .b = 188},     /* light grey */
+    screen::Clut{.r = 0, .g = 0, .b = 0},           /* black */
     /* clang-format on */
 };
 
-inline constexpr uint8_t BLACK{0};
+inline constexpr uint8_t LGREY{0}; /* also the transparency color */
 inline constexpr uint8_t RED{1};
 inline constexpr uint8_t GREEN{2};
 inline constexpr uint8_t BLUE{3};
@@ -53,6 +53,6 @@ inline constexpr uint8_t LBLUE{11};
 inline constexpr uint8_t LCYAN{12};
 inline constexpr uint8_t LYELLOW{13};
 inline constexpr uint8_t LMAGENTA{14};
-inline constexpr uint8_t LGREY{15};
+inline constexpr uint8_t BLACK{15};
 } // namespace chippie
 #endif

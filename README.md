@@ -43,6 +43,8 @@ The LCD supports a White/Black binary mode, where 0 == white instead of black.
 
 Uses `elf-size-analyze` from [jedrzejbocar](https://github.com/jedrzejboczar/elf-size-analyze) and `size` from GNU.
 
+To install: `pip install --upgrade elf-size-analyze`
+
 # Think thoughts and TODOs
 
 * Modify the waveshare driver to include options for 2bit color LUT

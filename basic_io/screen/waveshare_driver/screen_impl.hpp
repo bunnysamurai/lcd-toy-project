@@ -33,5 +33,15 @@ void set_virtual_screen_size(Position new_topleft, Dimensions new_size) noexcept
 
 [[nodiscard]] bool get_touch_report(TouchReport &out) noexcept;
 
+/**
+    @brief Disable updates to the screen.  Useful when there's no double-buffering.
+ */
+void pause_screen() noexcept;
+
+/**
+    @brief Resume updates to the screen.  Useful when there's no double-buffering.
+ */
+void resume_screen() noexcept;
+
 } // namespace screen_impl
 #endif

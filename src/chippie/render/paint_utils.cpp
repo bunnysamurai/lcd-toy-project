@@ -4,8 +4,8 @@
 #include <array>
 
 #include "chippie/entities/entity_types.hpp"
+#include "chippie/textures/texture.hpp"
 #include "embp/variable_array.hpp"
-#include "entities/entity_types.hpp"
 #include "screen/TileDef.h"
 #include "screen/screen.hpp"
 
@@ -23,7 +23,6 @@ namespace
 */
 
 struct tile_map_t
-
 {
     const screen::Tile *tile;
     entity_type entity;
@@ -62,7 +61,19 @@ embp::variable_array<tile_map_t, TILE_MAPPING_LIMIT> tile_map;
 
 */
 
-void draw_tile_index(uint32_t left_column, uint32_t top_row, entity_type) noexcept
+void draw_tile_index(uint32_t left_column, uint32_t top_row, texture::texture_type text) noexcept
+{
+    screen::draw_tile(left_column, top_row, texture::get_texture(text));
+}
+
+void draw_tile_index(const Grid &grid_def, Grid::Location location, texture::texture_type text) noexcept
+{
+    const auto [x, y]{grid_def.to_native(location)};
+
+    draw_tile_index(x, y, text);
+}
+
+void draw_tile_index(uint32_t left_column, uint32_t top_row, entity_type entity) noexcept
 {
     auto itr{std::find_if(std::begin(tile_map), std::end(tile_map),
                           [&](const auto &elem) { return elem.entity == entity; })};
@@ -101,7 +112,7 @@ mapping_result set_tile_to_entity_mapping(const screen::Tile *tile, entity_type 
     }
 
     /* add a new entry to the list */
-    tile_map.emplace_back(tile_map_t{.tile = tile, .entity = entity});
+    tile_map.push_back(tile_map_t{.tile = tile, .entity = entity});
 
     return mapping_result::SUCCESS;
 }

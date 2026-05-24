@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 # application
+
 add_executable(${PROJECT_NAME} 
     main.cpp
     status_utilities.cpp
@@ -10,6 +11,17 @@ add_executable(${PROJECT_NAME}
     revenge/revenge.cpp
     ShellCmd_Menu.cpp
     common/screen_utils.cpp
+    # chippie :)
+    chippie/chippie.cpp
+    chippie/state/state.cpp
+    chippie/events/event.cpp
+    chippie/entities/basic_entity.cpp
+    chippie/entities/chippie_entity.cpp
+    chippie/entities/purple_ball.cpp
+    chippie/render/paint_utils.cpp
+    chippie/state/chippie_inventory.cpp
+    chippie/state/terrain_effects.cpp
+    chippie/textures/texture.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

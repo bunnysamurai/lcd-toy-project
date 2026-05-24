@@ -14,6 +14,7 @@
 #include "screen/screen.hpp"
 #include "snake/snake.hpp"
 #include "tetris/tetris.hpp"
+#include "chippie/chippie.hpp"
 
 namespace {
 
@@ -37,7 +38,7 @@ MenuConfig g_cfg{
     .startcol = 1, .startline = 3, .row_spacing = 2, .titlestartline = 1};
 
 bool g_keep_running{true};
-std::array<std::pair<const char *, void (*)(void)>, 5> g_f_table{
+std::array<std::pair<const char *, void (*)(void)>, 6> g_f_table{
     std::make_pair("Rattler Race",
                    [] {
                      snake::run();
@@ -51,6 +52,11 @@ std::array<std::pair<const char *, void (*)(void)>, 5> g_f_table{
     std::make_pair("Rodent's Revenge",
                    [] {
                      revenge::run();
+                     sleep_ms(100);
+                   }),
+    std::make_pair("Steven's Challenge",
+                   [] {
+                     chippie::run();
                      sleep_ms(100);
                    }),
 

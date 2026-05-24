@@ -54,7 +54,7 @@ enum struct inventory_item
     ITEM_COUNT
 };
 
-using inventory = basic_inventory<inventory_item, inventory_item::ITEM_COUNT, uint8_t>;
+using inventory = basic_inventory<inventory_item, static_cast<int>(inventory_item::ITEM_COUNT), uint8_t>;
 
 [[nodiscard]] inventory &access_chippie_inventory();
 
