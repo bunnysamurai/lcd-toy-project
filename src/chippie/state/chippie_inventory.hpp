@@ -10,6 +10,15 @@ namespace chippie
 template <typename ItemEnum, uint32_t ItemCount, typename StorageElemType> class basic_inventory
 {
   public:
+    void constexpr set(ItemEnum item, StorageElemType amount) noexcept
+    {
+        const uint32_t index{static_cast<uint32_t>(item)};
+        if (index < std::size(item_stash))
+        {
+            item_stash[index] = amount;
+        }
+    }
+
     void constexpr add(ItemEnum item) noexcept
     {
         const uint32_t index{static_cast<uint32_t>(item)};
@@ -22,7 +31,7 @@ template <typename ItemEnum, uint32_t ItemCount, typename StorageElemType> class
     void constexpr remove(ItemEnum item) noexcept
     {
         const uint32_t index{static_cast<uint32_t>(item)};
-        if (index < std::size(item_stash) && item_stash > 0)
+        if (index < std::size(item_stash) && item_stash[index] > 0)
         {
             --item_stash[index];
         }
@@ -51,6 +60,7 @@ enum struct inventory_item
     SUCTION_BOOTS,
     ICE_SKATES,
     FLIPPERS,
+    CHIPS,
     ITEM_COUNT
 };
 

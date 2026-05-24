@@ -6,6 +6,7 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/events/event.hpp"
 #include "chippie/render/paint_utils.hpp"
+#include "chippie/state/chippie_inventory.hpp"
 #include "chippie/textures/texture.hpp"
 #include "chippie/textures/texture_defs.hpp"
 #include "common/Rect.hpp"
@@ -110,6 +111,9 @@ void State::load_entity_list_from_rom_stub([[maybe_unused]] uint8_t level) noexc
 
 void State::load_level_from_rom_stub(uint8_t level) noexcept
 {
+    /* set the amount of chips for the level */
+    access_chippie_inventory().set(inventory_item::CHIPS, 11);
+
     /* clear the map data */
     std::memset(std::data(the_map.map_data), static_cast<int>(terrain_type::CLEAR),
                 sizeof(terrain_type) * std::size(the_map.map_data));
@@ -212,6 +216,30 @@ void State::load_level_from_rom_stub(uint8_t level) noexcept
             the_map[Grid::Location{.x = xx, .y = 17}] = terrain_type::YELLOW_DOOR;
         }
     }
+
+    /* row 18 */
+    the_map[Grid::Location{.x = 12, .y = 18}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 15, .y = 18}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 18, .y = 18}] = terrain_type::WALL;
+
+    /* row 19 */
+    the_map[Grid::Location{.x = 12, .y = 19}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 15, .y = 19}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 18, .y = 19}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 14, .y = 19}] = terrain_type::CHIP;
+    the_map[Grid::Location{.x = 16, .y = 19}] = terrain_type::CHIP;
+
+    /* row 20 */
+    the_map[Grid::Location{.x = 12, .y = 20}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 15, .y = 20}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 18, .y = 20}] = terrain_type::WALL;
+    the_map[Grid::Location{.x = 16, .y = 20}] = terrain_type::GREEN_KEY;
+
+    /* row 21 */
+    for (uint32_t xx = 12; xx < 19; ++xx)
+    {
+        the_map[Grid::Location{.x = xx, .y = 21}] = terrain_type::WALL;
+    }
 }
 
 void State::move_entities() noexcept
@@ -280,12 +308,12 @@ void State::move_entities() noexcept
             continue;
         }
 
-        apply_terrain_exit_effect(*this, ent, collision.tile);
+        /* TODO feed this with the tile from the previous entity location */
+        // apply_terrain_exit_effect(ent, collision.tile);
 
         if (action == collision_action::APPLY_NEXT_LOCATION)
         {
             ent.loc = nextloc;
-            apply_terrain_entry_effect(*this, ent, collision.tile);
         }
         else
         {
@@ -314,7 +342,7 @@ void State::move_entities() noexcept
             move_relative_direction(ent, direction_to_move);
         }
 
-        apply_terrain_entry_effect(*this, ent, collision.tile);
+        apply_terrain_entry_effect(ent, collision.tile);
 
         /* finally, process the exit handler */
         if (entity_handles.exit_handler != nullptr)
@@ -392,16 +420,17 @@ void State::paint_entity(const entity &ent) const noexcept
 void State::init_play_grid() noexcept
 {
     const auto [width, height]{screen::get_virtual_screen_size()};
-    const Grid::GridCfg view_cfg{.xdimension = {.off = (width - TILE_SIDE_LENGTH * 9) / 2, .scale = TILE_SIDE_LENGTH},
-                                 .ydimension = {.off = 10, .scale = TILE_SIDE_LENGTH},
-                                 .grid_width = 9,
-                                 .grid_height = 9};
+    static constexpr Grid::GridCfg view_cfg{
+        .xdimension = {.off = (width - TILE_SIDE_LENGTH * 9) / 2, .scale = TILE_SIDE_LENGTH},
+        .ydimension = {.off = 10, .scale = TILE_SIDE_LENGTH},
+        .grid_width = 9,
+        .grid_height = 9};
     view_grid = Grid{view_cfg};
 
-    const Grid::GridCfg play_cfg{.xdimension = {.off = 0, .scale = 1},
-                                 .ydimension = {.off = 0, .scale = 1},
-                                 .grid_width = 32,
-                                 .grid_height = 32};
+    static constexpr Grid::GridCfg play_cfg{.xdimension = {.off = 0, .scale = 1},
+                                            .ydimension = {.off = 0, .scale = 1},
+                                            .grid_width = 32,
+                                            .grid_height = 32};
     play_grid = Grid{play_cfg};
 }
 

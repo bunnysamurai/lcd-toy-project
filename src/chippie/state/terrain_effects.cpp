@@ -6,7 +6,6 @@
 #include "chippie/events/event_types.hpp"
 #include "chippie/state/terrain_types.hpp"
 #include "chippie_inventory.hpp"
-#include "state.hpp"
 
 namespace chippie
 {
@@ -42,21 +41,9 @@ inline void apply_ice_effect(entity &ent) noexcept
     }
 }
 
-inline bool apply_chip_effect(entity &ent) noexcept
-{
-    if (check_is_chip(ent))
-    {
-    }
-}
-
-inline bool apply_socket_effect(entity &ent) noexcept
-{
-    return ent.identity == entity_type::CHIPPIE;
-}
-
 } // namespace
 
-void apply_terrain_entry_effect(State &state, entity &ent, terrain_type &terrain) noexcept
+void apply_terrain_entry_effect(entity &ent, terrain_type &terrain) noexcept
 {
     switch (terrain)
     {
@@ -76,7 +63,7 @@ void apply_terrain_entry_effect(State &state, entity &ent, terrain_type &terrain
         ent.trapped = true;
         break;
     case terrain_type::CHIP:
-        state.decrement_chip_count();
+        access_chippie_inventory().remove(inventory_item::CHIPS);
         terrain = terrain_type::CLEAR;
         break;
     case terrain_type::SOCKET:
@@ -140,7 +127,7 @@ void apply_terrain_entry_effect(State &state, entity &ent, terrain_type &terrain
     }
 }
 
-void apply_terrain_exit_effect(State &state, entity &ent, terrain_type terrain) noexcept
+void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
 {
 }
 

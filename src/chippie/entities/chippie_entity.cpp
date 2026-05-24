@@ -1,6 +1,9 @@
 #include "chippie_entity.hpp"
 #include "chippie/chippie_common.hpp"
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/events/event.hpp"
+#include "chippie/state/chippie_inventory.hpp"
+#include "chippie/state/terrain_types.hpp"
 #include "gamepad/gamepad.hpp"
 
 #include "pico/time.h"
@@ -80,9 +83,62 @@ absolute_time_t hold_time_point;
     return std::make_pair(ent.loc, direction::DOWN);
 }
 
+[[nodiscard]] collision_action handle_door(terrain_type collided_terrain) noexcept
+{
+    if (collided_terrain == terrain_type::GREEN_DOOR &&
+        ::chippie::access_chippie_inventory().check(inventory_item::GREEN_KEY) > 0)
+    {
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+    if (collided_terrain == terrain_type::YELLOW_DOOR &&
+        ::chippie::access_chippie_inventory().check(inventory_item::YELLOW_KEY) > 0)
+    {
+        ::chippie::access_chippie_inventory().remove(inventory_item::YELLOW_KEY);
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+    if (collided_terrain == terrain_type::RED_DOOR &&
+        ::chippie::access_chippie_inventory().check(inventory_item::RED_KEY) > 0)
+    {
+        ::chippie::access_chippie_inventory().remove(inventory_item::RED_KEY);
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+    if (collided_terrain == terrain_type::CYAN_DOOR &&
+        ::chippie::access_chippie_inventory().check(inventory_item::CYAN_KEY) > 0)
+    {
+        ::chippie::access_chippie_inventory().remove(inventory_item::CYAN_KEY);
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+    return collision_action::NO_ACTION_NEEDED;
+}
+
+[[nodiscard]] collision_action handle_socket() noexcept
+{
+    if (::chippie::access_chippie_inventory().check(inventory_item::CHIPS) == 0)
+    {
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+    return collision_action::NO_ACTION_NEEDED;
+}
+
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type &collided_terrain) noexcept
 {
+    /* for level 1 */
+    switch (collided_terrain)
+    {
+    case terrain_type::GREEN_DOOR:
+    case terrain_type::CYAN_DOOR:
+    case terrain_type::YELLOW_DOOR:
+    case terrain_type::RED_DOOR:
+        return handle_door(collided_terrain);
+    case terrain_type::WALL:
+        return collision_action::NO_ACTION_NEEDED;
+    case terrain_type::SOCKET:
+        return handle_socket();
+    default:
+        return collision_action::APPLY_NEXT_LOCATION;
+    }
+
     return collision_action::APPLY_NEXT_LOCATION;
 }
 

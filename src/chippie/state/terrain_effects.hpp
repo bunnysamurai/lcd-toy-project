@@ -8,8 +8,8 @@
 namespace chippie
 {
 
-void apply_terrain_entry_effect(State &state, entity &ent, terrain_type &terrain) noexcept;
-void apply_terrain_exit_effect(State &state, entity &ent, terrain_type terrain) noexcept;
+void apply_terrain_entry_effect(entity &ent, terrain_type &terrain) noexcept;
+void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept;
 
 /**
     @brief Check for "opacity" for general entities.  Chippie will do it's own thing.
