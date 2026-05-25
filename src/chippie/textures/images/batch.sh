@@ -8,7 +8,7 @@ function convert() {
 }
 
 # do transparent ones first
-transparent_list="chippie_down.png chippie_left.png chippie_up.png chippie_right.png"
+transparent_list="chippie_down.png chippie_left.png chippie_up.png chippie_right.png chippie_down_girl.png chippie_left_girl.png chippie_up_girl.png chippie_right_girl.png"
 
 for f in $transparent_list; do
 	convert $f ${f%.png} --transparent

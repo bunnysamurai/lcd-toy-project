@@ -420,17 +420,16 @@ void State::paint_entity(const entity &ent) const noexcept
 void State::init_play_grid() noexcept
 {
     const auto [width, height]{screen::get_virtual_screen_size()};
-    static constexpr Grid::GridCfg view_cfg{
-        .xdimension = {.off = (width - TILE_SIDE_LENGTH * 9) / 2, .scale = TILE_SIDE_LENGTH},
-        .ydimension = {.off = 10, .scale = TILE_SIDE_LENGTH},
-        .grid_width = 9,
-        .grid_height = 9};
+    const Grid::GridCfg view_cfg{.xdimension = {.off = (width - TILE_SIDE_LENGTH * 9) / 2, .scale = TILE_SIDE_LENGTH},
+                                 .ydimension = {.off = 10, .scale = TILE_SIDE_LENGTH},
+                                 .grid_width = 9,
+                                 .grid_height = 9};
     view_grid = Grid{view_cfg};
 
     static constexpr Grid::GridCfg play_cfg{.xdimension = {.off = 0, .scale = 1},
-                                            .ydimension = {.off = 0, .scale = 1},
-                                            .grid_width = 32,
-                                            .grid_height = 32};
+                                 .ydimension = {.off = 0, .scale = 1},
+                                 .grid_width = 32,
+                                 .grid_height = 32};
     play_grid = Grid{play_cfg};
 }
 

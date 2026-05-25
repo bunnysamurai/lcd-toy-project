@@ -3,10 +3,17 @@
 #include "chippie/entities/entity_types.hpp"
 
 #include "tiles/chip.hpp"
+#ifdef CHIPPIE_IS_GIRL
+#include "tiles/chippie_down_girl.hpp"
+#include "tiles/chippie_left_girl.hpp"
+#include "tiles/chippie_right_girl.hpp"
+#include "tiles/chippie_up_girl.hpp"
+#else
 #include "tiles/chippie_down.hpp"
 #include "tiles/chippie_left.hpp"
 #include "tiles/chippie_right.hpp"
 #include "tiles/chippie_up.hpp"
+#endif
 #include "tiles/clear.hpp"
 #include "tiles/cyan_door.hpp"
 #include "tiles/cyan_key.hpp"
@@ -114,13 +121,29 @@ screen::Tile get_texture(texture_type texture) noexcept
     case texture_type::CHIP:
         return chip::get_texture();
     case texture_type::CHIPPIE_DOWN:
+#ifdef CHIPPIE_IS_GIRL
+        return chippie_down_girl::get_texture();
+#else
         return chippie_down::get_texture();
+#endif
     case texture_type::CHIPPIE_LEFT:
+#ifdef CHIPPIE_IS_GIRL
+        return chippie_left_girl::get_texture();
+#else
         return chippie_left::get_texture();
+#endif
     case texture_type::CHIPPIE_RIGHT:
+#ifdef CHIPPIE_IS_GIRL
+        return chippie_right_girl::get_texture();
+#else
         return chippie_right::get_texture();
+#endif
     case texture_type::CHIPPIE_UP:
+#ifdef CHIPPIE_IS_GIRL
+        return chippie_up_girl::get_texture();
+#else
         return chippie_up::get_texture();
+#endif
     case texture_type::CLEAR:
         return clear::get_texture();
     case texture_type::CYAN_DOOR:

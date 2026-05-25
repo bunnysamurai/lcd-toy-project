@@ -28,6 +28,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_link_options(${PROJECT_NAME} PRIVATE -flto)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DCHIPPIE_IS_GIRL)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     pico_stdlib 
