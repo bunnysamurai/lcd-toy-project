@@ -44,6 +44,7 @@ template <typename ItemEnum, uint32_t ItemCount, typename StorageElemType> class
         {
             return item_stash[index];
         }
+        return -1;
     }
 
   private:

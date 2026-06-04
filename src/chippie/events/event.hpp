@@ -9,11 +9,14 @@ namespace chippie
 namespace event
 {
 
+/**
+    @brief Register external handler
+    For right now, only one handler per event type.
+*/
 void register_handler(event_handler) noexcept;
 void register_event(event_type) noexcept;
 void process_events() noexcept;
-
-[[nodiscard]] bool exit() noexcept;
+[[nodiscard]] event_type dequeue_next_event() noexcept;
 
 } // namespace event
 

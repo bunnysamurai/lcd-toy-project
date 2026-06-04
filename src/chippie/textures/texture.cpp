@@ -28,6 +28,17 @@
 #include "tiles/yellow_door.hpp"
 #include "tiles/yellow_key.hpp"
 
+#include "tiles/digit_00.hpp"
+#include "tiles/digit_01.hpp"
+#include "tiles/digit_02.hpp"
+#include "tiles/digit_03.hpp"
+#include "tiles/digit_04.hpp"
+#include "tiles/digit_05.hpp"
+#include "tiles/digit_06.hpp"
+#include "tiles/digit_07.hpp"
+#include "tiles/digit_08.hpp"
+#include "tiles/digit_09.hpp"
+
 namespace chippie::texture
 {
 
@@ -173,6 +184,35 @@ screen::Tile get_texture(texture_type texture) noexcept
     }
 
     return clear::get_texture();
+}
+
+screen::Tile get_digit_texture(int digit) noexcept
+{
+    switch (digit)
+    {
+    case 0:
+        return digit_00::get_texture();
+    case 1:
+        return digit_01::get_texture();
+    case 2:
+        return digit_02::get_texture();
+    case 3:
+        return digit_03::get_texture();
+    case 4:
+        return digit_04::get_texture();
+    case 5:
+        return digit_05::get_texture();
+    case 6:
+        return digit_06::get_texture();
+    case 7:
+        return digit_07::get_texture();
+    case 8:
+        return digit_08::get_texture();
+    case 9:
+        return digit_09::get_texture();
+    }
+
+    return digit_00::get_texture();
 }
 
 } // namespace chippie::texture

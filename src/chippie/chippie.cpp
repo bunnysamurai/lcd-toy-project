@@ -22,7 +22,7 @@ void screen_init() noexcept
     screen::set_format(chippie::TILE_SCREEN_FORMAT);
     screen::init_clut(chippie::Palette.data(), chippie::Palette.size());
 
-    /* we use a black background */
+    /* we use a light grey background */
     screen::fill_screen((LGREY << 4) | LGREY);
 }
 

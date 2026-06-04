@@ -3,8 +3,10 @@
 
 #include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
-#include "common/Rect.hpp"
+#include "common/pico_sdk_timer_details.hpp"
+#include "common/timer.hpp"
 #include "embp/containers.hpp"
+#include "screen/gfx/defs.hpp"
 #include "static_map.hpp"
 
 #include "pico/time.h"
@@ -14,9 +16,12 @@
 namespace chippie
 {
 
+/* this guy has gotten a little bloated.  need to break some of this up */
 struct State
 {
   public:
+    State() noexcept;
+
     [[nodiscard]] bool is_active() noexcept;
 
     void load_level() noexcept;
@@ -40,12 +45,17 @@ struct State
 
     [[nodiscard]] bool within_view_port(Grid::Location loc) noexcept;
 
+    void process_time_remaining() noexcept;
+
     void paint() noexcept;
 
+    void paint_the_background() noexcept;
     void paint_the_map() noexcept;
     void paint_chip_count_display() noexcept;
     void paint_timer_display() noexcept;
     void paint_level_display() noexcept;
+    void paint_hint() noexcept;
+    void paint_inventory() noexcept;
 
     void paint_entity(const entity &ent) const noexcept;
 
@@ -53,17 +63,36 @@ struct State
 
     void init_play_grid() noexcept;
 
+    void intialize_event_handlers() noexcept;
+
+    /* list of event handler functions */
+    void handle_portal() noexcept;
+    void handle_time_up() noexcept;
+    void handle_display_hint() noexcept;
+    void handle_clear_hint() noexcept;
+
     bool active{true}; /* set to false when game should end */
     uint8_t level_number{1};
-    Rect_<uint32_t> view_port{
-        .x = 0, .y = 0, .width = 9, .height = 9}; /* rectangle of the viewable portion of the grid */
+    screen::gfx::Rect_<uint32_t> view_port{
+        .topleft = {.x = 0, .y = 0},
+        .size = {.width = 9, .height = 9},
+    }; /* rectangle of the viewable portion of the grid */
     embp::variable_array<entity, 128> entity_list;
     Grid play_grid;
     Grid view_grid;
-    uint16_t chip_count;
+    Grid chip_count_grid;
+    Grid level_count_grid;
+    Grid time_remaining_grid;
+    Grid hint_print_grid;
+    Grid inventory_grid;
+    uint16_t time_remaining{};
+    Timer<timer_details::PicoSdk> countdown_timer{1'000'000}; /* period of 1 second*/
     static_map the_map;
     absolute_time_t last_paint_time{};
     static constexpr int64_t PAINT_TIME_INTERVAL_US{33'333};
+    const char *hint_text;
+    bool hint_displayable{false};
+    screen::gfx::Rect hint_area;
 };
 
 } // namespace chippie

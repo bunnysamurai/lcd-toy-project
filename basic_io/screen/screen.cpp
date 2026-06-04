@@ -10,7 +10,7 @@
 
 // #define PRINT_DEBUG
 #ifdef PRINT_DEBUG
-#include "pico/printf.h"
+#include <pico/printf.h>
 #endif
 
 #if defined(WAVESHARE_240P)
@@ -245,6 +245,9 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish, uint32_t 
 
     if (column_start == dims.width || row_start > dims.height)
     {
+#ifdef PRINT_DEBUG
+        printf("exit 1\n");
+#endif
         return;
     }
     /* we might be relying on overflow behaviours here a bit too much... maybe
@@ -253,12 +256,18 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish, uint32_t 
     column_finish = {column_finish < dims.width ? column_finish : dims.width};
     if (column_start >= column_finish)
     {
+#ifdef PRINT_DEBUG
+        printf("exit 2\n");
+#endif
         return;
     }
 
     row_finish = {row_finish < dims.height ? row_finish : dims.height};
     if (row_start >= row_finish)
     {
+#ifdef PRINT_DEBUG
+        printf("exit 3\n");
+#endif
         return;
     }
 

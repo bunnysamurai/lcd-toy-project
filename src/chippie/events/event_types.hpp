@@ -15,8 +15,12 @@ enum struct event_type
     NEXT_LEVEL,
     RELEASE_ALL_TRAPS,
     OPEN_MENU,
+    DISPLAY_HINT,
+    CLEAR_HINT,
     GAME_COMPLETE,
-    GAME_OVER
+    TIME_UP,
+    GAME_OVER,
+    MAX_EVENT_TYPE
 };
 
 using event_cb_t = void (*)(void);

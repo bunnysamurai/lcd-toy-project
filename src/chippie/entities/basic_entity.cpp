@@ -31,6 +31,7 @@ namespace chippie
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }
+    return {};
 }
 
 [[nodiscard]] uint64_t get_entity_velocity(entity_type id) noexcept
@@ -58,6 +59,7 @@ namespace chippie
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }
+    return {};
 }
 
 } // namespace chippie

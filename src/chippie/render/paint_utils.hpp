@@ -33,6 +33,11 @@ void draw_tile_index(uint32_t left_column, uint32_t top_row, texture::texture_ty
 void draw_tile_index(const Grid &grid_def, Grid::Location location, texture::texture_type text) noexcept;
 
 /**
+    @brief Draw tile on the screen, using the grid overlay.
+ */
+void draw_tile_index(const Grid &grid_def, Grid::Location location, screen::Tile tile) noexcept;
+
+/**
     @brief Draw the entity on the screen directly.
         Does require some setup, see set_tile_to_entity_mapping below.
 

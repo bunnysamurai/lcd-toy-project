@@ -93,6 +93,13 @@ void draw_tile_index(const Grid &grid_def, Grid::Location location, entity_type 
     draw_tile_index(x, y, entity);
 }
 
+void draw_tile_index(const Grid &grid_def, Grid::Location location, screen::Tile tile) noexcept
+{
+    const auto [x, y]{grid_def.to_native(location)};
+
+    screen::draw_tile(x, y, tile);
+}
+
 mapping_result set_tile_to_entity_mapping(const screen::Tile *tile, entity_type entity) noexcept
 {
     auto itr{std::find_if(std::begin(tile_map), std::end(tile_map),

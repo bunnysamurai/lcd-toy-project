@@ -27,12 +27,13 @@ enum struct texture_type
     SOCKET,
     WALL,
     YELLOW_DOOR,
-    YELLOW_KEY
+    YELLOW_KEY,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;
 [[nodiscard]] texture_type get_entity_texture_type(const ::chippie::entity &) noexcept;
 [[nodiscard]] screen::Tile get_texture(texture_type) noexcept;
+[[nodiscard]] screen::Tile get_digit_texture(int digit) noexcept;
 
 } // namespace chippie::texture
 #endif
