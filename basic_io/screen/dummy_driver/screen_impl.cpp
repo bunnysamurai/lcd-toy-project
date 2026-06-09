@@ -21,6 +21,7 @@ std::span<const uint8_t> g_source_buffer;
 Position g_virtual_topleft;
 Dimensions g_virtual_size;
 Format g_format;
+bool g_screen_paused;
 
 std::span<const Clut> g_clut;
 
@@ -45,6 +46,7 @@ std::span<const Clut> g_clut;
     g_virtual_topleft = virtual_topleft;
     g_virtual_size = virtual_size;
     g_format = format;
+    g_screen_paused = false;
 
     return true;
 }
@@ -96,6 +98,15 @@ void set_virtual_screen_size(Position new_topleft, Dimensions new_size) noexcept
 [[nodiscard]] bool get_touch_report(TouchReport &) noexcept
 {
     return false;
+}
+
+void pause_screen() noexcept
+{
+    g_screen_paused = true;
+}
+void resume_screen() noexcept
+{
+    g_screen_paused = false;
 }
 
 } // namespace screen_impl

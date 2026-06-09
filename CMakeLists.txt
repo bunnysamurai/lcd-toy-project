@@ -22,15 +22,15 @@ message(STATUS "Building tests")
 
 find_package(Catch2 3 REQUIRED)
 
-add_executable(tests)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+add_library(tests INTERFACE)
+target_link_libraries(tests INTERFACE Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
 
 add_subdirectory(basic_io)
 add_subdirectory(embp) # required for some tests to build
 
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
 
 else()
 

@@ -33,5 +33,8 @@ void set_virtual_screen_size(Position new_topleft, Dimensions new_size) noexcept
 
 [[nodiscard]] bool get_touch_report(TouchReport &out) noexcept;
 
+void pause_screen() noexcept;
+void resume_screen() noexcept;
+
 } // namespace screen_impl
 #endif

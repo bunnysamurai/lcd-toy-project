@@ -14,10 +14,10 @@ add_library(${PROJECT_NAME} STATIC
 target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 target_link_options(${PROJECT_NAME} PUBLIC -flto)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-target_link_libraries(${PROJECT_NAME} PUBLIC 
-    embp
-    pico_stdlib
-)
+target_link_libraries(${PROJECT_NAME} PUBLIC embp)
+if( CMAKE_CROSSCOMPILING )
+target_link_libraries(${PROJECT_NAME} PUBLIC pico_stdlib)
+endif()
 
 message(STATUS "Screen configured for ${SCREEN_CONFIG}")
 
