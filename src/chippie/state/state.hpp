@@ -37,6 +37,8 @@ struct State
 
     void load_level_from_rom_stub(uint8_t level) noexcept;
 
+    void process_opening_level_dialog() noexcept;
+
     void move_entities() noexcept;
 
     [[nodiscard]] collision_result find_collisions(Grid::Location next_location) noexcept;
@@ -77,7 +79,6 @@ struct State
         .topleft = {.x = 0, .y = 0},
         .size = {.width = 9, .height = 9},
     }; /* rectangle of the viewable portion of the grid */
-    embp::variable_array<entity, 128> entity_list;
     Grid play_grid;
     Grid view_grid;
     Grid chip_count_grid;
@@ -85,14 +86,19 @@ struct State
     Grid time_remaining_grid;
     Grid hint_print_grid;
     Grid inventory_grid;
-    uint16_t time_remaining{};
     Timer<timer_details::PicoSdk> countdown_timer{1'000'000}; /* period of 1 second*/
-    static_map the_map;
     absolute_time_t last_paint_time{};
     static constexpr int64_t PAINT_TIME_INTERVAL_US{33'333};
-    const char *hint_text;
     bool hint_displayable{false};
     screen::gfx::Rect hint_area;
+    bool display_level_name_once{true};
+
+    /* level state */
+    const char *hint_text;
+    const char *level_name_text;
+    uint16_t time_remaining{};
+    static_map the_map;
+    embp::variable_array<entity, 128> entity_list;
 };
 
 } // namespace chippie

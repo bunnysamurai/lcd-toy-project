@@ -33,7 +33,7 @@ void display_dialog_box(const char *string, uint32_t column_limit, Point topleft
 
     Uses sane defaults for the screen size.
  */
-void display_dialog_box(const char *string) noexcept;
+void display_dialog_box(const char *string, uint32_t col_limit = 10) noexcept;
 
 } // namespace screen::gfx
 

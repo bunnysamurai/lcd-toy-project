@@ -7,6 +7,7 @@
 
 #include "common/BitImage.hpp"
 #include "common/screen_utils.hpp"
+#include "screen/glyphs/letter_utils.hpp"
 #include "gamepad/gamepad.hpp"
 
 // #define PRINT_DEBUG_MSG

@@ -10,7 +10,6 @@ add_executable(${PROJECT_NAME}
     tetris/tetris.cpp
     revenge/revenge.cpp
     ShellCmd_Menu.cpp
-    common/screen_utils.cpp
     # chippie :)
     chippie/chippie.cpp
     chippie/state/state.cpp

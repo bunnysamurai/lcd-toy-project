@@ -16,6 +16,7 @@
 
 #include "screen/TileDef.h"
 #include "screen/glyphs/letters.hpp"
+#include "screen/glyphs/letter_utils.hpp"
 #include "screen/screen.hpp"
 
 #include "gamepad/gamepad.hpp"

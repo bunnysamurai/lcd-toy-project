@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 4.00)
 
 project(basic_io)
+
+if( CMAKE_CROSSCOMPILING )
+
+message(STATUS "Cross compiling ${PROJECT_NAME}")
 
 option(BUILD_WITH_STDIO_USB "Use pico sdk stdio_usb, instead of stdio to the screen" OFF)
 
@@ -28,3 +32,21 @@ target_link_libraries(basic_io PUBLIC ${BASIC_IO_DEPS})
 
 add_subdirectory(screen)
 add_subdirectory(gamepad)
+
+else()
+
+message(STATUS "Building tests for ${PROJECT_NAME}")
+target_link_libraries(tests PRIVATE embp)
+# include all of the directories 
+target_include_directories(tests PRIVATE 
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/screen
+    ${CMAKE_CURRENT_LIST_DIR}/screen/gfx
+)
+target_sources(tests PRIVATE 
+    screen/gfx/dialog.cpp 
+    screen/gfx/dialog.hpp
+    screen/gfx/dialog.test.cc
+)
+
+endif()

@@ -7,14 +7,16 @@ set_property(CACHE SCREEN_CONFIG PROPERTY STRINGS "waveshare240p" "dummy")
 add_library(${PROJECT_NAME} STATIC 
     screen.cpp
     tile_blitting.cpp
+    glyphs/letter_utils.cpp
     gfx/shapes.cpp
-    # gfx/dialog.cpp
+    gfx/dialog.cpp
 )
 target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 target_link_options(${PROJECT_NAME} PUBLIC -flto)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_link_libraries(${PROJECT_NAME} PUBLIC 
     embp
+    pico_stdlib
 )
 
 message(STATUS "Screen configured for ${SCREEN_CONFIG}")

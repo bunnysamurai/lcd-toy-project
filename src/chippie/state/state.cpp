@@ -15,6 +15,7 @@
 #include "screen/gfx/dialog.hpp"
 #include "screen/gfx/shapes.hpp"
 #include "screen/glyphs/letters.hpp"
+#include "screen/glyphs/letter_utils.hpp"
 #include "screen/screen.hpp"
 #include "static_map.hpp"
 #include "terrain_effects.hpp"
@@ -55,6 +56,22 @@ State::State() noexcept
     event::process_events()
     */
     myself = this;
+
+    /* we use the dialog, so let's set its palette */
+    struct dialog_palette
+    {
+        uint16_t bright_highlight;
+        uint16_t shadow_highlight;
+        uint16_t background;
+        uint16_t font_color;
+    };
+
+    screen::gfx::set_dialog_palette({
+        .bright_highlight = WHITE,
+        .shadow_highlight = DRKGRY,
+        .background = BLACK,
+        .font_color = YELLOW,
+    });
 }
 
 void State::intialize_event_handlers() noexcept
@@ -110,6 +127,8 @@ void State::load_level() noexcept
 
 void State::process() noexcept
 {
+    process_opening_level_dialog();
+
     process_time_remaining();
 
     move_entities();
@@ -161,6 +180,39 @@ void State::paint() noexcept
     screen::resume_screen();
 }
 
+void State::process_opening_level_dialog() noexcept
+{
+    if (!display_level_name_once)
+    {
+        return;
+    }
+
+    paint();
+
+    display_level_name_once = false;
+
+    /* draw the level dialog */
+    // screen::gfx::display_dialog_box(level_name_text);
+    screen::gfx::display_dialog_box(hint_text, 20);
+
+// void display_dialog_box(const char *string, uint32_t column_limit, Point topleft) noexcept;
+
+    /* spin until the user presses a button */
+    while (true)
+    {
+        const auto [up, down, right, left, etc, unused]{gamepad::five::get()};
+        const bool result = up | down | right | left | etc;
+
+        if (result)
+        {
+            break;
+        }
+
+        /* TODO pico-sdk specific call should be abstracted for better portability */
+        sleep_ms(1);
+    }
+}
+
 void State::load_entity_list_from_rom_stub([[maybe_unused]] uint8_t level) noexcept
 {
     entity_list.clear();
@@ -178,7 +230,9 @@ void State::load_level_from_rom_stub(uint8_t level) noexcept
     access_chippie_inventory().set(inventory_item::CHIPS, 11);
 
     /* set the hint string, which can be null */
-    hint_text = "Collect chips to get past the chip socket.  Use keys to open doors.";
+    hint_text = "Collect chips to get past the chip socket. Use keys to open doors.";
+    /* set the level name */
+    level_name_text = "LESSON 1";
 
     /* clear the map data */
     std::memset(std::data(the_map.map_data), static_cast<int>(terrain_type::CLEAR),

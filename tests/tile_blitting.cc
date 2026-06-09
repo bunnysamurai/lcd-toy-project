@@ -258,7 +258,7 @@ TEST_F(Blitting, FourBitsPerPixel_Transparent)
             }
             return result;
         }()};
-        screen::TransparencyTile tile{.side_length = 3, .format = FORMAT, .data = std::data(tile_data)};
+        screen::Tile tile{.side_length = 3, .transparent = 1, .format = FORMAT, .data = std::data(tile_data)};
         screen::blit_4bpp(std::data(buffer), COLS, XTILEPOSITION, YTILEPOSITION, tile);
 
         EXPECT_THAT(buffer, testing::ContainerEq(expected_buffer));
@@ -305,7 +305,7 @@ TEST_F(Blitting, FourBitsPerPixel_Transparent)
             }
             return result;
         }()};
-        screen::TransparencyTile tile{.side_length = 3, .format = FORMAT, .data = std::data(tile_data)};
+        screen::Tile tile{.side_length = 3, .transparent = 1, .format = FORMAT, .data = std::data(tile_data)};
         screen::blit_4bpp(std::data(buffer), COLS, XTILEPOSITION, YTILEPOSITION, tile);
 
         EXPECT_THAT(buffer, testing::ContainerEq(expected_buffer));
@@ -375,8 +375,8 @@ TEST_F(Blitting, EightBitsPerPixel_Transparent)
         return result;
     }()};
 
-    screen::TransparencyTile tile{
-        .side_length = 3, .format = screen::Format::RGB565_LUT8, .data = std::data(tile_data)};
+    screen::Tile tile{
+        .side_length = 3, .transparent = 1, .format = screen::Format::RGB565_LUT8, .data = std::data(tile_data)};
 
     screen::blit_8bpp(std::data(buffer), COLS, XTILEPOSITION, YTILEPOSITION, tile);
 

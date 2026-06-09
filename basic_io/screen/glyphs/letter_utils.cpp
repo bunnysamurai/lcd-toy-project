@@ -1,7 +1,7 @@
-#include "screen_utils.hpp"
+#include "letter_utils.hpp"
 
-#include "screen/TileDef.h"
-#include "screen/screen.hpp"
+#include "../TileDef.h"
+#include "../screen.hpp"
 
 namespace screen
 {
