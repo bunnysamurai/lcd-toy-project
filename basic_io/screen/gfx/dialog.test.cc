@@ -1,11 +1,13 @@
 #include <catch2/catch_test_macros.hpp>
 
-TEST_CASE("ALWAYS", "dialog")
+#include "dialog.hpp"
+
+TEST_CASE("[dialog] ALWAYS", "dialog")
 {
     SUCCEED();
 }
 
-TEST_CASE("NEVER","dialog" )
+TEST_CASE("[dialog] NEVER","dialog" )
 {
-    SUCCEED();
+    FAIL();
 }

@@ -34,24 +34,10 @@ add_subdirectory(screen)
 add_subdirectory(gamepad)
 
 else()
+
 message(STATUS "Building tests for ${PROJECT_NAME}")
-
-add_executable(dialog.test
-    screen/gfx/dialog.cpp 
-    screen/gfx/dialog.hpp
-    screen/gfx/dialog.test.cc
-)
-
-target_link_libraries(dialog.test PRIVATE tests embp bsio_screen)
-# include all of the directories 
-target_include_directories(dialog.test PRIVATE 
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/screen
-    ${CMAKE_CURRENT_LIST_DIR}/screen/gfx
-)
 
 add_subdirectory(screen)
 
-catch_discover_tests(dialog.test)
 
 endif()
