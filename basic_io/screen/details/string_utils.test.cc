@@ -41,3 +41,58 @@ TEST_CASE("determine_page_breaks case 3", "string_utils")
         REQUIRE(expectation[ii] == static_cast<int>(result3[ii]));
     }
 }
+
+TEST_CASE("trim_trailing_whitespace happy path", "string_utils")
+{
+    const char *test_str{"This     "};
+
+    const auto [newbegin, newend]{
+        screen::details::trim_trailing_whitespace(test_str, std::next(test_str, std::strlen(test_str)))};
+
+    REQUIRE(newbegin == test_str);
+    REQUIRE(newend == std::next(test_str, 4));
+}
+
+TEST_CASE("trim_trailing_whitespace no-trailing", "string_utils")
+{
+    const char *test_str{"This"};
+
+    const auto [newbegin, newend]{
+        screen::details::trim_trailing_whitespace(test_str, std::next(test_str, std::strlen(test_str)))};
+
+    REQUIRE(newbegin == test_str);
+    REQUIRE(newend == std::next(test_str, 4));
+}
+
+TEST_CASE("trim_trailing_whitespace degenerate case: args out of order", "string_utils")
+{
+    const char *test_str{"This   "};
+
+    const auto [newbegin, newend]{
+        screen::details::trim_trailing_whitespace(std::next(test_str, std::strlen(test_str)), test_str)};
+
+    REQUIRE(newend == test_str);
+    REQUIRE(newbegin == std::next(test_str, std::strlen(test_str)));
+}
+
+TEST_CASE("trim_trailing_whitespace degenerate case: args are null", "string_utils")
+{
+    const char *test_str{"This   "};
+    const char *n{nullptr};
+
+    {
+        const auto [newbegin, newend]{screen::details::trim_trailing_whitespace(n, test_str)};
+        REQUIRE(newbegin == nullptr);
+        REQUIRE(newend == test_str);
+    }
+    {
+        const auto [newbegin, newend]{screen::details::trim_trailing_whitespace(test_str, n)};
+        REQUIRE(newbegin == test_str);
+        REQUIRE(newend == nullptr);
+    }
+    {
+        const auto [newbegin, newend]{screen::details::trim_trailing_whitespace(n, n)};
+        REQUIRE(newbegin == nullptr);
+        REQUIRE(newend == nullptr);
+    }
+}

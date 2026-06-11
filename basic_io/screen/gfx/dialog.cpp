@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <algorithm>
 
 #include "../details/string_utils.hpp"
 #include "../glyphs/letter_utils.hpp"
@@ -53,11 +54,6 @@ namespace
 
 void init_dialog(Rect text_area) noexcept
 {
-#ifdef PRINTF_DEBUGGING
-    printf("init_dialog text area: { x: %d, y: %d, w: %d, h: %d }\n", text_area.topleft.x, text_area.topleft.y,
-           text_area.size.width, text_area.size.height);
-#endif
-
     /* background */
     screen::gfx::draw_rect(text_area, g_palette.background, 0);
 
@@ -109,11 +105,14 @@ void init_dialog(Rect text_area) noexcept
 void write_substring_to_dialog(Point topleft, const char *begin, const char *end) noexcept
 {
     letter_4bpp_array_t letter_data;
-    while (begin < end)
+
+    auto [trimbeg, trimend]{details::trim_trailing_whitespace(begin, end)};
+
+    while (trimbeg < trimend)
     {
-    screen:
-        draw_standard_character_to_4bpp_display(*begin++, topleft.x, topleft.y, g_palette.font_color,
-                                                g_palette.background);
+
+        screen::draw_standard_character_to_4bpp_display(*trimbeg++, topleft.x, topleft.y, g_palette.font_color,
+                                                        g_palette.background);
         topleft.x += GLYPH_WIDTH;
     }
 }
@@ -139,7 +138,7 @@ void set_dialog_palette(dialog_palette palette) noexcept
     g_palette = palette;
 }
 
-void display_dialog_box(const char *str, uint32_t column_limit, Point topleft) noexcept
+void display_dialog_box(const char *str, uint32_t column_limit, Point centerpoint) noexcept
 {
     /*
         going word by word, keep track of which column this word will end on
@@ -147,35 +146,28 @@ void display_dialog_box(const char *str, uint32_t column_limit, Point topleft) n
      */
     const auto page_breaks{details::determine_page_breaks(str, column_limit)};
 
+    const auto maxchars { *std::max_element(std::begin(page_breaks), std::end(page_breaks))};
+
+    const auto dwidth{maxchars < column_limit ? maxchars * GLYPH_WIDTH : column_limit * GLYPH_WIDTH};
+    const auto dheight{(1 + std::size(page_breaks)) * GLYPH_HEIGHT};
+    const auto dialog_rect = screen::gfx::Rect{
+        .topleft = {.x = centerpoint.x - dwidth / 2, .y = centerpoint.y - dheight / 2},
+        .size = {.width = dwidth, .height = dheight},
+    };
+
+    init_dialog(dialog_rect);
+
+    /* handle simple, one line case and return */
     if (page_breaks.empty())
     {
-#ifdef PRINTF_DEBUGGING
-        printf("page breaks is empty!\n");
-#endif
-        init_dialog(screen::gfx::Rect{
-            .topleft = topleft,
-            .size = {.width = column_limit * GLYPH_WIDTH, .height = GLYPH_HEIGHT},
-        });
-        write_substring_to_dialog(topleft, str, std::next(str, std::strlen(str)));
+        write_substring_to_dialog(dialog_rect.topleft, str, std::next(str, std::strlen(str)));
         return;
     }
-
-#ifdef PRINTF_DEBUGGING
-    printf("number of page breaks is %u\n", std::size(page_breaks));
-#endif
-
-    init_dialog(screen::gfx::Rect{
-        .topleft = topleft,
-        .size = {.width = column_limit * GLYPH_WIDTH, .height = std::size(page_breaks) * GLYPH_HEIGHT},
-    });
-
-#ifdef PRINTF_DEBUGGING
-    printf("write substring for first page\n");
-#endif
 
     /* page breaks are encoded with the first element being the start, and subsequent elements being offsets from
      * the previous. */
     uint32_t page_break_idx{page_breaks[0]};
+    auto topleft{dialog_rect.topleft};
     write_substring_to_dialog(topleft, str, std::next(str, page_break_idx));
     topleft.y += glyphs::tile::height();
 
@@ -183,28 +175,19 @@ void display_dialog_box(const char *str, uint32_t column_limit, Point topleft) n
     {
         const uint32_t prev = page_break_idx;
         page_break_idx += page_breaks[ii];
-#ifdef PRINTF_DEBUGGING
-        printf("write substring for %u page\n", ii + 1);
-#endif
         write_substring_to_dialog(topleft, std::next(str, prev), std::next(str, page_break_idx));
         topleft.y += glyphs::tile::height();
     }
 
-#ifdef PRINTF_DEBUGGING
-    printf("write remaining substring, if any\n");
-#endif
-    // write_substring_to_dialog(topleft, std::next(str, page_break_idx), std::next(str, std::strlen(str)));
-#ifdef PRINTF_DEBUGGING
-    printf("done\n");
-#endif
+    write_substring_to_dialog(topleft, std::next(str, page_break_idx), std::next(str, std::strlen(str)));
 }
 
 void display_dialog_box(const char *str, uint32_t col_limit) noexcept
 {
     const auto [width, height]{screen::get_virtual_screen_size()};
     const auto dialog_width{(col_limit + 2) * GLYPH_WIDTH};
-    const auto dialog_y_offset{height / 3};
-    const auto dialog_x_offset{(width - dialog_width) / 2};
+    const auto dialog_y_offset{17 * height / 32};
+    const auto dialog_x_offset{width / 2};
     screen::pause_screen();
     display_dialog_box(str, col_limit, {.x = dialog_x_offset, .y = dialog_y_offset});
     screen::resume_screen();

@@ -2,9 +2,12 @@
 #define SCREEN_STRING_UTILS_HPP
 
 #include <cstdint>
+#include <utility>
 
 #include "embp/containers.hpp"
 #include "string_utils_defs.hpp"
+
+#include <iostream>
 
 namespace screen::details
 {
@@ -14,13 +17,45 @@ namespace screen::details
     return c == ' ' || c == '\t';
 }
 
+[[nodiscard]] constexpr bool my_is_newline(char c) noexcept
+{
+    return c == '\n';
+}
+
+template <class Iter>
+[[nodiscard]] constexpr std::pair<Iter, Iter> trim_trailing_whitespace(Iter begin, Iter end) noexcept
+{
+    /*
+        we'll be a little cheeky, and adjust the end pointer back until it hits the first non-space character, then
+        increment it by one.  This is to trim any trailing whitespace.
+    */
+    if (!begin || end < begin)
+    {
+        return std::make_pair(begin, end);
+    }
+
+    --end; /* turn the end iterator into a reverse iterator... ish */
+
+    while (begin != end)
+    {
+        const auto character{*end};
+        if (!my_is_blank(character) && character != '\0' && !my_is_newline(character))
+        {
+            break;
+        }
+        std::advance(end, -1);
+    }
+
+    return std::make_pair(begin, std::next(end, 1));
+}
+
 /**
     @brief page break indicates where a new line should begin, which is always at the start of a new word.
 */
 [[nodiscard]] constexpr embp::variable_array<uint8_t, PAGE_BREAK_WORD_LIMIT> determine_page_breaks(
     const char *str, uint32_t limit) noexcept
 {
-    embp::variable_array<uint8_t, PAGE_BREAK_WORD_LIMIT> result;
+    embp::variable_array<uint8_t, PAGE_BREAK_WORD_LIMIT> result{};
 
     if (str == nullptr || str[0] == '\0')
     {
@@ -44,10 +79,11 @@ namespace screen::details
     /* start looking for the next whitespace, via state machine */
     bool state_looking_for_blank = true;
     uint32_t beginning_of_this_word = offset;
+    uint32_t beginning_of_previous_word = offset;
     while ((c = str[idx]) != '\0')
     {
         const auto column_position = idx - offset;
-        if (state_looking_for_blank && my_is_blank(c))
+        if ((state_looking_for_blank && my_is_blank(c)) || my_is_newline(c))
         {
             /* Found the end of the word.  If it is past the column limit,
              * put the page break at the start of this word.
@@ -65,15 +101,14 @@ namespace screen::details
                 }
                 else
                 {
-                    const auto prev{result.back()};
-                    result.push_back(beginning_of_this_word - prev);
+                    result.push_back(beginning_of_this_word - offset);
                 }
                 offset = beginning_of_this_word;
             }
             state_looking_for_blank = false;
         }
 
-        if (!state_looking_for_blank && !my_is_blank(c))
+        if (!state_looking_for_blank && !my_is_blank(c) && !my_is_newline(c))
         {
             /* found a new word.  Make note of its starting position and start
              * looking for the first whitespace. */
@@ -95,7 +130,7 @@ namespace screen::details
         else
         {
             const auto prev{result.back()};
-            result.push_back(beginning_of_this_word - prev);
+            result.push_back(beginning_of_this_word - offset);
         }
     }
 

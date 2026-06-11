@@ -26,7 +26,7 @@ void set_dialog_palette(dialog_palette palette) noexcept;
 
     Height of the dialog box adjusts automatically to fit the text.
  */
-void display_dialog_box(const char *string, uint32_t column_limit, Point topleft) noexcept;
+void display_dialog_box(const char *string, uint32_t column_limit, Point centerpoint) noexcept;
 
 /**
     @brief draw a simple dialog box on the display.

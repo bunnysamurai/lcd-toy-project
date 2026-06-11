@@ -14,8 +14,8 @@
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
 #include "screen/gfx/shapes.hpp"
-#include "screen/glyphs/letters.hpp"
 #include "screen/glyphs/letter_utils.hpp"
+#include "screen/glyphs/letters.hpp"
 #include "screen/screen.hpp"
 #include "static_map.hpp"
 #include "terrain_effects.hpp"
@@ -192,10 +192,7 @@ void State::process_opening_level_dialog() noexcept
     display_level_name_once = false;
 
     /* draw the level dialog */
-    // screen::gfx::display_dialog_box(level_name_text);
-    screen::gfx::display_dialog_box(hint_text, 20);
-
-// void display_dialog_box(const char *string, uint32_t column_limit, Point topleft) noexcept;
+    screen::gfx::display_dialog_box(level_name_text);
 
     /* spin until the user presses a button */
     while (true)
@@ -211,6 +208,9 @@ void State::process_opening_level_dialog() noexcept
         /* TODO pico-sdk specific call should be abstracted for better portability */
         sleep_ms(1);
     }
+
+    countdown_timer.reset();
+    last_paint_time = get_absolute_time();
 }
 
 void State::load_entity_list_from_rom_stub([[maybe_unused]] uint8_t level) noexcept
@@ -232,7 +232,7 @@ void State::load_level_from_rom_stub(uint8_t level) noexcept
     /* set the hint string, which can be null */
     hint_text = "Collect chips to get past the chip socket. Use keys to open doors.";
     /* set the level name */
-    level_name_text = "LESSON 1";
+    level_name_text = "LESSON 1\nPassword: BDHP";
 
     /* clear the map data */
     std::memset(std::data(the_map.map_data), static_cast<int>(terrain_type::CLEAR),
