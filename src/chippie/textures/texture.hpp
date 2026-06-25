@@ -11,7 +11,7 @@ namespace chippie::texture
 enum struct texture_type
 {
     CHIP,
-    CHIPPIE_UP,
+    CHIPPIE_UP, /* maintain this ordering for entites with facings, please */
     CHIPPIE_DOWN,
     CHIPPIE_LEFT,
     CHIPPIE_RIGHT,
@@ -28,6 +28,14 @@ enum struct texture_type
     WALL,
     YELLOW_DOOR,
     YELLOW_KEY,
+    CENTIPEDE_UP,
+    CENTIPEDE_DOWN,
+    CENTIPEDE_LEFT,
+    CENTIPEDE_RIGHT,
+    DIRT,
+    MOVING_BLOCK,
+    WATER_NOSPLASH,
+    WATER_SPLASH
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

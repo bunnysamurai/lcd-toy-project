@@ -39,6 +39,15 @@
 #include "tiles/digit_08.hpp"
 #include "tiles/digit_09.hpp"
 
+#include "tiles/centipede_down.hpp"
+#include "tiles/centipede_left.hpp"
+#include "tiles/centipede_right.hpp"
+#include "tiles/centipede_up.hpp"
+#include "tiles/dirt.hpp"
+#include "tiles/moving_block.hpp"
+#include "tiles/water_nosplash.hpp"
+#include "tiles/water_splash.hpp"
+
 namespace chippie::texture
 {
 
@@ -74,12 +83,14 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::CYAN_KEY;
     case terrain_type::YELLOW_KEY:
         return texture_type::YELLOW_KEY;
-    /* not yet implemented */
+    case terrain_type::DIRT:
+        return texture_type::DIRT;
     case terrain_type::WATER:
+        return texture_type::WATER_NOSPLASH;
+    /* not yet implemented */
     case terrain_type::FIRE:
     case terrain_type::GRAVEL:
     case terrain_type::ICE:
-    case terrain_type::DIRT:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
     case terrain_type::GREEN_BUTTON:
@@ -118,6 +129,7 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::BACTERIA:
     case entity_type::FROG_MONSTER:
     case entity_type::CENTIPEDE:
+        return static_cast<texture_type>(static_cast<int>(texture_type::CENTIPEDE_UP) + static_cast<int>(ent.facing));
     case entity_type::ENTITY_TYPE_SIZE:
         return texture_type::CLEAR; /* TODO not yet implemented*/
     }
@@ -181,6 +193,23 @@ screen::Tile get_texture(texture_type texture) noexcept
         return yellow_door::get_texture();
     case texture_type::YELLOW_KEY:
         return yellow_key::get_texture();
+
+    case texture_type::CENTIPEDE_UP:
+        return centipede_up::get_texture();
+    case texture_type::CENTIPEDE_DOWN:
+        return centipede_down::get_texture();
+    case texture_type::CENTIPEDE_LEFT:
+        return centipede_left::get_texture();
+    case texture_type::CENTIPEDE_RIGHT:
+        return centipede_right::get_texture();
+    case texture_type::DIRT:
+        return dirt::get_texture();
+    case texture_type::MOVING_BLOCK:
+        return moving_block::get_texture();
+    case texture_type::WATER_NOSPLASH:
+        return water_nosplash::get_texture();
+    case texture_type::WATER_SPLASH:
+        return water_splash::get_texture();
     }
 
     return clear::get_texture();

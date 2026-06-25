@@ -6,6 +6,7 @@
 #include "basic_entity.hpp"
 #include "chippie/chippie_common.hpp"
 #include "common/Grid.hpp"
+#include "state/State.hpp"
 
 namespace chippie::chippie
 {

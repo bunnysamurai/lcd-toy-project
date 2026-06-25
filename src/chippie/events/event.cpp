@@ -41,8 +41,10 @@ void process_events() noexcept
 {
     while (!the_queue.empty())
     {
-
-        handlers[asindex(dequeue_next_event())]();
+        if (handlers[asindex(dequeue_next_event())])
+        {
+            handlers[asindex(dequeue_next_event())]();
+        }
     }
 }
 

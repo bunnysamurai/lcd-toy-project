@@ -52,7 +52,7 @@ inline constexpr uint8_t LGREEN{10};
 inline constexpr uint8_t LBLUE{11};
 inline constexpr uint8_t LCYAN{12};
 inline constexpr uint8_t LYELLOW{13};
-inline constexpr uint8_t LMAGENTA{14};
+inline constexpr uint8_t BROWN{14};
 inline constexpr uint8_t BLACK{15};
 } // namespace chippie
 #endif

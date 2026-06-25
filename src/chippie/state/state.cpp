@@ -92,6 +92,14 @@ void State::intialize_event_handlers() noexcept
         .identifier = event::event_type::CLEAR_HINT,
         .handler = [] { myself->handle_clear_hint(); },
     });
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::OPEN_MENU,
+        .handler = [] { myself->handle_open_menu(); },
+    });
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::MOVE_MOVABLE_BLOCK,
+        .handler = [] { myself->handle_moving_movable_block(); },
+    });
 }
 
 void State::handle_portal() noexcept
@@ -99,6 +107,10 @@ void State::handle_portal() noexcept
     active = false;
 }
 void State::handle_time_up() noexcept
+{
+    handle_portal();
+}
+void State::handle_open_menu() noexcept
 {
     handle_portal();
 }
@@ -117,6 +129,16 @@ bool State::is_active() noexcept
 {
     return active;
 }
+
+const static_map &State::get_map() const noexcept
+{
+    return the_map;
+}
+
+static_map &State::get_map() noexcept
+{
+    return the_map;
+};
 
 void State::load_level() noexcept
 {

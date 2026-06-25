@@ -32,6 +32,10 @@ struct State
 
     [[nodiscard]] uint16_t get_chip_count() noexcept;
 
+    [[nodiscard]] const static_map &get_map() const noexcept;
+
+    [[nodiscard]] static_map &get_map() noexcept;
+
   private:
     void load_entity_list_from_rom_stub([[maybe_unused]] uint8_t level) noexcept;
 
@@ -72,6 +76,7 @@ struct State
     void handle_time_up() noexcept;
     void handle_display_hint() noexcept;
     void handle_clear_hint() noexcept;
+    void handle_open_menu() noexcept;
 
     bool active{true}; /* set to false when game should end */
     uint8_t level_number{1};

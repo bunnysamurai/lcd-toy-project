@@ -55,25 +55,52 @@ namespace chippie
 
 class static_map
 {
+  private:
+    struct complex_terrain_type
+    {
+        terrain_type base : 7;
+        bool movable_block : 1;
+    };
+
   public:
     static constexpr uint32_t map_width{32};
     static constexpr uint32_t map_height{32};
-    std::array<terrain_type, map_width * map_height>
+    std::array<complex_terrain_type, map_width * map_height>
         map_data; /* to be loaded into RAM from ROM, as it'll just be easier if it can be mutable */
 
     [[nodiscard]] constexpr terrain_type &operator[](Grid::Location xy) noexcept
     {
-        return map_data[to_linear_idx(xy)];
+        return return_moveable_or_underlying(map_data[to_linear_idx(xy)]);
     }
+
     [[nodiscard]] constexpr const terrain_type &operator[](Grid::Location xy) const noexcept
     {
-        return map_data[to_linear_idx(xy)];
+        return return_moveable_or_underlying(map_data[to_linear_idx(xy)]);
+    }
+
+    constexpr void set_moveable(Grid::Location xy) noexcept
+    {
+        map_data[to_linear_idx(xy)].movable_block = true;
+    }
+
+    constexpr void clear_moveable(Grid::Location xy) noexcept
+    {
+        map_data[to_linear_idx(xy)].movable_block = false;
     }
 
   private:
     [[nodiscard]] constexpr uint32_t to_linear_idx(Grid::Location xy) const noexcept
     {
         return xy.y * map_width + xy.x;
+    }
+
+    [[nodiscard]] static constexpr terrain_type return_moveable_or_underlying(complex_terrain_type data) noexcept
+    {
+        if (data.movable_block)
+        {
+            return terrain_type::MOVABLE_BLOCK;
+        }
+        return data.base;
     }
 };
 

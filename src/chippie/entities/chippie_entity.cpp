@@ -120,6 +120,17 @@ absolute_time_t hold_time_point;
     return collision_action::NO_ACTION_NEEDED;
 }
 
+[[nodiscard]] collision_action handle_movable_block(const entity &ent) noexcept
+{
+    /* using the entity's facing and current location, we can infer where the movable block needs to go
+        we then query the static map if the new location for the block is allowed or not
+        if it is, we update the static map and proceed with the next move
+        otherwise, we say no action is needed.
+     */
+    event::register_event(event::event_type::MOVE_MOVABLE_BLOCK);
+    return collision_action::APPLY_NEXT_LOCATION;
+}
+
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type &collided_terrain) noexcept
 {
@@ -135,6 +146,10 @@ absolute_time_t hold_time_point;
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
         return handle_socket();
+    case terrain_type::WATER:
+        event::register_event(event::event_type::GAME_OVER);
+    case terrain_type::MOVABLE_BLOCK:
+        return handle_movable_block(ent);
     default:
         return collision_action::APPLY_NEXT_LOCATION;
     }

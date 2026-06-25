@@ -20,6 +20,7 @@ enum struct event_type
     GAME_COMPLETE,
     TIME_UP,
     GAME_OVER,
+    MOVE_MOVABLE_BLOCK,
     MAX_EVENT_TYPE
 };
 

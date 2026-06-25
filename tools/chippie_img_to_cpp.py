@@ -20,7 +20,7 @@ pallete_map = {
         "LBLUE": [128, 128,  255],
         "LCYAN": [200, 255,  255],
         "LYELLOW": [255, 255,  200],
-        "LMAGENTA": [255, 128,  255],
+        "BROWN": [150, 75, 0], # we'll use the LMagenta for the pinta palette, but we'll remap it to brown in the code
         "LGREY": [188, 188,  188]
     }
 
