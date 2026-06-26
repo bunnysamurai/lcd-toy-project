@@ -37,13 +37,13 @@ void register_event(event_type eventid) noexcept
     the_queue.push_back(eventid);
 }
 
-void process_events() noexcept
+void process_events(state& game_state) noexcept
 {
     while (!the_queue.empty())
     {
         if (handlers[asindex(dequeue_next_event())])
         {
-            handlers[asindex(dequeue_next_event())]();
+            handlers[asindex(dequeue_next_event())](game_state);
         }
     }
 }

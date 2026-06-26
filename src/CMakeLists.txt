@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
     # chippie :)
     chippie/chippie.cpp
     chippie/state/state.cpp
+    chippie/state/game_logic.cpp
     chippie/events/event.cpp
     chippie/entities/basic_entity.cpp
     chippie/entities/chippie_entity.cpp

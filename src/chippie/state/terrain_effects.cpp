@@ -18,7 +18,7 @@ inline constexpr bool check_is_chip(const entity &ent) noexcept
 
 inline void apply_fire_effect(entity &ent) noexcept
 {
-    if (check_is_chip(ent) && 0 == access_chippie_inventory().check(inventory_item::FIRE_BOOTS))
+    if (check_is_chip(ent) && 0 == ent.game_state->chippie_inventory.check(inventory_item::FIRE_BOOTS))
     {
         event::register_event(event::event_type::GAME_OVER);
     }
@@ -26,7 +26,7 @@ inline void apply_fire_effect(entity &ent) noexcept
 
 inline void apply_water_effect(entity &ent) noexcept
 {
-    if (check_is_chip(ent) && 0 == access_chippie_inventory().check(inventory_item::FLIPPERS))
+    if (check_is_chip(ent) && 0 == ent.game_state->chippie_inventory.check(inventory_item::FLIPPERS))
     {
         event::register_event(event::event_type::GAME_OVER);
     }
@@ -34,7 +34,7 @@ inline void apply_water_effect(entity &ent) noexcept
 
 inline void apply_ice_effect(entity &ent) noexcept
 {
-    if (!check_is_chip(ent) || 0 == access_chippie_inventory().check(inventory_item::ICE_SKATES))
+    if (!check_is_chip(ent) || 0 == ent.game_state->chippie_inventory.check(inventory_item::ICE_SKATES))
     {
         move_relative_direction(ent, relative_direction::FORWARD);
         return;
@@ -43,8 +43,10 @@ inline void apply_ice_effect(entity &ent) noexcept
 
 } // namespace
 
-void apply_terrain_entry_effect(entity &ent, terrain_type &terrain) noexcept
+void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
 {
+    auto& map_tile{ ent.game_state->the_map[ent.loc]};
+
     switch (terrain)
     {
     case terrain_type::PORTAL:
@@ -63,35 +65,35 @@ void apply_terrain_entry_effect(entity &ent, terrain_type &terrain) noexcept
         ent.trapped = true;
         break;
     case terrain_type::CHIP:
-        access_chippie_inventory().remove(inventory_item::CHIPS);
-        terrain = terrain_type::CLEAR;
+        ent.game_state->chippie_inventory.remove(inventory_item::CHIPS);
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::SOCKET:
     case terrain_type::GREEN_DOOR:
     case terrain_type::RED_DOOR:
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
-        terrain = terrain_type::CLEAR;
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::GREEN_KEY:
-        access_chippie_inventory().add(inventory_item::GREEN_KEY);
-        terrain = terrain_type::CLEAR;
+        ent.game_state->chippie_inventory.add(inventory_item::GREEN_KEY);
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::RED_KEY:
-        access_chippie_inventory().add(inventory_item::RED_KEY);
-        terrain = terrain_type::CLEAR;
+        ent.game_state->chippie_inventory.add(inventory_item::RED_KEY);
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::CYAN_KEY:
-        access_chippie_inventory().add(inventory_item::CYAN_KEY);
-        terrain = terrain_type::CLEAR;
+        ent.game_state->chippie_inventory.add(inventory_item::CYAN_KEY);
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::YELLOW_KEY:
-        access_chippie_inventory().add(inventory_item::YELLOW_KEY);
-        terrain = terrain_type::CLEAR;
+        ent.game_state->chippie_inventory.add(inventory_item::YELLOW_KEY);
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::BOMB:
         ent.alive = false;
-        terrain = terrain_type::CLEAR;
+        map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::BROWN_BUTTON:
         event::register_event(event::event_type::RELEASE_ALL_TRAPS);
@@ -126,6 +128,8 @@ void apply_terrain_entry_effect(entity &ent, terrain_type &terrain) noexcept
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
+
+    case terrain_type::MOVABLE_BLOCK:
         break;
     }
 }
@@ -179,10 +183,11 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
+
+    case terrain_type::MOVABLE_BLOCK:
         break;
     }
 }
-
 
 [[nodiscard]] bool check_terrain_is_opaque(entity &ent, terrain_type terrain) noexcept
 {
@@ -197,6 +202,7 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::RED_DOOR:
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
+    case terrain_type::MOVABLE_BLOCK:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -219,6 +225,66 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
 
     case terrain_type::CLEAR:
     case terrain_type::PORTAL:
+    case terrain_type::HINT:
+    case terrain_type::WATER:
+    case terrain_type::FIRE:
+    case terrain_type::ICE:
+    case terrain_type::TRAP:
+    case terrain_type::BOMB:
+    case terrain_type::GREEN_BUTTON:
+    case terrain_type::BLUE_BUTTON:
+    case terrain_type::BROWN_BUTTON:
+    case terrain_type::RED_BUTTON:
+    case terrain_type::GREEN_KEY:
+    case terrain_type::RED_KEY:
+    case terrain_type::CYAN_KEY:
+    case terrain_type::YELLOW_KEY:
+    case terrain_type::PUSH_FLOOR_UP:
+    case terrain_type::PUSH_FLOOR_DOWN:
+    case terrain_type::PUSH_FLOOR_LEFT:
+    case terrain_type::PUSH_FLOOR_RIGHT:
+        return false;
+    }
+
+    return false;
+}
+
+[[nodiscard]] bool check_terrain_is_opaque_for_moveable(direction dir, terrain_type terrain) noexcept
+{
+    switch (terrain)
+    {
+    case terrain_type::WALL:
+    case terrain_type::DIRT:
+    case terrain_type::MOVABLE_BLOCK:
+    case terrain_type::PORTAL:
+    case terrain_type::SOCKET:
+    case terrain_type::GRAVEL:
+    case terrain_type::GREEN_DOOR:
+    case terrain_type::RED_DOOR:
+    case terrain_type::CYAN_DOOR:
+    case terrain_type::YELLOW_DOOR:
+        return true;
+
+    case terrain_type::THIN_WALL_TOP:
+        return dir == direction::DOWN;
+    case terrain_type::THIN_WALL_BOT:
+        return dir == direction::UP;
+    case terrain_type::THIN_WALL_LEFT:
+        return dir == direction::RIGHT;
+    case terrain_type::THIN_WALL_RIGHT:
+        return dir == direction::LEFT;
+
+    case terrain_type::ICE_TOPLEFT:
+        return dir == direction::DOWN || dir == direction::RIGHT;
+    case terrain_type::ICE_TOPRIGHT:
+        return dir == direction::DOWN || dir == direction::LEFT;
+    case terrain_type::ICE_BOTLEFT:
+        return dir == direction::UP || dir == direction::RIGHT;
+    case terrain_type::ICE_BOTRIGHT:
+        return dir == direction::UP || dir == direction::LEFT;
+
+    case terrain_type::CLEAR:
+    case terrain_type::CHIP:
     case terrain_type::HINT:
     case terrain_type::WATER:
     case terrain_type::FIRE:

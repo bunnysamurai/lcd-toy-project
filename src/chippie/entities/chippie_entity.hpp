@@ -5,13 +5,13 @@
 
 #include "basic_entity.hpp"
 #include "chippie/chippie_common.hpp"
+#include "chippie/state/state.hpp"
 #include "common/Grid.hpp"
-#include "state/State.hpp"
 
 namespace chippie::chippie
 {
 
-[[nodiscard]] entity create(Grid::Location, direction, uint8_t) noexcept;
+[[nodiscard]] entity create(state &game_state, Grid::Location, direction, uint8_t) noexcept;
 
 [[nodiscard]] entity_state_machine get_state_functions() noexcept;
 

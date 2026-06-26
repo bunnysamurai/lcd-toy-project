@@ -8,7 +8,7 @@
 namespace chippie::purple_ball
 {
 
-[[nodiscard]] entity create(Grid::Location, direction) noexcept;
+[[nodiscard]] entity create(state &game_state, Grid::Location, direction) noexcept;
 [[nodiscard]] entity_state_machine get_state_functions() noexcept;
 
 /**

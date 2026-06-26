@@ -1,12 +1,15 @@
 #include "chippie_entity.hpp"
 #include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
+#include "chippie/entities/entity_types.hpp"
 #include "chippie/events/event.hpp"
 #include "chippie/state/chippie_inventory.hpp"
+#include "chippie/state/terrain_effects.hpp"
 #include "chippie/state/terrain_types.hpp"
 #include "gamepad/gamepad.hpp"
 
 #include "pico/time.h"
+#include <cstddef>
 #include <pico/types.h>
 
 #define DEBUG_PRINT
@@ -83,56 +86,86 @@ absolute_time_t hold_time_point;
     return std::make_pair(ent.loc, direction::DOWN);
 }
 
-[[nodiscard]] collision_action handle_door(terrain_type collided_terrain) noexcept
+[[nodiscard]] collision_action handle_door(inventory &invent, terrain_type collided_terrain) noexcept
 {
-    if (collided_terrain == terrain_type::GREEN_DOOR &&
-        ::chippie::access_chippie_inventory().check(inventory_item::GREEN_KEY) > 0)
+    if (collided_terrain == terrain_type::GREEN_DOOR && invent.check(inventory_item::GREEN_KEY) > 0)
     {
         return collision_action::APPLY_NEXT_LOCATION;
     }
-    if (collided_terrain == terrain_type::YELLOW_DOOR &&
-        ::chippie::access_chippie_inventory().check(inventory_item::YELLOW_KEY) > 0)
+    if (collided_terrain == terrain_type::YELLOW_DOOR && invent.check(inventory_item::YELLOW_KEY) > 0)
     {
-        ::chippie::access_chippie_inventory().remove(inventory_item::YELLOW_KEY);
+        invent.remove(inventory_item::YELLOW_KEY);
         return collision_action::APPLY_NEXT_LOCATION;
     }
-    if (collided_terrain == terrain_type::RED_DOOR &&
-        ::chippie::access_chippie_inventory().check(inventory_item::RED_KEY) > 0)
+    if (collided_terrain == terrain_type::RED_DOOR && invent.check(inventory_item::RED_KEY) > 0)
     {
-        ::chippie::access_chippie_inventory().remove(inventory_item::RED_KEY);
+        invent.remove(inventory_item::RED_KEY);
         return collision_action::APPLY_NEXT_LOCATION;
     }
-    if (collided_terrain == terrain_type::CYAN_DOOR &&
-        ::chippie::access_chippie_inventory().check(inventory_item::CYAN_KEY) > 0)
+    if (collided_terrain == terrain_type::CYAN_DOOR && invent.check(inventory_item::CYAN_KEY) > 0)
     {
-        ::chippie::access_chippie_inventory().remove(inventory_item::CYAN_KEY);
+        invent.remove(inventory_item::CYAN_KEY);
         return collision_action::APPLY_NEXT_LOCATION;
     }
     return collision_action::NO_ACTION_NEEDED;
 }
 
-[[nodiscard]] collision_action handle_socket() noexcept
+[[nodiscard]] collision_action handle_socket(inventory &invent) noexcept
 {
-    if (::chippie::access_chippie_inventory().check(inventory_item::CHIPS) == 0)
+    if (invent.check(inventory_item::CHIPS) == 0)
     {
         return collision_action::APPLY_NEXT_LOCATION;
     }
     return collision_action::NO_ACTION_NEEDED;
 }
 
-[[nodiscard]] collision_action handle_movable_block(const entity &ent) noexcept
+[[nodiscard]] collision_action handle_movable_block(entity &ent) noexcept
 {
     /* using the entity's facing and current location, we can infer where the movable block needs to go
         we then query the static map if the new location for the block is allowed or not
         if it is, we update the static map and proceed with the next move
         otherwise, we say no action is needed.
      */
-    event::register_event(event::event_type::MOVE_MOVABLE_BLOCK);
+
+    const auto current_location_of_movable_block{ent.loc};
+
+    const auto candidate_location_for_moveable_block{move(current_location_of_movable_block, ent.facing)};
+
+    const terrain_type candidate_terrain{ent.game_state->the_map[candidate_location_for_moveable_block]};
+
+    /* what are the rules, here?
+            If it's water, turn it into dirt
+            If it's clear, allow the move
+    */
+    if (check_terrain_is_opaque_for_moveable(ent.facing, candidate_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
+    /* collided location clears it's moveable status */
+    ent.game_state->the_map[current_location_of_movable_block].clear_moveable();
+
+    /* candidate location now has a moveable block on top, unless it landed in water, in which case it becomes dirt */
+    if (candidate_terrain == terrain_type::WATER)
+    {
+        ent.game_state->the_map[candidate_location_for_moveable_block] = terrain_type::DIRT;
+    }
+    else
+    {
+        ent.game_state->the_map[candidate_location_for_moveable_block].set_moveable();
+    }
+
+    return collision_action::APPLY_NEXT_LOCATION;
+}
+
+[[nodiscard]] collision_action handle_dirt(entity &ent) noexcept
+{
+    ent.game_state->the_map[ent.loc] = terrain_type::CLEAR;
     return collision_action::APPLY_NEXT_LOCATION;
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
-                                                terrain_type &collided_terrain) noexcept
+                                                terrain_type collided_terrain) noexcept
 {
     /* for level 1 */
     switch (collided_terrain)
@@ -141,17 +174,20 @@ absolute_time_t hold_time_point;
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
     case terrain_type::RED_DOOR:
-        return handle_door(collided_terrain);
+        return handle_door(ent.game_state->chippie_inventory, collided_terrain);
     case terrain_type::WALL:
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
-        return handle_socket();
+        return handle_socket(ent.game_state->chippie_inventory);
     case terrain_type::WATER:
         event::register_event(event::event_type::GAME_OVER);
+        return collision_action::APPLY_NEXT_LOCATION;
     case terrain_type::MOVABLE_BLOCK:
         return handle_movable_block(ent);
+    case terrain_type::DIRT:
+        return handle_dirt(ent);
     default:
-        return collision_action::APPLY_NEXT_LOCATION;
+        break;
     }
 
     return collision_action::APPLY_NEXT_LOCATION;
@@ -167,7 +203,7 @@ absolute_time_t hold_time_point;
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-entity create(Grid::Location xy, direction dir, uint8_t uuid) noexcept
+entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
 {
     hold_time_point = get_absolute_time();
     wait_for_release = true; /* just in case the button is still being pressed when a level loads */
@@ -180,6 +216,7 @@ entity create(Grid::Location xy, direction dir, uint8_t uuid) noexcept
         .alive = true,
         .trapped = false,
         .uuid = uuid,
+        .game_state = &game_state,
     };
 }
 

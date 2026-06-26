@@ -12,6 +12,8 @@
 namespace chippie
 {
 
+struct state;
+
 /** entities process via state machine?
     on every game loop iteration, the machine processes as follows:
     start-of-loop
@@ -34,6 +36,7 @@ struct entity
     bool alive{true};
     bool trapped{false};
     uint8_t uuid;
+    state *game_state;
 };
 
 enum struct collision_action
@@ -50,13 +53,13 @@ enum struct collision_action
 struct collision_result
 {
     entity *other;
-    terrain_type &tile;
+    terrain_type tile;
 };
 
 using entity_manip_fn = void (*)(entity &) noexcept;
 using process_move_fn = std::pair<Grid::Location, direction> (*)(const entity &) noexcept;
 using handle_collision_fn = collision_action (*)(entity &this_entity, entity *collided_entity,
-                                                 terrain_type &collided_terrain) noexcept;
+                                                 terrain_type collided_terrain) noexcept;
 
 struct entity_state_machine
 {

@@ -15,7 +15,7 @@ namespace event
 */
 void register_handler(event_handler) noexcept;
 void register_event(event_type) noexcept;
-void process_events() noexcept;
+void process_events(state&) noexcept;
 [[nodiscard]] event_type dequeue_next_event() noexcept;
 
 } // namespace event

@@ -37,7 +37,7 @@ template <typename ItemEnum, uint32_t ItemCount, typename StorageElemType> class
         }
     }
 
-    [[nodiscard]] constexpr uint8_t check(ItemEnum item) noexcept
+    [[nodiscard]] constexpr uint8_t check(ItemEnum item) const noexcept
     {
         const uint32_t index{static_cast<uint32_t>(item)};
         if (index < std::size(item_stash))
@@ -66,8 +66,6 @@ enum struct inventory_item
 };
 
 using inventory = basic_inventory<inventory_item, static_cast<int>(inventory_item::ITEM_COUNT), uint8_t>;
-
-[[nodiscard]] inventory &access_chippie_inventory();
 
 } // namespace chippie
 

@@ -43,7 +43,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
-                                                terrain_type &collided_terrain) noexcept
+                                                terrain_type collided_terrain) noexcept
 {
     /* in the case of the purple ball:
             if it's clear, allow the move,
@@ -82,7 +82,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(Grid::Location xy, direction dir, uint8_t uuid) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
 {
     return {
         .loc = xy,
@@ -91,6 +91,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
         .alive = true,
         .trapped = false,
         .uuid = uuid,
+        .game_state = &game_state,
     };
 }
 

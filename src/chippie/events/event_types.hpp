@@ -1,6 +1,8 @@
 #if !defined(EVENT_TYPES_HPP)
 #define EVENT_TYPES_HPP
 
+#include "chippie/state/state.hpp"
+
 namespace chippie
 {
 namespace event
@@ -24,7 +26,7 @@ enum struct event_type
     MAX_EVENT_TYPE
 };
 
-using event_cb_t = void (*)(void);
+using event_cb_t = void (*)(state &);
 
 struct event_handler
 {

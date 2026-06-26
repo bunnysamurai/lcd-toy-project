@@ -31,7 +31,7 @@ template <typename T> struct Rect_
     [[nodiscard]] constexpr bool operator==(const Rect_ &) const noexcept = default;
     [[nodiscard]] constexpr bool operator!=(const Rect_ &) const noexcept = default;
 
-    [[nodiscard]] constexpr bool contains(Point_<T> pt) noexcept
+    [[nodiscard]] constexpr bool contains(Point_<T> pt) const noexcept
     {
         return pt.y >= topleft.y && pt.x >= topleft.x && pt.y < (topleft.y + size.height) &&
                pt.x < (topleft.x + size.width);
