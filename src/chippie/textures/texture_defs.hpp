@@ -32,7 +32,7 @@ inline constexpr std::array Palette{
 
     screen::Clut{.r = 200, .g = 255, .b = 255},     /* light cyan */
     screen::Clut{.r = 255, .g = 255, .b = 200},     /* light yellow */
-    screen::Clut{.r = 255, .g = 128, .b = 255},     /* light magenta */
+    screen::Clut{.r = 0x96, .g = 0x4B, .b = 0x00},  /* brown */
 
     screen::Clut{.r = 0, .g = 0, .b = 0},           /* black */
     /* clang-format on */

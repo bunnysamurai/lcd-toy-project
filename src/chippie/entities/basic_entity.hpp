@@ -73,18 +73,11 @@ using compute_next_fun_t = Grid::Location (*)(const entity &) noexcept;
 using handle_collision_fun_t = collision_action (*)(entity &this_entity, entity *collided_entity,
                                                     terrain_type &collided_terrain) noexcept;
 
-/* entity manipulating functions... leaving these free for now as that makes things less complicated.  I might be a C
- * programmer now :() */
-
-[[nodiscard]] constexpr direction to_absolute_direction(direction facing, relative_direction dir) noexcept
-{
-    return direction::DOWN;
-};
-
 constexpr void move_relative_direction(entity &ent, relative_direction dir) noexcept
 {
-    const direction absolute{to_absolute_direction(ent.facing, dir)};
-    ent.loc = move(ent.loc, absolute);
+    const auto [newloc, newfac]{move(ent.loc, ent.facing, dir)};
+    ent.loc = newloc;
+    ent.facing = newfac;
 }
 
 /**

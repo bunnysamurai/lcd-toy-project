@@ -1,6 +1,8 @@
 #include "basic_entity.hpp"
 
+#include "centipede.hpp"
 #include "chippie_entity.hpp"
+#include "moveable_block.hpp"
 #include "purple_ball.hpp"
 
 namespace chippie
@@ -27,7 +29,9 @@ namespace chippie
     case entity_type::FROG_MONSTER:
         return {};
     case entity_type::CENTIPEDE:
-        return {};
+        return centipede::get_state_functions();
+    case entity_type::MOVEABLE_BLOCK:
+        return moveable_block_entity::get_state_functions();
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }
@@ -55,7 +59,9 @@ namespace chippie
     case entity_type::FROG_MONSTER:
         return {};
     case entity_type::CENTIPEDE:
-        return {};
+        return centipede::get_velocity();
+    case entity_type::MOVEABLE_BLOCK:
+        return moveable_block_entity::get_velocity();
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }

@@ -16,6 +16,7 @@ enum struct entity_type
     BACTERIA,
     FROG_MONSTER,
     CENTIPEDE,
+    MOVEABLE_BLOCK,
     ENTITY_TYPE_SIZE
 };
 

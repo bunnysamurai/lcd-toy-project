@@ -21,25 +21,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    auto nextloc{ent.loc};
-
-    switch (ent.facing)
-    {
-    case direction::UP:
-        ++nextloc.y;
-        break;
-    case direction::DOWN:
-        --nextloc.y;
-        break;
-    case direction::RIGHT:
-        ++nextloc.x;
-        break;
-    case direction::LEFT:
-        --nextloc.x;
-        break;
-    }
-
-    return std::make_pair(nextloc, ent.facing);
+    return std::make_pair(move(ent.loc, ent.facing), ent.facing);
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,

@@ -1,8 +1,8 @@
 #include "state.hpp"
 
+#include "chippie/render/paint_utils.hpp"
 #include "chippie/textures/texture.hpp"
 #include "chippie/textures/texture_defs.hpp"
-#include "chippie/render/paint_utils.hpp"
 
 #include "screen/gfx/dialog.hpp"
 #include "screen/gfx/shapes.hpp"
@@ -189,8 +189,8 @@ void paint_inventory(const state &game_state) noexcept
     };
 
     static constexpr std::array item_textures{
-        texture::texture_type::SOCKET,     texture::texture_type::SOCKET,    texture::texture_type::SOCKET,
-        texture::texture_type::SOCKET,     texture::texture_type::RED_KEY,   texture::texture_type::CYAN_KEY,
+        texture::texture_type::FIRE_BOOTS, texture::texture_type::SUCTION_BOOTS, texture::texture_type::ICE_SKATES,
+        texture::texture_type::FLIPPERS,   texture::texture_type::RED_KEY,       texture::texture_type::CYAN_KEY,
         texture::texture_type::YELLOW_KEY, texture::texture_type::GREEN_KEY,
     };
 
@@ -229,7 +229,7 @@ void paint(state &game_state) noexcept
 {
 
 #ifdef DEBUG_PRINT
-printf("painting game state\n");
+    printf("painting game state\n");
 #endif
     screen::pause_screen();
 

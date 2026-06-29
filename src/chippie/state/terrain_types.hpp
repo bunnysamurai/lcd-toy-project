@@ -62,7 +62,11 @@ enum struct terrain_type : uint8_t
     THIN_WALL_LEFT,
     THIN_WALL_RIGHT,
 
-    MOVABLE_BLOCK = 0b0111'1111 /* don't add anything beyond this, please */
+    /* the loot! (boot) */
+    FIRE_BOOTS,
+    FLIPPERS,
+    ICE_SKATES,
+    SUCTION_BOOTS,
 };
 /* clang-format on */
 

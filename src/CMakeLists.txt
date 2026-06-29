@@ -16,12 +16,17 @@ add_executable(${PROJECT_NAME}
     chippie/state/game_logic.cpp
     chippie/events/event.cpp
     chippie/entities/basic_entity.cpp
+    chippie/entities/moveable_block.cpp
     chippie/entities/chippie_entity.cpp
     chippie/entities/purple_ball.cpp
+    chippie/entities/centipede.cpp
     chippie/render/paint_utils.cpp
     chippie/state/chippie_inventory.cpp
     chippie/state/terrain_effects.cpp
     chippie/textures/texture.cpp
+    chippie/levels/level_1.cpp
+    chippie/levels/level_2.cpp
+    chippie/levels/level_3.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

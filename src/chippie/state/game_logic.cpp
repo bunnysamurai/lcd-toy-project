@@ -46,10 +46,16 @@ void game_logic::move_entities() noexcept
 {
     for (auto &ent : game_state.entity_list)
     {
-        /*  If this guy is dead, or timer hasn't expired yet for a move, then skip.
-            Dead entities are cleaned up later.
-        */
-        if (!ent.alive || absolute_time_diff_us(get_absolute_time(), ent.next_time) > 0)
+        /*  If this guy is dead, then skip.  Dead entities are cleaned up later.
+         */
+        if (!ent.alive)
+        {
+            continue;
+        }
+
+        /*  If the timer hasn't expired yet for a move, then skip.
+         */
+        if (absolute_time_diff_us(get_absolute_time(), ent.next_time) > 0)
         {
             continue;
         }
@@ -67,15 +73,12 @@ void game_logic::move_entities() noexcept
         }
 
         /* next, compute where this entity wants to move */
-        const auto [nextloc, nextfacing]{entity_handles.process_move_handler != nullptr
-                                             ? entity_handles.process_move_handler(ent)
-                                             : std::make_pair(ent.loc, ent.facing)};
+        auto [nextloc, nextfacing]{entity_handles.process_move_handler != nullptr
+                                       ? entity_handles.process_move_handler(ent)
+                                       : std::make_pair(ent.loc, ent.facing)};
 
-        if (game_state.play_grid.out_of_bounds(nextloc))
-        {
-            ent.alive = false;
-            continue;
-        }
+        /* after the entity has its say about where to move, we now allow the terrain to possibly override it */
+        apply_terrain_override_effect(ent, nextloc, nextfacing, game_state.the_map[ent.loc]);
 
         /* At least for now, we always update the facing, even if we don't end up moving.
            note that the collision handler may further edit the facing. */
@@ -88,7 +91,7 @@ void game_logic::move_entities() noexcept
         }
 
         /* then, determine and resolve collisions */
-        const collision_result collision{find_collisions(nextloc)};
+        const collision_result collision{find_collisions(ent, nextloc)};
 
         const collision_action action{
             entity_handles.entity_collision_handler != nullptr
@@ -104,6 +107,12 @@ void game_logic::move_entities() noexcept
         if (action == collision_action::MARK_DEAD)
         {
             ent.alive = false;
+            continue;
+        }
+
+        /* here we'll check if the entity is trapped.  Trapped entities can change facing but not move. */
+        if (ent.trapped)
+        {
             continue;
         }
 
@@ -140,6 +149,13 @@ void game_logic::move_entities() noexcept
             move_relative_direction(ent, direction_to_move);
         }
 
+        /* if the entity moved off the map, it's dead */
+        if (game_state.play_grid.out_of_bounds(nextloc))
+        {
+            ent.alive = false;
+            continue;
+        }
+
         /* the entity's location is now updated per the move.  Process entry effects. */
         apply_terrain_entry_effect(ent, collision.tile);
 
@@ -151,13 +167,17 @@ void game_logic::move_entities() noexcept
     }
 }
 
-[[nodiscard]] collision_result game_logic::find_collisions(Grid::Location next_location) noexcept
+[[nodiscard]] collision_result game_logic::find_collisions(const entity &current_processing_ent,
+                                                           Grid::Location next_location) noexcept
 {
     collision_result result{.other = nullptr, .tile = game_state.the_map[next_location]};
 
     /* search for other entities */
-    auto entitr = std::find_if(std::begin(game_state.entity_list), std::end(game_state.entity_list),
-                               [&](const auto &other) { return other.loc == next_location; });
+    auto entitr =
+        std::find_if(std::begin(game_state.entity_list), std::end(game_state.entity_list), [&](const auto &other) {
+            return (other.loc == next_location) && (current_processing_ent.uuid != other.uuid);
+        });
+
     if (entitr != std::end(game_state.entity_list))
     {
         result.other = entitr;

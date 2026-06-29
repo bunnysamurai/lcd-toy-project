@@ -21,6 +21,9 @@ enum struct event_type
     CLEAR_HINT,
     GAME_COMPLETE,
     TIME_UP,
+    FELL_IN_WATER,
+    EATEN_BY_BUG,
+    GOT_BURNED,
     GAME_OVER,
     MOVE_MOVABLE_BLOCK,
     MAX_EVENT_TYPE

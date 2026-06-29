@@ -11,6 +11,7 @@ function convert() {
 transparent_list=(chippie_down.png chippie_left.png chippie_up.png chippie_right.png)
 transparent_list+=(chippie_down_girl.png chippie_left_girl.png chippie_up_girl.png chippie_right_girl.png)
 transparent_list+=(centipede_down.png centipede_left.png centipede_up.png centipede_right.png)
+transparent_list+=(purple_ball.png)
 
 for f in ${transparent_list[@]}; do
 	echo $f
@@ -26,6 +27,10 @@ opaque_list+=(chip.png clear.png cyan_door.png cyan_key.png green_door.png)
 opaque_list+=(green_key.png hint.png portal.png red_door.png red_key.png)
 opaque_list+=(socket.png wall.png yellow_door.png yellow_key.png)
 opaque_list+=(dirt.png moving_block.png water_nosplash.png water_splash.png)
+opaque_list+=(digit_00_yellow.png fire_boots.png flippers.png ice_skates.png suction_boots.png)
+opaque_list+=(ice.png ice_bottomleft.png ice_bottomright.png ice_topleft.png ice_topright.png)
+opaque_list+=(push_floor_down.png push_floor_left.png push_floor_right.png push_floor_up.png)
+opaque_list+=(campfire.png)
 
 for f in ${opaque_list[@]}; do
     echo $f

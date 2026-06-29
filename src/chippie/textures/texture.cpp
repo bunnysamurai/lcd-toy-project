@@ -48,6 +48,23 @@
 #include "tiles/water_nosplash.hpp"
 #include "tiles/water_splash.hpp"
 
+#include "tiles/campfire.hpp"
+#include "tiles/digit_00_yellow.hpp"
+#include "tiles/fire_boots.hpp"
+#include "tiles/flippers.hpp"
+#include "tiles/ice.hpp"
+#include "tiles/ice_bottomleft.hpp"
+#include "tiles/ice_bottomright.hpp"
+#include "tiles/ice_skates.hpp"
+#include "tiles/ice_topleft.hpp"
+#include "tiles/ice_topright.hpp"
+#include "tiles/purple_ball.hpp"
+#include "tiles/push_floor_down.hpp"
+#include "tiles/push_floor_left.hpp"
+#include "tiles/push_floor_right.hpp"
+#include "tiles/push_floor_up.hpp"
+#include "tiles/suction_boots.hpp"
+
 namespace chippie::texture
 {
 
@@ -87,24 +104,42 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::DIRT;
     case terrain_type::WATER:
         return texture_type::WATER_NOSPLASH;
-    /* not yet implemented */
     case terrain_type::FIRE:
-    case terrain_type::GRAVEL:
+        return texture_type::CAMPFIRE;
     case terrain_type::ICE:
+        return texture_type::ICE;
+    case terrain_type::ICE_TOPLEFT:
+        return texture_type::ICE_TOPLEFT;
+    case terrain_type::ICE_TOPRIGHT:
+        return texture_type::ICE_TOPRIGHT;
+    case terrain_type::ICE_BOTLEFT:
+        return texture_type::ICE_BOTTOMLEFT;
+    case terrain_type::ICE_BOTRIGHT:
+        return texture_type::ICE_BOTTOMRIGHT;
+    case terrain_type::PUSH_FLOOR_UP:
+        return texture_type::PUSH_FLOOR_UP;
+    case terrain_type::PUSH_FLOOR_DOWN:
+        return texture_type::PUSH_FLOOR_DOWN;
+    case terrain_type::PUSH_FLOOR_LEFT:
+        return texture_type::PUSH_FLOOR_LEFT;
+    case terrain_type::PUSH_FLOOR_RIGHT:
+        return texture_type::PUSH_FLOOR_RIGHT;
+    case terrain_type::FIRE_BOOTS:
+        return texture_type::FIRE_BOOTS;
+    case terrain_type::FLIPPERS:
+        return texture_type::FLIPPERS;
+    case terrain_type::ICE_SKATES:
+        return texture_type::ICE_SKATES;
+    case terrain_type::SUCTION_BOOTS:
+        return texture_type::SUCTION_BOOTS;
+    /* not yet implemented */
+    case terrain_type::GRAVEL:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
     case terrain_type::GREEN_BUTTON:
     case terrain_type::BLUE_BUTTON:
     case terrain_type::BROWN_BUTTON:
     case terrain_type::RED_BUTTON:
-    case terrain_type::ICE_TOPLEFT:
-    case terrain_type::ICE_TOPRIGHT:
-    case terrain_type::ICE_BOTLEFT:
-    case terrain_type::ICE_BOTRIGHT:
-    case terrain_type::PUSH_FLOOR_UP:
-    case terrain_type::PUSH_FLOOR_DOWN:
-    case terrain_type::PUSH_FLOOR_LEFT:
-    case terrain_type::PUSH_FLOOR_RIGHT:
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
@@ -130,6 +165,8 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::FROG_MONSTER:
     case entity_type::CENTIPEDE:
         return static_cast<texture_type>(static_cast<int>(texture_type::CENTIPEDE_UP) + static_cast<int>(ent.facing));
+    case entity_type::MOVEABLE_BLOCK:
+        return texture_type::MOVING_BLOCK;
     case entity_type::ENTITY_TYPE_SIZE:
         return texture_type::CLEAR; /* TODO not yet implemented*/
     }
@@ -210,6 +247,38 @@ screen::Tile get_texture(texture_type texture) noexcept
         return water_nosplash::get_texture();
     case texture_type::WATER_SPLASH:
         return water_splash::get_texture();
+    case texture_type::CAMPFIRE:
+        return campfire::get_texture();
+    case texture_type::PURPLE_BALL:
+        return purple_ball::get_texture();
+    case texture_type::DIGIT_00_YELLOW:
+        return digit_00_yellow::get_texture();
+    case texture_type::FIRE_BOOTS:
+        return fire_boots::get_texture();
+    case texture_type::FLIPPERS:
+        return flippers::get_texture();
+    case texture_type::ICE_SKATES:
+        return ice_skates::get_texture();
+    case texture_type::SUCTION_BOOTS:
+        return suction_boots::get_texture();
+    case texture_type::ICE:
+        return ice::get_texture();
+    case texture_type::ICE_TOPLEFT:
+        return ice_topleft::get_texture();
+    case texture_type::ICE_TOPRIGHT:
+        return ice_topright::get_texture();
+    case texture_type::ICE_BOTTOMRIGHT:
+        return ice_bottomright::get_texture();
+    case texture_type::ICE_BOTTOMLEFT:
+        return ice_bottomleft::get_texture();
+    case texture_type::PUSH_FLOOR_UP:
+        return push_floor_up::get_texture();
+    case texture_type::PUSH_FLOOR_RIGHT:
+        return push_floor_right::get_texture();
+    case texture_type::PUSH_FLOOR_DOWN:
+        return push_floor_down::get_texture();
+    case texture_type::PUSH_FLOOR_LEFT:
+        return push_floor_left::get_texture();
     }
 
     return clear::get_texture();

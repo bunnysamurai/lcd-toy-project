@@ -9,6 +9,7 @@
 #include "gamepad/gamepad.hpp"
 
 #include "pico/time.h"
+#include <algorithm>
 #include <cstddef>
 #include <pico/types.h>
 
@@ -33,6 +34,17 @@ constexpr uint64_t CHIPPIE_BUTTON_POLL_US{10'000};                   /* every 10
 constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{100'000}; /* every 100 ms? */
 bool wait_for_release;
 absolute_time_t hold_time_point;
+
+[[nodiscard]] bool check_entity_present(state &game_state, Grid::Location loc) noexcept
+{
+#ifdef DEBUG_PRINT
+    printf("check_entity_present: location to check {.x = %u, .y = %u}\n", loc.x, loc.y);
+#endif
+    auto &list{game_state.entity_list};
+    const auto itr{std::find_if(std::cbegin(list), std::cend(list), [&](const entity &ent) { return ent.loc == loc; })};
+
+    return itr != std::cend(list);
+}
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
@@ -82,8 +94,8 @@ absolute_time_t hold_time_point;
         return std::make_pair(Grid::Location{.x = ent.loc.x - 1, .y = ent.loc.y}, direction::LEFT);
     }
 
-    /* otherwise, change facing to down */
-    return std::make_pair(ent.loc, direction::DOWN);
+    /* TODO otherwise, change facing to down */
+    return std::make_pair(ent.loc, ent.facing);
 }
 
 [[nodiscard]] collision_action handle_door(inventory &invent, terrain_type collided_terrain) noexcept
@@ -119,7 +131,7 @@ absolute_time_t hold_time_point;
     return collision_action::NO_ACTION_NEEDED;
 }
 
-[[nodiscard]] collision_action handle_movable_block(entity &ent) noexcept
+[[nodiscard]] collision_action handle_movable_block(const entity &chip_ent, const entity &block_ent) noexcept
 {
     /* using the entity's facing and current location, we can infer where the movable block needs to go
         we then query the static map if the new location for the block is allowed or not
@@ -127,33 +139,39 @@ absolute_time_t hold_time_point;
         otherwise, we say no action is needed.
      */
 
-    const auto current_location_of_movable_block{ent.loc};
+#ifdef DEBUG_PRINT
+    printf("chippie: handling moveable block\n");
+#endif
+    const auto current_location_of_movable_block{block_ent.loc};
 
-    const auto candidate_location_for_moveable_block{move(current_location_of_movable_block, ent.facing)};
+    const auto candidate_location_for_moveable_block{move(current_location_of_movable_block, chip_ent.facing)};
 
-    const terrain_type candidate_terrain{ent.game_state->the_map[candidate_location_for_moveable_block]};
+    const terrain_type candidate_terrain{chip_ent.game_state->the_map[candidate_location_for_moveable_block]};
 
     /* what are the rules, here?
             If it's water, turn it into dirt
             If it's clear, allow the move
     */
-    if (check_terrain_is_opaque_for_moveable(ent.facing, candidate_terrain))
+    const bool is_opaque{check_terrain_is_opaque_for_moveable(chip_ent.facing, candidate_terrain)};
+#ifdef DEBUG_PRINT
+    if (is_opaque)
+        printf("chippie: candidate is opaque.\n");
+#endif
+    const bool entity_present{check_entity_present(*chip_ent.game_state, candidate_location_for_moveable_block)};
+#ifdef DEBUG_PRINT
+    if (entity_present)
+        printf("chippie: entity is present.\n");
+#endif
+    if (is_opaque || entity_present)
     {
+#ifdef DEBUG_PRINT
+        printf("chippie: moveable block is not clear to move.\n");
+#endif
         return collision_action::NO_ACTION_NEEDED;
     }
-
-    /* collided location clears it's moveable status */
-    ent.game_state->the_map[current_location_of_movable_block].clear_moveable();
-
-    /* candidate location now has a moveable block on top, unless it landed in water, in which case it becomes dirt */
-    if (candidate_terrain == terrain_type::WATER)
-    {
-        ent.game_state->the_map[candidate_location_for_moveable_block] = terrain_type::DIRT;
-    }
-    else
-    {
-        ent.game_state->the_map[candidate_location_for_moveable_block].set_moveable();
-    }
+#ifdef DEBUG_PRINT
+    printf("chippie: moveable block is clear to move.\n");
+#endif
 
     return collision_action::APPLY_NEXT_LOCATION;
 }
@@ -179,13 +197,19 @@ absolute_time_t hold_time_point;
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
         return handle_socket(ent.game_state->chippie_inventory);
-    case terrain_type::WATER:
-        event::register_event(event::event_type::GAME_OVER);
-        return collision_action::APPLY_NEXT_LOCATION;
-    case terrain_type::MOVABLE_BLOCK:
-        return handle_movable_block(ent);
     case terrain_type::DIRT:
         return handle_dirt(ent);
+    default:
+        break;
+    }
+
+    switch (collided_entity->identity)
+    {
+    case entity_type::MOVEABLE_BLOCK:
+        return handle_movable_block(ent, *collided_entity);
+    case entity_type::CENTIPEDE:
+        event::register_event(event::event_type::EATEN_BY_BUG);
+        return collision_action::NO_ACTION_NEEDED;
     default:
         break;
     }

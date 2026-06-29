@@ -3,15 +3,18 @@
 
 #include "common/Grid.hpp"
 
+#include <cstdint>
+#include <utility>
+
 namespace chippie
 {
 
 enum struct direction
 {
     UP,
+    RIGHT,
     DOWN,
     LEFT,
-    RIGHT
 };
 
 [[nodiscard]] constexpr direction reverse(direction facing) noexcept
@@ -53,10 +56,18 @@ enum struct direction
 enum struct relative_direction
 {
     FORWARD,
-    BACKWARD,
     RIGHT,
+    BACKWARD,
     LEFT
 };
+
+[[nodiscard]] constexpr std::pair<Grid::Location, direction> move(Grid::Location loc, direction facing,
+                                                                  relative_direction dir) noexcept
+{
+    const direction new_facing{(static_cast<uint8_t>(facing) + static_cast<uint8_t>(dir)) & 0b11};
+
+    return std::make_pair(move(loc, new_facing), new_facing);
+}
 
 } // namespace chippie
 

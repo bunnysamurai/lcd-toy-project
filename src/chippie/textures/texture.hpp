@@ -12,9 +12,9 @@ enum struct texture_type
 {
     CHIP,
     CHIPPIE_UP, /* maintain this ordering for entites with facings, please */
+    CHIPPIE_RIGHT,
     CHIPPIE_DOWN,
     CHIPPIE_LEFT,
-    CHIPPIE_RIGHT,
     CLEAR,
     CYAN_DOOR,
     CYAN_KEY,
@@ -29,13 +29,29 @@ enum struct texture_type
     YELLOW_DOOR,
     YELLOW_KEY,
     CENTIPEDE_UP,
+    CENTIPEDE_RIGHT,
     CENTIPEDE_DOWN,
     CENTIPEDE_LEFT,
-    CENTIPEDE_RIGHT,
     DIRT,
     MOVING_BLOCK,
     WATER_NOSPLASH,
-    WATER_SPLASH
+    WATER_SPLASH,
+    CAMPFIRE,
+    PURPLE_BALL,
+    DIGIT_00_YELLOW,
+    FIRE_BOOTS,
+    FLIPPERS,
+    ICE_SKATES,
+    SUCTION_BOOTS,
+    ICE,
+    ICE_TOPLEFT,
+    ICE_TOPRIGHT,
+    ICE_BOTTOMRIGHT,
+    ICE_BOTTOMLEFT,
+    PUSH_FLOOR_UP,
+    PUSH_FLOOR_RIGHT,
+    PUSH_FLOOR_DOWN,
+    PUSH_FLOOR_LEFT,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

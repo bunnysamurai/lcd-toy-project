@@ -10,44 +10,45 @@
 namespace chippie
 {
 
-class map_element
-{
-  private:
-    terrain_type base : 7;
-    bool moveable : 1;
+// class map_element
+// {
+//   private:
+//     terrain_type base : 7;
+//     bool moveable : 1;
 
-  public:
-    /* will clear moveable block */
-    constexpr map_element &operator=(terrain_type type) noexcept
-    {
-        this->base = type;
-        clear_moveable();
-        return *this;
-    }
+//   public:
+//     /* will clear moveable block */
+//     constexpr map_element &operator=(terrain_type type) noexcept
+//     {
+//         this->base = type;
+//         clear_moveable();
+//         return *this;
+//     }
 
-    constexpr void set_moveable() noexcept
-    {
-        this->moveable = true;
-    }
+//     constexpr void set_moveable() noexcept
+//     {
+//         this->moveable = true;
+//     }
 
-    constexpr void clear_moveable() noexcept
-    {
-        this->moveable = false;
-    }
+//     constexpr void clear_moveable() noexcept
+//     {
+//         this->moveable = false;
+//     }
 
-    constexpr operator terrain_type() const noexcept
-    {
-        if (this->moveable)
-        {
-            return terrain_type::MOVABLE_BLOCK;
-        }
-        return this->base;
-    }
-};
+//     constexpr operator terrain_type() const noexcept
+//     {
+//         if (this->moveable)
+//         {
+//             return terrain_type::MOVABLE_BLOCK;
+//         }
+//         return this->base;
+//     }
+// };
 
 class static_map
 {
   public:
+    using map_element = terrain_type;
     static constexpr uint32_t map_width{32};
     static constexpr uint32_t map_height{32};
     std::array<map_element, map_width * map_height>

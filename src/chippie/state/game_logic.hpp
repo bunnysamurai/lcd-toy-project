@@ -22,7 +22,7 @@ struct game_logic
   private:
     void move_entities() noexcept;
 
-    [[nodiscard]] collision_result find_collisions(Grid::Location next_location) noexcept;
+    [[nodiscard]] collision_result find_collisions(const entity&, Grid::Location next_location) noexcept;
 
     void process_time_remaining() noexcept;
 
