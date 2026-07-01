@@ -32,6 +32,21 @@ enum struct direction
     }
 }
 
+[[nodiscard]] constexpr direction rotate_clockwise(direction facing) noexcept
+{
+    switch (facing)
+    {
+    case direction::UP:
+        return direction::RIGHT;
+    case direction::DOWN:
+        return direction::LEFT;
+    case direction::RIGHT:
+        return direction::DOWN;
+    case direction::LEFT:
+        return direction::UP;
+    }
+}
+
 [[nodiscard]] constexpr Grid::Location move(Grid::Location loc, direction facing) noexcept
 {
     Grid::Location result{loc};

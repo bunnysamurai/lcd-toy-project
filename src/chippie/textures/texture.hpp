@@ -52,6 +52,10 @@ enum struct texture_type
     PUSH_FLOOR_RIGHT,
     PUSH_FLOOR_DOWN,
     PUSH_FLOOR_LEFT,
+    BLUE_TANK_UP,
+    BLUE_TANK_RIGHT,
+    BLUE_TANK_DOWN,
+    BLUE_TANK_LEFT,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

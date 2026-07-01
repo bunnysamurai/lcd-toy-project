@@ -31,6 +31,8 @@ opaque_list+=(digit_00_yellow.png fire_boots.png flippers.png ice_skates.png suc
 opaque_list+=(ice.png ice_bottomleft.png ice_bottomright.png ice_topleft.png ice_topright.png)
 opaque_list+=(push_floor_down.png push_floor_left.png push_floor_right.png push_floor_up.png)
 opaque_list+=(campfire.png)
+opaque_list+=(blue_button.png brown_button.png green_button.png red_button.png)
+opaque_list+=(green_button_clear.png green_button_wall.png)
 
 for f in ${opaque_list[@]}; do
     echo $f

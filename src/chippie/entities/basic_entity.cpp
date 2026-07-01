@@ -1,5 +1,6 @@
 #include "basic_entity.hpp"
 
+#include "blue_tank.hpp"
 #include "centipede.hpp"
 #include "chippie_entity.hpp"
 #include "moveable_block.hpp"
@@ -14,8 +15,11 @@ namespace chippie
     {
     case entity_type::CHIPPIE:
         return chippie::get_state_functions();
-    case entity_type::BLUE_TANK:
-        return {};
+    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+        return blue_tank::get_state_functions();
     case entity_type::WATER_GLIDER:
         return {};
     case entity_type::FIRE_DANCER:
@@ -44,8 +48,11 @@ namespace chippie
     {
     case entity_type::CHIPPIE:
         return chippie::get_velocity();
-    case entity_type::BLUE_TANK:
-        return {};
+    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+        return blue_tank::get_velocity();
     case entity_type::WATER_GLIDER:
         return {};
     case entity_type::FIRE_DANCER:

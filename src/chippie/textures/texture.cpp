@@ -65,6 +65,13 @@
 #include "tiles/push_floor_up.hpp"
 #include "tiles/suction_boots.hpp"
 
+#include "tiles/blue_button.hpp"
+#include "tiles/brown_button.hpp"
+#include "tiles/green_button_clear.hpp"
+#include "tiles/green_button_wall.hpp"
+#include "tiles/green_button.hpp"
+#include "tiles/red_button.hpp"
+
 namespace chippie::texture
 {
 
@@ -156,7 +163,14 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     {
     case entity_type::CHIPPIE:
         return static_cast<texture_type>(static_cast<int>(texture_type::CHIPPIE_UP) + static_cast<int>(ent.facing));
-    case entity_type::BLUE_TANK:
+    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+        return texture_type::BLUE_TANK_DOWN;
+    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+        return texture_type::BLUE_TANK_LEFT;
+    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+        return texture_type::BLUE_TANK_RIGHT;
+    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+        return texture_type::BLUE_TANK_UP;
     case entity_type::WATER_GLIDER:
     case entity_type::FIRE_DANCER:
     case entity_type::PURPLE_BALL:
@@ -230,7 +244,6 @@ screen::Tile get_texture(texture_type texture) noexcept
         return yellow_door::get_texture();
     case texture_type::YELLOW_KEY:
         return yellow_key::get_texture();
-
     case texture_type::CENTIPEDE_UP:
         return centipede_up::get_texture();
     case texture_type::CENTIPEDE_DOWN:
@@ -279,6 +292,14 @@ screen::Tile get_texture(texture_type texture) noexcept
         return push_floor_down::get_texture();
     case texture_type::PUSH_FLOOR_LEFT:
         return push_floor_left::get_texture();
+    case texture_type::BLUE_TANK_UP:
+        return blue_tank_up::get_texture();
+    case texture_type::BLUE_TANK_RIGHT:
+        return blue_tank_right::get_texture();
+    case texture_type::BLUE_TANK_DOWN:
+        return blue_tank_down::get_texture();
+    case texture_type::BLUE_TANK_LEFT:
+        return blue_tank_left::get_texture();
     }
 
     return clear::get_texture();

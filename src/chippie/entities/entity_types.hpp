@@ -8,7 +8,10 @@ namespace chippie
 enum struct entity_type
 {
     CHIPPIE,
-    BLUE_TANK,
+    BLUE_TANK_THAT_MOVES_DOWN,
+    BLUE_TANK_THAT_MOVES_LEFT,
+    BLUE_TANK_THAT_MOVES_UP,
+    BLUE_TANK_THAT_MOVES_RIGHT,
     WATER_GLIDER,
     FIRE_DANCER,
     PURPLE_BALL,
