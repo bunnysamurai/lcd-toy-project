@@ -35,6 +35,8 @@ enum struct terrain_type : uint8_t
     BOMB,
 
     /* buttons, doors, keys */
+    GREEN_BUTTON_CLEAR,
+    GREEN_BUTTON_WALL,
     GREEN_BUTTON,
     BLUE_BUTTON,
     BROWN_BUTTON,

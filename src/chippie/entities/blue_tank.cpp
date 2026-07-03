@@ -77,12 +77,17 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 #ifdef DEBUG_PRINT
             printf("collided with chip\n");
 #endif
-            register_event(event::event_type::EATEN_BY_BUG);
+            register_event(event::event_type::FLATTENED_BY_TANK);
         }
         else
         {
             return collision_action::NO_ACTION_NEEDED;
         }
+    }
+
+    if (check_terrain_is_opaque_for_blue_tank(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
     }
 
 #ifdef DEBUG_PRINT
@@ -104,9 +109,24 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 */
 [[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
 {
+    auto &&to_identity{[](const direction entdir) {
+        switch (entdir)
+        {
+        case direction::UP:
+            return entity_type::BLUE_TANK_THAT_MOVES_UP;
+        case direction::DOWN:
+            return entity_type::BLUE_TANK_THAT_MOVES_DOWN;
+        case direction::LEFT:
+            return entity_type::BLUE_TANK_THAT_MOVES_LEFT;
+        case direction::RIGHT:
+            return entity_type::BLUE_TANK_THAT_MOVES_RIGHT;
+        }
+        return entity_type::BLUE_TANK_THAT_MOVES_UP;
+    }};
+
     return {
         .loc = xy,
-        .identity = entity_type::blue_tank,
+        .identity = to_identity(dir),
         .facing = dir,
         .alive = true,
         .trapped = false,

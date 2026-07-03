@@ -194,6 +194,7 @@ absolute_time_t hold_time_point;
     case terrain_type::RED_DOOR:
         return handle_door(ent.game_state->chippie_inventory, collided_terrain);
     case terrain_type::WALL:
+    case terrain_type::GREEN_BUTTON_WALL:
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
         return handle_socket(ent.game_state->chippie_inventory);
@@ -209,6 +210,12 @@ absolute_time_t hold_time_point;
         return handle_movable_block(ent, *collided_entity);
     case entity_type::CENTIPEDE:
         event::register_event(event::event_type::EATEN_BY_BUG);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+        event::register_event(event::event_type::FLATTENED_BY_TANK);
         return collision_action::NO_ACTION_NEEDED;
     default:
         break;

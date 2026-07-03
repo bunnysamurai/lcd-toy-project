@@ -67,10 +67,15 @@
 
 #include "tiles/blue_button.hpp"
 #include "tiles/brown_button.hpp"
+#include "tiles/green_button.hpp"
 #include "tiles/green_button_clear.hpp"
 #include "tiles/green_button_wall.hpp"
-#include "tiles/green_button.hpp"
 #include "tiles/red_button.hpp"
+
+#include "tiles/blue_tank_down.hpp"
+#include "tiles/blue_tank_left.hpp"
+#include "tiles/blue_tank_right.hpp"
+#include "tiles/blue_tank_up.hpp"
 
 namespace chippie::texture
 {
@@ -139,14 +144,22 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::ICE_SKATES;
     case terrain_type::SUCTION_BOOTS:
         return texture_type::SUCTION_BOOTS;
+    case terrain_type::GREEN_BUTTON_CLEAR:
+        return texture_type::GREEN_BUTTON_CLEAR;
+    case terrain_type::GREEN_BUTTON_WALL:
+        return texture_type::GREEN_BUTTON_WALL;
+    case terrain_type::GREEN_BUTTON:
+        return texture_type::GREEN_BUTTON;
+    case terrain_type::BLUE_BUTTON:
+        return texture_type::BLUE_BUTTON;
+    case terrain_type::BROWN_BUTTON:
+        return texture_type::BROWN_BUTTON;
+    case terrain_type::RED_BUTTON:
+        return texture_type::RED_BUTTON;
     /* not yet implemented */
     case terrain_type::GRAVEL:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
-    case terrain_type::GREEN_BUTTON:
-    case terrain_type::BLUE_BUTTON:
-    case terrain_type::BROWN_BUTTON:
-    case terrain_type::RED_BUTTON:
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
@@ -164,13 +177,10 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::CHIPPIE:
         return static_cast<texture_type>(static_cast<int>(texture_type::CHIPPIE_UP) + static_cast<int>(ent.facing));
     case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
-        return texture_type::BLUE_TANK_DOWN;
     case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
-        return texture_type::BLUE_TANK_LEFT;
     case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
-        return texture_type::BLUE_TANK_RIGHT;
     case entity_type::BLUE_TANK_THAT_MOVES_UP:
-        return texture_type::BLUE_TANK_UP;
+        return static_cast<texture_type>(static_cast<int>(texture_type::BLUE_TANK_UP) + static_cast<int>(ent.facing));
     case entity_type::WATER_GLIDER:
     case entity_type::FIRE_DANCER:
     case entity_type::PURPLE_BALL:
@@ -300,6 +310,18 @@ screen::Tile get_texture(texture_type texture) noexcept
         return blue_tank_down::get_texture();
     case texture_type::BLUE_TANK_LEFT:
         return blue_tank_left::get_texture();
+    case texture_type::GREEN_BUTTON_CLEAR:
+        return green_button_clear::get_texture();
+    case texture_type::GREEN_BUTTON_WALL:
+        return green_button_wall::get_texture();
+    case texture_type::GREEN_BUTTON:
+        return green_button::get_texture();
+    case texture_type::BLUE_BUTTON:
+        return blue_button::get_texture();
+    case texture_type::BROWN_BUTTON:
+        return brown_button::get_texture();
+    case texture_type::RED_BUTTON:
+        return red_button::get_texture();
     }
 
     return clear::get_texture();

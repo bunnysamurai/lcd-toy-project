@@ -26,6 +26,7 @@ enum struct event_type
     GOT_BURNED,
     GAME_OVER,
     MOVE_MOVABLE_BLOCK,
+    FLATTENED_BY_TANK,
     MAX_EVENT_TYPE
 };
 

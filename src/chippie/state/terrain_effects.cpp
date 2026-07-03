@@ -180,10 +180,14 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         ent.game_state->chippie_inventory.add(inventory_item::SUCTION_BOOTS);
         map_tile = terrain_type::CLEAR;
         break;
+    case terrain_type::GREEN_BUTTON:
+        event::register_event(event::event_type::GREEN_BUTTON);
+        break;
+    case terrain_type::BLUE_BUTTON:
+        event::register_event(event::event_type::BLUE_BUTTON);
+        break;
 
     case terrain_type::ICE:
-    case terrain_type::GREEN_BUTTON:
-    case terrain_type::BLUE_BUTTON:
     case terrain_type::RED_BUTTON:
     case terrain_type::CLEAR:
     case terrain_type::WALL:
@@ -334,6 +338,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     case terrain_type::RED_DOOR:
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
+    case terrain_type::GREEN_BUTTON_WALL:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -362,6 +367,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     case terrain_type::ICE:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
+    case terrain_type::GREEN_BUTTON_CLEAR:
     case terrain_type::GREEN_BUTTON:
     case terrain_type::BLUE_BUTTON:
     case terrain_type::BROWN_BUTTON:
@@ -393,6 +399,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     case terrain_type::RED_DOOR:
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
+    case terrain_type::GREEN_BUTTON_WALL:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -421,6 +428,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     case terrain_type::ICE:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
+    case terrain_type::GREEN_BUTTON_CLEAR:
     case terrain_type::GREEN_BUTTON:
     case terrain_type::BLUE_BUTTON:
     case terrain_type::BROWN_BUTTON:

@@ -3,6 +3,7 @@
 #include "chippie/entities/centipede.hpp"
 #include "chippie/entities/chippie_entity.hpp"
 #include "chippie/entities/moveable_block.hpp"
+#include "level_utils.hpp"
 
 #include <cstring>
 
@@ -11,26 +12,6 @@ namespace chippie::level_3
 
 namespace
 {
-
-constexpr void draw_h_line(state &game_state, terrain_type terrain, uint32_t row, uint32_t col,
-                           uint32_t length) noexcept
-{
-    for (uint32_t xx = col; xx < col + length; ++xx)
-    {
-        game_state.the_map[Grid::Location{.x = xx, .y = row}] = terrain;
-        game_state.the_map[Grid::Location{.x = xx, .y = row}] = terrain;
-    }
-}
-
-constexpr void draw_v_line(state &game_state, terrain_type terrain, uint32_t row, uint32_t col,
-                           uint32_t length) noexcept
-{
-    for (uint32_t yy = row; yy < row + length; ++yy)
-    {
-        game_state.the_map[Grid::Location{.x = col, .y = yy}] = terrain;
-        game_state.the_map[Grid::Location{.x = col, .y = yy}] = terrain;
-    }
-}
 
 void load_level_from_rom_stub(state &game_state) noexcept
 {
@@ -42,7 +23,8 @@ void load_level_from_rom_stub(state &game_state) noexcept
     game_state.chippie_inventory.set(inventory_item::CHIPS, 4);
 
     /* set the hint string, which can be null */
-    game_state.hint_text = "Suction-boots for force   floors. Fire boots for    fire. Flippers for water. Skates for ice.";
+    game_state.hint_text =
+        "Suction-boots for force   floors. Fire boots for    fire. Flippers for water. Skates for ice.";
     /* set the level name */
     game_state.level_name_text = "LESSON 3\nPassword: ECBQ";
 
@@ -133,7 +115,6 @@ void load_level_from_rom_stub(state &game_state) noexcept
     game_state.the_map[Grid::Location{.x = 16, .y = 16}] = terrain_type::FLIPPERS;
     game_state.the_map[Grid::Location{.x = 16, .y = 7}] = terrain_type::SOCKET;
     game_state.the_map[Grid::Location{.x = 16, .y = 6}] = terrain_type::PORTAL;
-
 }
 
 void load_entity_list_from_rom_stub(state &game_state) noexcept

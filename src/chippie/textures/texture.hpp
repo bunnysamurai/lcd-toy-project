@@ -56,6 +56,12 @@ enum struct texture_type
     BLUE_TANK_RIGHT,
     BLUE_TANK_DOWN,
     BLUE_TANK_LEFT,
+    GREEN_BUTTON_CLEAR,
+    GREEN_BUTTON_WALL,
+    GREEN_BUTTON,
+    BLUE_BUTTON,
+    BROWN_BUTTON,
+    RED_BUTTON,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

@@ -1,3 +1,4 @@
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/chippie_entity.hpp"
 #include "chippie/events/event.hpp"
 #include "chippie/textures/texture_defs.hpp"
@@ -8,6 +9,7 @@
 #include "chippie/levels/level_1.hpp"
 #include "chippie/levels/level_2.hpp"
 #include "chippie/levels/level_3.hpp"
+#include "chippie/levels/level_4.hpp"
 
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
@@ -52,18 +54,28 @@ void screen_init() noexcept
     if (level_number == 1)
     {
         level_1::load_level(game_state);
+        game_state.level_number = level_number;
         return true;
     }
 
     if (level_number == 2)
     {
         level_2::load_level(game_state);
+        game_state.level_number = level_number;
         return true;
     }
 
     if (level_number == 3)
     {
         level_3::load_level(game_state);
+        game_state.level_number = level_number;
+        return true;
+    }
+
+    if (level_number == 4)
+    {
+        level_4::load_level(game_state);
+        game_state.level_number = level_number;
         return true;
     }
 
@@ -72,6 +84,14 @@ void screen_init() noexcept
 
 void init_event_handlers() noexcept
 {
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::FLATTENED_BY_TANK,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
     event::register_handler(event::event_handler{
         .identifier = event::event_type::GOT_BURNED,
         .handler =
@@ -126,6 +146,53 @@ void init_event_handlers() noexcept
             [](state &game_state) {
                 game_state.active = false;
                 game_state.inactive_reason = state::reason::USER_QUIT;
+            },
+    });
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::GREEN_BUTTON,
+        .handler =
+            [](state &game_state) {
+                /* search throught the map, inverting any green button clear/wall tiles */
+                for (auto &tile : game_state.the_map.map_data)
+                {
+                    switch (tile)
+                    {
+                    case terrain_type::GREEN_BUTTON_CLEAR:
+                        tile = terrain_type::GREEN_BUTTON_WALL;
+                        break;
+                    case terrain_type::GREEN_BUTTON_WALL:
+                        tile = terrain_type::GREEN_BUTTON_CLEAR;
+                    default:
+                        break;
+                    }
+                }
+            },
+    });
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::BLUE_BUTTON,
+        .handler =
+            [](state &game_state) {
+                /* search throught the entity list, inverting any blue tanks */
+                for (auto &ent : game_state.entity_list)
+                {
+                    switch (ent.identity)
+                    {
+                    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+                        ent.identity = entity_type::BLUE_TANK_THAT_MOVES_UP;
+                        break;
+                    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+                        ent.identity = entity_type::BLUE_TANK_THAT_MOVES_DOWN;
+                        break;
+                    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+                        ent.identity = entity_type::BLUE_TANK_THAT_MOVES_RIGHT;
+                        break;
+                    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+                        ent.identity = entity_type::BLUE_TANK_THAT_MOVES_LEFT;
+                        break;
+                    default:
+                        break;
+                    }
+                }
             },
     });
 }
@@ -251,8 +318,8 @@ void run()
     /* menu should go here */
     // const auto result{menu.run()};
 
-    const int MAX_LEVELS = 3;
-    int level = 1;
+    const int MAX_LEVELS = 4;
+    int level = 4;
 
     while (true)
     {
@@ -283,12 +350,6 @@ void run()
 
         const auto beginning_of_game{get_absolute_time()};
 
-        /* TODO instead, create an object of class GameLogic that is initalized with the State
-          This GameLogic object will more-or-less replace the `state` object used in the next
-          statements
-          GameLogic will do much of the logic that is going on inside State at the moment, except
-          the entity handling and event handlers will depend on the State object being passed to it.
-        */
         while (the_game.is_active())
         {
 #ifdef DEBUG_PRINT

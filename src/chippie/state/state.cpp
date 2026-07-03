@@ -120,9 +120,21 @@ void paint_chip_count_display(const state &game_state) noexcept
     const auto chip_count{game_state.chippie_inventory.check(inventory_item::CHIPS)};
     const auto [msb, mmb, lsb]{screen::bcd<3>(chip_count)};
 
-    draw_tile_index(game_state.chip_count_grid, {.x = 0, .y = 0}, texture::get_digit_texture(msb));
-    draw_tile_index(game_state.chip_count_grid, {.x = 1, .y = 0}, texture::get_digit_texture(mmb));
-    draw_tile_index(game_state.chip_count_grid, {.x = 2, .y = 0}, texture::get_digit_texture(lsb));
+    if (!msb && !mmb && !lsb)
+    {
+        draw_tile_index(game_state.chip_count_grid, {.x = 0, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_00_YELLOW));
+        draw_tile_index(game_state.chip_count_grid, {.x = 1, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_00_YELLOW));
+        draw_tile_index(game_state.chip_count_grid, {.x = 2, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_00_YELLOW));
+    }
+    else
+    {
+        draw_tile_index(game_state.chip_count_grid, {.x = 0, .y = 0}, texture::get_digit_texture(msb));
+        draw_tile_index(game_state.chip_count_grid, {.x = 1, .y = 0}, texture::get_digit_texture(mmb));
+        draw_tile_index(game_state.chip_count_grid, {.x = 2, .y = 0}, texture::get_digit_texture(lsb));
+    }
 }
 
 void paint_timer_display(const state &game_state) noexcept

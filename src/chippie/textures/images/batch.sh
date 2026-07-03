@@ -11,7 +11,7 @@ function convert() {
 transparent_list=(chippie_down.png chippie_left.png chippie_up.png chippie_right.png)
 transparent_list+=(chippie_down_girl.png chippie_left_girl.png chippie_up_girl.png chippie_right_girl.png)
 transparent_list+=(centipede_down.png centipede_left.png centipede_up.png centipede_right.png)
-transparent_list+=(purple_ball.png)
+transparent_list+=(purple_ball.png blue_tank_up.png blue_tank_down.png blue_tank_left.png blue_tank_right.png)
 
 for f in ${transparent_list[@]}; do
 	echo $f
