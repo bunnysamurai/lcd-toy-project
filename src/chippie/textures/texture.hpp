@@ -62,6 +62,14 @@ enum struct texture_type
     BLUE_BUTTON,
     BROWN_BUTTON,
     RED_BUTTON,
+    BOMB,
+    TRAP,
+    WATER_GLIDER_UP,
+    WATER_GLIDER_RIGHT,
+    WATER_GLIDER_DOWN,
+    WATER_GLIDER_LEFT,
+    CLONER_FIRE_DANCER,
+    FIRE_DANCER,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

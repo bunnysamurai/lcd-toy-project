@@ -34,7 +34,7 @@ enum struct terrain_type : uint8_t
     TRAP,
     BOMB,
 
-    /* buttons, doors, keys */
+    /* buttons, doors, keys, clone machines, etc. */
     GREEN_BUTTON_CLEAR,
     GREEN_BUTTON_WALL,
     GREEN_BUTTON,
@@ -49,6 +49,7 @@ enum struct terrain_type : uint8_t
     RED_KEY,
     CYAN_KEY,
     YELLOW_KEY,
+    CLONER_FIRE_DANCER,
 
     /* directional terrain features */
     ICE_TOPLEFT,

@@ -10,7 +10,7 @@
 
 #include <pico/time.h>
 
-// #define DEBUG_PRINT
+#define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include <pico/printf.h>
 #endif
@@ -20,6 +20,13 @@ namespace chippie
 
 game_logic::game_logic(state &injected_state) noexcept : game_state{injected_state}
 {
+    const auto game_start_time{get_absolute_time()};
+
+    /* synchronize all entities in time */
+    for (auto &ent : game_state.entity_list)
+    {
+        ent.next_time = delayed_by_us(game_start_time, get_entity_velocity(ent.identity));
+    }
 }
 
 bool game_logic::is_active() noexcept
@@ -44,8 +51,16 @@ void game_logic::process() noexcept
 
 void game_logic::move_entities() noexcept
 {
-    for (auto &ent : game_state.entity_list)
+    // for (auto &ent : game_state.entity_list)
+    for (uint32_t ii = 0;; ++ii)
     {
+        if (ii >= std::size(game_state.entity_list))
+        {
+            break;
+        }
+
+        auto &ent{game_state.entity_list[ii]};
+
         /*  If this guy is dead, then skip.  Dead entities are cleaned up later.
          */
         if (!ent.alive)
@@ -156,8 +171,14 @@ void game_logic::move_entities() noexcept
             continue;
         }
 
-        /* the entity's location is now updated per the move.  Process entry effects. */
-        apply_terrain_entry_effect(ent, collision.tile);
+/* the entity's location is now updated per the move.  Process entry effects. */
+#ifdef DEBUG_PRINT
+        if (ent.identity == entity_type::PURPLE_BALL)
+        {
+            printf("apply entry effect for purple ball: %d\n", game_state.the_map[ent.loc]);
+        }
+#endif
+        apply_terrain_entry_effect(ent, game_state.the_map[ent.loc]);
 
         /* finally, process the entity's exit handler */
         if (entity_handles.exit_handler != nullptr)

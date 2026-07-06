@@ -23,10 +23,13 @@ enum struct event_type
     TIME_UP,
     FELL_IN_WATER,
     EATEN_BY_BUG,
-    GOT_BURNED,
+    GOT_BURNED, /* stepped on campefire terrain */
     GAME_OVER,
     MOVE_MOVABLE_BLOCK,
     FLATTENED_BY_TANK,
+    DANCED_BY_FIRE, /* touched a fire dancer */
+    EXPLODED,       /* stepped on a bomb */
+    GLIDED_OVER,    /* touched a water glider */
     MAX_EVENT_TYPE
 };
 

@@ -217,6 +217,12 @@ absolute_time_t hold_time_point;
     case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
         event::register_event(event::event_type::FLATTENED_BY_TANK);
         return collision_action::NO_ACTION_NEEDED;
+    case entity_type::WATER_GLIDER:
+        event::register_event(event::event_type::GLIDED_OVER);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::FIRE_DANCER:
+        event::register_event(event::event_type::DANCED_BY_FIRE);
+        return collision_action::NO_ACTION_NEEDED;
     default:
         break;
     }

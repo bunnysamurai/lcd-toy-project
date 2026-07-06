@@ -3,8 +3,10 @@
 #include "blue_tank.hpp"
 #include "centipede.hpp"
 #include "chippie_entity.hpp"
+#include "fire_dancer.hpp"
 #include "moveable_block.hpp"
 #include "purple_ball.hpp"
+#include "water_glider.hpp"
 
 namespace chippie
 {
@@ -21,9 +23,9 @@ namespace chippie
     case entity_type::BLUE_TANK_THAT_MOVES_UP:
         return blue_tank::get_state_functions();
     case entity_type::WATER_GLIDER:
-        return {};
+        return water_glider::get_state_functions();
     case entity_type::FIRE_DANCER:
-        return {};
+        return fire_dancer::get_state_functions();
     case entity_type::PURPLE_BALL:
         return purple_ball::get_state_functions();
     case entity_type::CYAN_STICK_BALL:
@@ -54,9 +56,9 @@ namespace chippie
     case entity_type::BLUE_TANK_THAT_MOVES_UP:
         return blue_tank::get_velocity();
     case entity_type::WATER_GLIDER:
-        return {};
+        return water_glider::get_velocity();
     case entity_type::FIRE_DANCER:
-        return {};
+        return fire_dancer::get_velocity();
     case entity_type::PURPLE_BALL:
         return purple_ball::get_velocity();
     case entity_type::CYAN_STICK_BALL:

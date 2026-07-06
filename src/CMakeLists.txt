@@ -21,14 +21,18 @@ add_executable(${PROJECT_NAME}
     chippie/entities/purple_ball.cpp
     chippie/entities/centipede.cpp
     chippie/entities/blue_tank.cpp
+    chippie/entities/fire_dancer.cpp
+    chippie/entities/water_glider.cpp
     chippie/render/paint_utils.cpp
     chippie/state/chippie_inventory.cpp
     chippie/state/terrain_effects.cpp
+    chippie/state/red_brown_buttons.cpp
     chippie/textures/texture.cpp
     chippie/levels/level_1.cpp
     chippie/levels/level_2.cpp
     chippie/levels/level_3.cpp
     chippie/levels/level_4.cpp
+    chippie/levels/level_5.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

@@ -1,16 +1,14 @@
-#include "centipede.hpp"
+#include "fire_dancer.hpp"
 #include "chippie/chippie_common.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
-
-#include <array>
 
 #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
 
-namespace chippie::centipede
+namespace chippie::fire_dancer
 {
 
 /*
@@ -24,27 +22,35 @@ namespace chippie::centipede
 namespace
 {
 
-constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
+constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 
-[[nodiscard]] bool check_terrain_is_opaque_for_centipede(const entity &ent, terrain_type candidate_terrain) noexcept
+[[nodiscard]] bool check_terrain_is_opaque_for_fire_dancer(const entity &ent, terrain_type candidate_terrain) noexcept
 {
     return check_terrain_is_opaque(ent, candidate_terrain);
 }
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    static constexpr std::array directions{relative_direction::LEFT, relative_direction::FORWARD,
-                                           relative_direction::RIGHT, relative_direction::BACKWARD};
+    static constexpr std::array directions{
+        relative_direction::FORWARD,
+        relative_direction::LEFT,
+        relative_direction::BACKWARD,
+        relative_direction::RIGHT,
+    };
     /*
-        centipede movement logic is "clockwise"
-        It always wants to move to the following relative directions, in order:
-            left
+        fire dancer movement logic is "anti-clockwise if colliding"
+        It always wants to move in the following priority order
             forward
-            right
+            left
             backward
+            right
+
+        TODO this logic is common among multiple entities, only differing by
+        the order of relative directions in the `directions` above.
+        Consider moving to a reusable function.
     */
 #ifdef DEBUG_PRINT
-    printf("centipede moving start\n");
+    printf("fire dancer moving start\n");
 #endif
     for (const auto dir : directions)
     {
@@ -53,7 +59,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
         /* check if */
-        if (check_terrain_is_opaque_for_centipede(ent, candidate_terrain))
+        if (check_terrain_is_opaque_for_fire_dancer(ent, candidate_terrain))
         {
             continue;
         }
@@ -62,7 +68,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
     }
 
 #ifdef DEBUG_PRINT
-    printf("centipede not moving result.. end\n");
+    printf("fire_dancer not moving result.. end\n");
 #endif
     return std::make_pair(move(ent.loc, ent.facing), ent.facing);
 }
@@ -71,7 +77,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
                                                 terrain_type collided_terrain) noexcept
 {
 #ifdef DEBUG_PRINT
-    printf("centipede collision handling start\n");
+    printf("fire dancer collision handling start\n");
 #endif
     if (collided_entity != nullptr)
     {
@@ -80,7 +86,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 #ifdef DEBUG_PRINT
             printf("collided with chip\n");
 #endif
-            register_event(event::event_type::EATEN_BY_BUG);
+            register_event(event::event_type::DANCED_BY_FIRE);
         }
         else
         {
@@ -89,7 +95,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
     }
 
 #ifdef DEBUG_PRINT
-    printf("centipede collision handling end\n");
+    printf("fire dancer collision handling end\n");
 #endif
 
     return collision_action::APPLY_NEXT_LOCATION;
@@ -109,7 +115,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 {
     return {
         .loc = xy,
-        .identity = entity_type::CENTIPEDE,
+        .identity = entity_type::FIRE_DANCER,
         .facing = dir,
         .alive = true,
         .trapped = false,
@@ -130,7 +136,7 @@ entity_state_machine get_state_functions() noexcept
 
 [[nodiscard]] uint64_t get_velocity() noexcept
 {
-    return CENTIPEDE_VELOCITY_US;
+    return FIRE_DANCER_VELOCITY_US;
 }
 
-} // namespace chippie::centipede
+} // namespace chippie::fire_dancer

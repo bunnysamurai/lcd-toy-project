@@ -17,7 +17,7 @@ namespace chippie::purple_ball
 namespace
 {
 
-constexpr uint64_t PURPLE_BALL_VELOCITY_US{1'000'000}; /* time is in us */
+constexpr uint64_t PURPLE_BALL_VELOCITY_US{250'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {

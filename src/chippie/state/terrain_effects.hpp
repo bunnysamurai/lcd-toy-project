@@ -1,7 +1,7 @@
-#include "chippie/chippie_common.hpp"
 #if !defined(TERRAIN_EFFECTS_HPP)
 #define TERRAIN_EFFECTS_HPP
 
+#include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie/state/state.hpp"
 #include "chippie/state/terrain_types.hpp"
@@ -19,7 +19,9 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
  */
 [[nodiscard]] bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept;
 
-/* dir is the direction the moveable block is moving */
+/**
+    @brief dir is the direction the moveable block is moving
+*/
 [[nodiscard]] bool check_terrain_is_opaque_for_moveable(direction dir, terrain_type terrain) noexcept;
 
 } // namespace chippie

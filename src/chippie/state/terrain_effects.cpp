@@ -5,8 +5,16 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/events/event.hpp"
 #include "chippie/events/event_types.hpp"
+#include "chippie/state/red_brown_buttons.hpp"
 #include "chippie/state/terrain_types.hpp"
 #include "chippie_inventory.hpp"
+
+#include <algorithm>
+
+#define DEBUG_PRINT
+#ifdef DEBUG_PRINT
+#include "pico/printf.h"
+#endif
 
 namespace chippie
 {
@@ -33,6 +41,18 @@ inline void apply_fire_effect(entity &ent) noexcept
     {
         event::register_event(event::event_type::GOT_BURNED);
     }
+
+    /* everything dies except water glider, moveable block,  and fire dancer */
+    switch (ent.identity)
+    {
+    case entity_type::MOVEABLE_BLOCK:
+    case entity_type::WATER_GLIDER:
+    case entity_type::FIRE_DANCER:
+        break;
+    default:
+        ent.alive = false;
+        break;
+    }
 }
 
 inline void apply_water_effect(entity &ent) noexcept
@@ -43,11 +63,79 @@ inline void apply_water_effect(entity &ent) noexcept
         return;
     }
 
-    if (ent.identity == entity_type::MOVEABLE_BLOCK)
+    /* everything dies except water glider... moveable block is special */
+    switch (ent.identity)
     {
+    case entity_type::MOVEABLE_BLOCK:
         ent.game_state->the_map[ent.loc] = terrain_type::DIRT;
         ent.alive = false;
+    case entity_type::WATER_GLIDER:
+        break;
+    default:
+        ent.alive = false;
     }
+}
+
+inline void handle_red_button(entity &ent) noexcept
+{
+    auto &game_state{*(ent.game_state)};
+
+    auto redbutton{
+        std::ranges::find_if(game_state.red_button_list, [&](const auto &button) { return button.button == ent.loc; })};
+
+    if (redbutton != std::cend(game_state.red_button_list))
+    {
+#ifdef DEBUG_PRINT
+        printf("calling generate on a red button\n");
+#endif
+        /* activate the clone machine */
+        redbutton->generate(game_state);
+    }
+}
+
+inline void handle_trap(entity &ent) noexcept
+{
+    /* search for the matching button */
+    const auto &listing{ent.game_state->brown_button_list};
+    const auto entity_location{ent.loc};
+
+    /* by definition, the search can't fail, so we'll skip the usual check */
+    const auto trap_itr{
+        std::ranges::find_if(listing, [=](const brown_button &button) { return button.trap == entity_location; })};
+
+    ent.trapped = trap_itr->check_trap_is_set(*(ent.game_state));
+}
+
+inline void handle_brown_button(entity &ent) noexcept
+{
+    /* if there is an entity trapped, untrap it */
+
+    /* search for the matching trap */
+    const auto &listing{ent.game_state->brown_button_list};
+    const auto entity_location{ent.loc};
+
+    /* by definition, the search can't fail, so we'll skip the usual check */
+    const auto button_itr{
+        std::ranges::find_if(listing, [=](const brown_button &button) { return button.button == entity_location; })};
+
+    /* search for an entity that might be trapped */
+    auto trapped_itr{std::ranges::find_if(ent.game_state->entity_list,
+                                          [=](const entity &otherent) { return otherent.loc == button_itr->trap; })};
+
+    if (trapped_itr != std::end(ent.game_state->entity_list))
+    {
+        trapped_itr->trapped = false;
+    }
+}
+
+inline void handle_bomb(entity &ent) noexcept
+{
+    if (check_is_chip(ent))
+    {
+        event::register_event(event::event_type::EXPLODED);
+    }
+
+    ent.alive = false;
 }
 
 } // namespace
@@ -68,7 +156,7 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         apply_water_effect(ent);
         break;
     case terrain_type::TRAP:
-        ent.trapped = true;
+        handle_trap(ent);
         break;
     case terrain_type::CHIP:
         ent.game_state->chippie_inventory.remove(inventory_item::CHIPS);
@@ -98,11 +186,14 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         map_tile = terrain_type::CLEAR;
         break;
     case terrain_type::BOMB:
-        ent.alive = false;
+        handle_bomb(ent);
         map_tile = terrain_type::CLEAR;
         break;
+    case terrain_type::RED_BUTTON:
+        handle_red_button(ent);
+        break;
     case terrain_type::BROWN_BUTTON:
-        event::register_event(event::event_type::RELEASE_ALL_TRAPS);
+        handle_brown_button(ent);
         break;
 
     case terrain_type::HINT:
@@ -188,7 +279,6 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         break;
 
     case terrain_type::ICE:
-    case terrain_type::RED_BUTTON:
     case terrain_type::CLEAR:
     case terrain_type::WALL:
     case terrain_type::GRAVEL:

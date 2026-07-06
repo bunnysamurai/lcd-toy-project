@@ -77,6 +77,16 @@
 #include "tiles/blue_tank_right.hpp"
 #include "tiles/blue_tank_up.hpp"
 
+#include "tiles/bomb.hpp"
+#include "tiles/cloner_fire_dancer.hpp"
+#include "tiles/fire_dancer.hpp"
+#include "tiles/trap.hpp"
+
+#include "tiles/water_glider_down.hpp"
+#include "tiles/water_glider_left.hpp"
+#include "tiles/water_glider_right.hpp"
+#include "tiles/water_glider_up.hpp"
+
 namespace chippie::texture
 {
 
@@ -156,10 +166,14 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::BROWN_BUTTON;
     case terrain_type::RED_BUTTON:
         return texture_type::RED_BUTTON;
+    case terrain_type::BOMB:
+        return texture_type::BOMB;
+    case terrain_type::TRAP:
+        return texture_type::TRAP;
+    case terrain_type::CLONER_FIRE_DANCER:
+        return texture_type::CLONER_FIRE_DANCER;
     /* not yet implemented */
     case terrain_type::GRAVEL:
-    case terrain_type::TRAP:
-    case terrain_type::BOMB:
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
@@ -182,8 +196,12 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::BLUE_TANK_THAT_MOVES_UP:
         return static_cast<texture_type>(static_cast<int>(texture_type::BLUE_TANK_UP) + static_cast<int>(ent.facing));
     case entity_type::WATER_GLIDER:
+        return static_cast<texture_type>(static_cast<int>(texture_type::WATER_GLIDER_UP) +
+                                         static_cast<int>(ent.facing));
     case entity_type::FIRE_DANCER:
+        return texture_type::FIRE_DANCER;
     case entity_type::PURPLE_BALL:
+        return texture_type::PURPLE_BALL;
     case entity_type::CYAN_STICK_BALL:
     case entity_type::BACTERIA:
     case entity_type::FROG_MONSTER:
@@ -322,6 +340,22 @@ screen::Tile get_texture(texture_type texture) noexcept
         return brown_button::get_texture();
     case texture_type::RED_BUTTON:
         return red_button::get_texture();
+    case texture_type::BOMB:
+        return bomb::get_texture();
+    case texture_type::TRAP:
+        return trap::get_texture();
+    case texture_type::WATER_GLIDER_UP:
+        return water_glider_up::get_texture();
+    case texture_type::WATER_GLIDER_RIGHT:
+        return water_glider_right::get_texture();
+    case texture_type::WATER_GLIDER_DOWN:
+        return water_glider_down::get_texture();
+    case texture_type::WATER_GLIDER_LEFT:
+        return water_glider_left::get_texture();
+    case texture_type::CLONER_FIRE_DANCER:
+        return cloner_fire_dancer::get_texture();
+    case texture_type::FIRE_DANCER:
+        return fire_dancer::get_texture();
     }
 
     return clear::get_texture();

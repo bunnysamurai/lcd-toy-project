@@ -12,6 +12,7 @@
 
 #include "screen/gfx/defs.hpp"
 
+#include "red_brown_buttons.hpp"
 #include "static_map.hpp"
 
 #include "pico/time.h"
@@ -60,14 +61,8 @@ struct state
     uint16_t time_remaining{};
     static_map the_map;
     embp::variable_array<entity, 128> entity_list;
-    /* how to handle the buttons? 
-        For green, we can either 
-            * iterate through the entire map, inverting state as we go along
-            * store a list of just those locations controlled by the green button, and iterate through that
-            
-            I'll go with the simpler but less efficient approach (iterate through the entire map) as I don't think it
-            will impact performance significantly... I'll measure, of course, and report back here.
-    */
+    embp::variable_array<red_button, 32> red_button_list;
+    embp::variable_array<brown_button, 32> brown_button_list;
 };
 
 void paint(state &) noexcept;
