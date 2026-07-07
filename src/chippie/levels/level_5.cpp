@@ -89,8 +89,6 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 {
     uint32_t uuid{0};
 
-    const auto game_load_time{get_absolute_time()};
-
     game_state.entity_list.clear();
 
     // by convention, Chippie is always the first one in the entity_list

@@ -35,7 +35,7 @@ opaque_list+=(push_floor_down.png push_floor_left.png push_floor_right.png push_
 opaque_list+=(campfire.png bomb.png)
 opaque_list+=(blue_button.png brown_button.png green_button.png red_button.png)
 opaque_list+=(green_button_clear.png green_button_wall.png)
-opaque_list+=(bomb.png cloner_fire_dancer.png trap.png)
+opaque_list+=(bomb.png cloner_fire_dancer.png trap.png magic_wall.png)
 
 for f in ${opaque_list[@]}; do
     echo $f

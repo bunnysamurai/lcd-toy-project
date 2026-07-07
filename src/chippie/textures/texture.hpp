@@ -70,6 +70,7 @@ enum struct texture_type
     WATER_GLIDER_LEFT,
     CLONER_FIRE_DANCER,
     FIRE_DANCER,
+    MAGIC_WALL,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

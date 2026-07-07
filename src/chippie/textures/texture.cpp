@@ -87,6 +87,8 @@
 #include "tiles/water_glider_right.hpp"
 #include "tiles/water_glider_up.hpp"
 
+#include "tiles/magic_wall.hpp"
+
 namespace chippie::texture
 {
 
@@ -168,6 +170,13 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::RED_BUTTON;
     case terrain_type::BOMB:
         return texture_type::BOMB;
+    case terrain_type::INVISIBLE_WALL:
+        return texture_type::CLEAR;
+    case terrain_type::APPEARING_WALL:
+        return texture_type::CLEAR;
+    case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::MAGIC_TILE_CLEAR:
+        return texture_type::MAGIC_WALL;
     case terrain_type::TRAP:
         return texture_type::TRAP;
     case terrain_type::CLONER_FIRE_DANCER:
@@ -356,6 +365,8 @@ screen::Tile get_texture(texture_type texture) noexcept
         return cloner_fire_dancer::get_texture();
     case texture_type::FIRE_DANCER:
         return fire_dancer::get_texture();
+    case texture_type::MAGIC_WALL:
+        return magic_wall::get_texture();
     }
 
     return clear::get_texture();

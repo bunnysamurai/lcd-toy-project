@@ -33,6 +33,10 @@ enum struct terrain_type : uint8_t
     DIRT,
     TRAP,
     BOMB,
+    INVISIBLE_WALL,
+    APPEARING_WALL,
+    MAGIC_TILE_WALL,
+    MAGIC_TILE_CLEAR,
 
     /* buttons, doors, keys, clone machines, etc. */
     GREEN_BUTTON_CLEAR,

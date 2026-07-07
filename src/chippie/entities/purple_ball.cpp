@@ -36,7 +36,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{250'000}; /* time is in us */
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-            register_event(event::event_type::GAME_OVER);
+            register_event(event::event_type::ROLLED_BY_BALL);
         }
         else
         {

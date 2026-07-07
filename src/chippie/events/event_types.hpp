@@ -30,6 +30,7 @@ enum struct event_type
     DANCED_BY_FIRE, /* touched a fire dancer */
     EXPLODED,       /* stepped on a bomb */
     GLIDED_OVER,    /* touched a water glider */
+    ROLLED_BY_BALL, /* touched a purple ball */
     MAX_EVENT_TYPE
 };
 

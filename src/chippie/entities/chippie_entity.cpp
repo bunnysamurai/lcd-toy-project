@@ -195,6 +195,12 @@ absolute_time_t hold_time_point;
         return handle_door(ent.game_state->chippie_inventory, collided_terrain);
     case terrain_type::WALL:
     case terrain_type::GREEN_BUTTON_WALL:
+    case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::INVISIBLE_WALL:
+        return collision_action::NO_ACTION_NEEDED;
+    case terrain_type::APPEARING_WALL:
+    case terrain_type::MAGIC_TILE_WALL:
+        ent.game_state->the_map[move(ent.loc, ent.facing)] = terrain_type::WALL;
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
         return handle_socket(ent.game_state->chippie_inventory);
@@ -222,6 +228,9 @@ absolute_time_t hold_time_point;
         return collision_action::NO_ACTION_NEEDED;
     case entity_type::FIRE_DANCER:
         event::register_event(event::event_type::DANCED_BY_FIRE);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::PURPLE_BALL:
+        event::register_event(event::event_type::ROLLED_BY_BALL);
         return collision_action::NO_ACTION_NEEDED;
     default:
         break;

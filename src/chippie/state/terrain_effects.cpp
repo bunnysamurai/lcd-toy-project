@@ -37,10 +37,6 @@ inline constexpr bool check_for_chip_and_item(const entity &ent, inventory_item 
 
 inline void apply_fire_effect(entity &ent) noexcept
 {
-    if (check_is_chip(ent) && 0 == ent.game_state->chippie_inventory.check(inventory_item::FIRE_BOOTS))
-    {
-        event::register_event(event::event_type::GOT_BURNED);
-    }
 
     /* everything dies except water glider, moveable block,  and fire dancer */
     switch (ent.identity)
@@ -48,6 +44,12 @@ inline void apply_fire_effect(entity &ent) noexcept
     case entity_type::MOVEABLE_BLOCK:
     case entity_type::WATER_GLIDER:
     case entity_type::FIRE_DANCER:
+        break;
+    case entity_type::CHIPPIE:
+        if (!check_has_item(ent, inventory_item::FIRE_BOOTS))
+        {
+            event::register_event(event::event_type::GOT_BURNED);
+        }
         break;
     default:
         ent.alive = false;
@@ -57,19 +59,19 @@ inline void apply_fire_effect(entity &ent) noexcept
 
 inline void apply_water_effect(entity &ent) noexcept
 {
-    if (check_is_chip(ent) && 0 == ent.game_state->chippie_inventory.check(inventory_item::FLIPPERS))
-    {
-        event::register_event(event::event_type::FELL_IN_WATER);
-        return;
-    }
-
-    /* everything dies except water glider... moveable block is special */
+    /* everything dies except water glider and chippie with flippers... moveable block is special */
     switch (ent.identity)
     {
     case entity_type::MOVEABLE_BLOCK:
         ent.game_state->the_map[ent.loc] = terrain_type::DIRT;
         ent.alive = false;
     case entity_type::WATER_GLIDER:
+        break;
+    case entity_type::CHIPPIE:
+        if (!check_has_item(ent, inventory_item::FLIPPERS))
+        {
+            event::register_event(event::event_type::FELL_IN_WATER);
+        }
         break;
     default:
         ent.alive = false;
@@ -135,6 +137,7 @@ inline void handle_bomb(entity &ent) noexcept
         event::register_event(event::event_type::EXPLODED);
     }
 
+    /* everything dies to the bomb */
     ent.alive = false;
 }
 
@@ -195,15 +198,13 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::BROWN_BUTTON:
         handle_brown_button(ent);
         break;
-
     case terrain_type::HINT:
         event::register_event(event::event_type::DISPLAY_HINT);
         break;
-
+    case terrain_type::MAGIC_TILE_CLEAR:
     case terrain_type::DIRT:
         map_tile = terrain_type::CLEAR;
         break;
-
     /* directional terrain features */
     case terrain_type::ICE_TOPLEFT:
         if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))

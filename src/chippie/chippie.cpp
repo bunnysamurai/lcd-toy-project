@@ -11,6 +11,7 @@
 #include "chippie/levels/level_3.hpp"
 #include "chippie/levels/level_4.hpp"
 #include "chippie/levels/level_5.hpp"
+#include "chippie/levels/level_6.hpp"
 
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
@@ -87,11 +88,34 @@ void screen_init() noexcept
         return true;
     }
 
+    if (level_number == 6)
+    {
+        level_6::load_level(game_state);
+        game_state.level_number = level_number;
+        return true;
+    }
+
     return false;
 }
 
 void init_event_handlers() noexcept
 {
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::ROLLED_BY_BALL,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::GLIDED_OVER,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
     event::register_handler(event::event_handler{
         .identifier = event::event_type::DANCED_BY_FIRE,
         .handler =
@@ -342,8 +366,8 @@ void run()
     /* menu should go here */
     // const auto result{menu.run()};
 
-    const int MAX_LEVELS = 5;
-    int level = 5;
+    const int MAX_LEVELS = 6;
+    int level = 6;
 
     while (true)
     {
