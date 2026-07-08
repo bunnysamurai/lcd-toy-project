@@ -141,6 +141,21 @@ inline void handle_bomb(entity &ent) noexcept
     ent.alive = false;
 }
 
+inline void handle_teleporter(entity &ent) noexcept
+{
+    static constexpr uint64_t TELEPORT_TIC_PERIOD_US{100'000};
+
+    /* by definition, this search cannot fail */
+    auto tele_itr{std::ranges::find_if(ent.game_state->teleport_list,
+                                       [&](const auto &tele) { return tele.entry_location == ent.loc; })};
+
+    const auto [newfacing, newloc]{tele_itr->compute_exit(ent.facing)};
+
+    ent.loc = newloc;
+    ent.facing = newfacing;
+    ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + TELEPORT_TIC_PERIOD_US;
+}
+
 } // namespace
 
 void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
@@ -279,6 +294,21 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         event::register_event(event::event_type::BLUE_BUTTON);
         break;
 
+    case terrain_type::WALL_TRAP:
+        map_tile = terrain_type::WALL;
+        break;
+
+    case terrain_type::THIEF:
+        ent.game_state->chippie_inventory.set(inventory_item::SUCTION_BOOTS, 0);
+        ent.game_state->chippie_inventory.set(inventory_item::ICE_SKATES, 0);
+        ent.game_state->chippie_inventory.set(inventory_item::FLIPPERS, 0);
+        ent.game_state->chippie_inventory.set(inventory_item::FIRE_BOOTS, 0);
+        break;
+
+    case terrain_type::TELEPORTER:
+        handle_teleporter(ent);
+        break;
+
     case terrain_type::ICE:
     case terrain_type::CLEAR:
     case terrain_type::WALL:
@@ -336,8 +366,8 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
-    case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_BOT:
+    case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
         break;
@@ -370,7 +400,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         return ent.facing;
     }};
 
-    /* just the force floors and ice do this */
+    /* just the force floors, ice, and thin walls do this */
     switch (terrain)
     {
     case terrain_type::ICE:
@@ -382,6 +412,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         {
             nextloc = move(ent.loc, ent.facing);
             nextfacing = ent.facing;
+            /* force the move at a fixed rate */
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
         break;
@@ -396,6 +427,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         {
             nextloc = move(ent.loc, ent.facing);
             nextfacing = to_direction(terrain);
+            /* force the move at a fixed rate */
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
         break;
@@ -407,10 +439,21 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         {
             nextloc = move(ent.loc, ent.facing);
             nextfacing = to_direction(terrain);
+            /* force the move at a fixed rate */
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
         break;
-
+    case terrain_type::THIN_WALL_BOT:
+        /* inhibit the movement */
+        if (nextfacing == direction::DOWN)
+        {
+            nextloc = ent.loc;
+        }
+        break;
+    case terrain_type::TELEPORTER:
+        nextloc = move(ent.loc, ent.facing);
+        nextfacing = ent.facing;
+        break;
     default:
         break;
     }

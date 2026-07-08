@@ -1,5 +1,6 @@
 #include "texture.hpp"
 
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
 
 #include "tiles/chip.hpp"
@@ -88,6 +89,11 @@
 #include "tiles/water_glider_up.hpp"
 
 #include "tiles/magic_wall.hpp"
+#include "tiles/teleporter.hpp"
+#include "tiles/thief.hpp"
+#include "tiles/wall_trap.hpp"
+
+#include "tiles/thin_wall_bottom.hpp"
 
 namespace chippie::texture
 {
@@ -181,10 +187,18 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::TRAP;
     case terrain_type::CLONER_FIRE_DANCER:
         return texture_type::CLONER_FIRE_DANCER;
+    case terrain_type::THIN_WALL_BOT:
+        return texture_type::THIN_WALL_BOTTOM;
+    case terrain_type::TELEPORTER:
+        return texture_type::TELEPORTER;
+    case terrain_type::THIEF:
+        return texture_type::THIEF;
+    case terrain_type::WALL_TRAP:
+        return texture_type::WALL_TRAP;
+
     /* not yet implemented */
     case terrain_type::GRAVEL:
     case terrain_type::THIN_WALL_TOP:
-    case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
         return texture_type::CLEAR;
@@ -367,6 +381,14 @@ screen::Tile get_texture(texture_type texture) noexcept
         return fire_dancer::get_texture();
     case texture_type::MAGIC_WALL:
         return magic_wall::get_texture();
+    case texture_type::THIEF:
+        return thief::get_texture();
+    case texture_type::TELEPORTER:
+        return teleporter::get_texture();
+    case texture_type::THIN_WALL_BOTTOM:
+        return thin_wall_bottom::get_texture();
+    case texture_type::WALL_TRAP:
+        return wall_trap::get_texture();
     }
 
     return clear::get_texture();

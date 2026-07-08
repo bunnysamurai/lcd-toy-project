@@ -13,6 +13,7 @@
 #include "screen/gfx/defs.hpp"
 
 #include "red_brown_buttons.hpp"
+#include "teleporter.hpp"
 #include "static_map.hpp"
 
 #include "pico/time.h"
@@ -63,6 +64,7 @@ struct state
     embp::variable_array<entity, 128> entity_list;
     embp::variable_array<red_button, 32> red_button_list;
     embp::variable_array<brown_button, 32> brown_button_list;
+    embp::variable_array<teleporter, 4> teleport_list;
 };
 
 void paint(state &) noexcept;

@@ -198,6 +198,12 @@ absolute_time_t hold_time_point;
     case terrain_type::CLONER_FIRE_DANCER:
     case terrain_type::INVISIBLE_WALL:
         return collision_action::NO_ACTION_NEEDED;
+    case terrain_type::THIN_WALL_BOT:
+        if (ent.facing == direction::UP)
+        {
+            return collision_action::NO_ACTION_NEEDED;
+        }
+        break;
     case terrain_type::APPEARING_WALL:
     case terrain_type::MAGIC_TILE_WALL:
         ent.game_state->the_map[move(ent.loc, ent.facing)] = terrain_type::WALL;

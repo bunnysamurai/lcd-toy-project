@@ -53,6 +53,8 @@ enum struct terrain_type : uint8_t
     RED_KEY,
     CYAN_KEY,
     YELLOW_KEY,
+    THIEF,
+    WALL_TRAP,
     CLONER_FIRE_DANCER,
 
     /* directional terrain features */
@@ -68,6 +70,7 @@ enum struct terrain_type : uint8_t
     THIN_WALL_BOT,
     THIN_WALL_LEFT,
     THIN_WALL_RIGHT,
+    TELEPORTER,
 
     /* the loot! (boot) */
     FIRE_BOOTS,

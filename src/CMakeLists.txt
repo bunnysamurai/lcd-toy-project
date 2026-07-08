@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
     chippie/state/chippie_inventory.cpp
     chippie/state/terrain_effects.cpp
     chippie/state/red_brown_buttons.cpp
+    chippie/state/teleporter.cpp
     chippie/textures/texture.cpp
     chippie/levels/level_1.cpp
     chippie/levels/level_2.cpp
@@ -34,6 +35,7 @@ add_executable(${PROJECT_NAME}
     chippie/levels/level_4.cpp
     chippie/levels/level_5.cpp
     chippie/levels/level_6.cpp
+    chippie/levels/level_7.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

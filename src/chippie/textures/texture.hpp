@@ -71,6 +71,10 @@ enum struct texture_type
     CLONER_FIRE_DANCER,
     FIRE_DANCER,
     MAGIC_WALL,
+    THIEF,
+    TELEPORTER,
+    THIN_WALL_BOTTOM,
+    WALL_TRAP,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

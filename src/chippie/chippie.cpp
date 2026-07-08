@@ -12,6 +12,7 @@
 #include "chippie/levels/level_4.hpp"
 #include "chippie/levels/level_5.hpp"
 #include "chippie/levels/level_6.hpp"
+#include "chippie/levels/level_7.hpp"
 
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
@@ -91,6 +92,13 @@ void screen_init() noexcept
     if (level_number == 6)
     {
         level_6::load_level(game_state);
+        game_state.level_number = level_number;
+        return true;
+    }
+
+    if (level_number == 7)
+    {
+        level_7::load_level(game_state);
         game_state.level_number = level_number;
         return true;
     }
@@ -366,8 +374,8 @@ void run()
     /* menu should go here */
     // const auto result{menu.run()};
 
-    const int MAX_LEVELS = 6;
-    int level = 6;
+    const int MAX_LEVELS = 7;
+    int level = 7;
 
     while (true)
     {
