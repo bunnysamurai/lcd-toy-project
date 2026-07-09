@@ -75,6 +75,11 @@ enum struct texture_type
     TELEPORTER,
     THIN_WALL_BOTTOM,
     WALL_TRAP,
+    GRAVEL,
+    FROG_UP,
+    FROG_RIGHT,
+    FROG_DOWN,
+    FROG_LEFT,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

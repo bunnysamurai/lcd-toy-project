@@ -176,12 +176,6 @@ absolute_time_t hold_time_point;
     return collision_action::APPLY_NEXT_LOCATION;
 }
 
-[[nodiscard]] collision_action handle_dirt(entity &ent) noexcept
-{
-    ent.game_state->the_map[ent.loc] = terrain_type::CLEAR;
-    return collision_action::APPLY_NEXT_LOCATION;
-}
-
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
@@ -210,8 +204,6 @@ absolute_time_t hold_time_point;
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::SOCKET:
         return handle_socket(ent.game_state->chippie_inventory);
-    case terrain_type::DIRT:
-        return handle_dirt(ent);
     default:
         break;
     }

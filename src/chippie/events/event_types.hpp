@@ -27,10 +27,11 @@ enum struct event_type
     GAME_OVER,
     MOVE_MOVABLE_BLOCK,
     FLATTENED_BY_TANK,
-    DANCED_BY_FIRE, /* touched a fire dancer */
-    EXPLODED,       /* stepped on a bomb */
-    GLIDED_OVER,    /* touched a water glider */
-    ROLLED_BY_BALL, /* touched a purple ball */
+    DANCED_BY_FIRE,  /* touched a fire dancer */
+    EXPLODED,        /* stepped on a bomb */
+    GLIDED_OVER,     /* touched a water glider */
+    ROLLED_BY_BALL,  /* touched a purple ball */
+    CHOMPED_BY_FROG, /* touched a frog monster */
     MAX_EVENT_TYPE
 };
 

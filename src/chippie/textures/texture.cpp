@@ -88,10 +88,16 @@
 #include "tiles/water_glider_right.hpp"
 #include "tiles/water_glider_up.hpp"
 
+#include "tiles/gravel.hpp"
 #include "tiles/magic_wall.hpp"
 #include "tiles/teleporter.hpp"
 #include "tiles/thief.hpp"
 #include "tiles/wall_trap.hpp"
+
+#include "tiles/frog_down.hpp"
+#include "tiles/frog_left.hpp"
+#include "tiles/frog_right.hpp"
+#include "tiles/frog_up.hpp"
 
 #include "tiles/thin_wall_bottom.hpp"
 
@@ -195,9 +201,10 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::THIEF;
     case terrain_type::WALL_TRAP:
         return texture_type::WALL_TRAP;
+    case terrain_type::GRAVEL:
+        return texture_type::GRAVEL;
 
     /* not yet implemented */
-    case terrain_type::GRAVEL:
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
@@ -228,6 +235,7 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::CYAN_STICK_BALL:
     case entity_type::BACTERIA:
     case entity_type::FROG_MONSTER:
+        return static_cast<texture_type>(static_cast<int>(texture_type::FROG_UP) + static_cast<int>(ent.facing));
     case entity_type::CENTIPEDE:
         return static_cast<texture_type>(static_cast<int>(texture_type::CENTIPEDE_UP) + static_cast<int>(ent.facing));
     case entity_type::MOVEABLE_BLOCK:
@@ -389,6 +397,16 @@ screen::Tile get_texture(texture_type texture) noexcept
         return thin_wall_bottom::get_texture();
     case texture_type::WALL_TRAP:
         return wall_trap::get_texture();
+    case texture_type::GRAVEL:
+        return gravel::get_texture();
+    case texture_type::FROG_UP:
+        return frog_up::get_texture();
+    case texture_type::FROG_RIGHT:
+        return frog_right::get_texture();
+    case texture_type::FROG_DOWN:
+        return frog_down::get_texture();
+    case texture_type::FROG_LEFT:
+        return frog_left::get_texture();
     }
 
     return clear::get_texture();

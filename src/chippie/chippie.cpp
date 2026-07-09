@@ -13,6 +13,7 @@
 #include "chippie/levels/level_5.hpp"
 #include "chippie/levels/level_6.hpp"
 #include "chippie/levels/level_7.hpp"
+#include "chippie/levels/level_8.hpp"
 
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
@@ -103,11 +104,26 @@ void screen_init() noexcept
         return true;
     }
 
+    if (level_number == 8)
+    {
+        level_8::load_level(game_state);
+        game_state.level_number = level_number;
+        return true;
+    }
+
     return false;
 }
 
 void init_event_handlers() noexcept
 {
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::CHOMPED_BY_FROG,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
     event::register_handler(event::event_handler{
         .identifier = event::event_type::ROLLED_BY_BALL,
         .handler =
@@ -374,8 +390,8 @@ void run()
     /* menu should go here */
     // const auto result{menu.run()};
 
-    const int MAX_LEVELS = 7;
-    int level = 7;
+    const int MAX_LEVELS = 8;
+    int level = 8;
 
     while (true)
     {

@@ -4,6 +4,7 @@
 #include "centipede.hpp"
 #include "chippie_entity.hpp"
 #include "fire_dancer.hpp"
+#include "frog_monster.hpp"
 #include "moveable_block.hpp"
 #include "purple_ball.hpp"
 #include "water_glider.hpp"
@@ -33,7 +34,7 @@ namespace chippie
     case entity_type::BACTERIA:
         return {};
     case entity_type::FROG_MONSTER:
-        return {};
+        return frog_monster::get_state_functions();
     case entity_type::CENTIPEDE:
         return centipede::get_state_functions();
     case entity_type::MOVEABLE_BLOCK:
@@ -66,7 +67,7 @@ namespace chippie
     case entity_type::BACTERIA:
         return {};
     case entity_type::FROG_MONSTER:
-        return {};
+        return frog_monster::get_velocity();
     case entity_type::CENTIPEDE:
         return centipede::get_velocity();
     case entity_type::MOVEABLE_BLOCK:
