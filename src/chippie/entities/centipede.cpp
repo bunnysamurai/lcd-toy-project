@@ -5,7 +5,7 @@
 
 #include <array>
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
@@ -33,8 +33,12 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    static constexpr std::array directions{relative_direction::LEFT, relative_direction::FORWARD,
-                                           relative_direction::RIGHT, relative_direction::BACKWARD};
+    static constexpr std::array directions{
+        relative_direction::LEFT,
+        relative_direction::FORWARD,
+        relative_direction::RIGHT,
+        relative_direction::BACKWARD,
+    };
     /*
         centipede movement logic is "clockwise"
         It always wants to move to the following relative directions, in order:

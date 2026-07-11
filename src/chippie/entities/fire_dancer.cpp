@@ -3,7 +3,7 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
@@ -34,8 +34,8 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
     static constexpr std::array directions{
         relative_direction::FORWARD,
         relative_direction::LEFT,
-        relative_direction::BACKWARD,
         relative_direction::RIGHT,
+        relative_direction::BACKWARD,
     };
     /*
         fire dancer movement logic is "anti-clockwise if colliding"
