@@ -25,12 +25,12 @@ done
 opaque_list=(digit_00.png digit_01.png digit_02.png)
 opaque_list+=(digit_03.png digit_04.png digit_05.png)
 opaque_list+=(digit_06.png digit_07.png digit_08.png)
-opaque_list+=(digit_09.png)
+opaque_list+=(digit_00_yellow.png digit_09.png digit_clear.png)
 opaque_list+=(chip.png clear.png cyan_door.png cyan_key.png green_door.png)
 opaque_list+=(green_key.png hint.png portal.png red_door.png red_key.png)
 opaque_list+=(socket.png wall.png yellow_door.png yellow_key.png)
 opaque_list+=(dirt.png moving_block.png water_nosplash.png water_splash.png)
-opaque_list+=(digit_00_yellow.png fire_boots.png flippers.png ice_skates.png suction_boots.png)
+opaque_list+=(fire_boots.png flippers.png ice_skates.png suction_boots.png)
 opaque_list+=(ice.png ice_bottomleft.png ice_bottomright.png ice_topleft.png ice_topright.png)
 opaque_list+=(push_floor_down.png push_floor_left.png push_floor_right.png push_floor_up.png)
 opaque_list+=(campfire.png bomb.png)
@@ -40,6 +40,8 @@ opaque_list+=(bomb.png cloner_fire_dancer.png trap.png magic_wall.png)
 opaque_list+=(thief.png teleporter.png wall_trap.png gravel.png)
 
 opaque_list+=(thin_wall_bottom.png)
+
+opaque_list+=(background.png)
 
 for f in ${opaque_list[@]}; do
     echo $f

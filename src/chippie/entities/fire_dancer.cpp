@@ -3,7 +3,7 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
-// #define DEBUG_PRINT
+#define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
@@ -33,8 +33,8 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 {
     static constexpr std::array directions{
         relative_direction::FORWARD,
-        relative_direction::LEFT,
         relative_direction::RIGHT,
+        relative_direction::LEFT,
         relative_direction::BACKWARD,
     };
     /*
@@ -49,9 +49,6 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
         the order of relative directions in the `directions` above.
         Consider moving to a reusable function.
     */
-#ifdef DEBUG_PRINT
-    printf("fire dancer moving start\n");
-#endif
     for (const auto dir : directions)
     {
         const auto [candidate_loc, candidate_facing]{move(ent.loc, ent.facing, dir)};
@@ -67,9 +64,6 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
         return std::make_pair(candidate_loc, candidate_facing);
     }
 
-#ifdef DEBUG_PRINT
-    printf("fire_dancer not moving result.. end\n");
-#endif
     return std::make_pair(move(ent.loc, ent.facing), ent.facing);
 }
 
@@ -77,7 +71,7 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
                                                 terrain_type collided_terrain) noexcept
 {
 #ifdef DEBUG_PRINT
-    printf("fire dancer collision handling start\n");
+    // printf("fire dancer collision handling start\n");
 #endif
     if (collided_entity != nullptr)
     {
@@ -95,7 +89,7 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
     }
 
 #ifdef DEBUG_PRINT
-    printf("fire dancer collision handling end\n");
+    // printf("fire dancer collision handling end\n");
 #endif
 
     return collision_action::APPLY_NEXT_LOCATION;

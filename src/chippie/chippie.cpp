@@ -6,14 +6,7 @@
 #include "state/game_logic.hpp"
 #include "state/state.hpp"
 
-#include "chippie/levels/level_1.hpp"
-#include "chippie/levels/level_2.hpp"
-#include "chippie/levels/level_3.hpp"
-#include "chippie/levels/level_4.hpp"
-#include "chippie/levels/level_5.hpp"
-#include "chippie/levels/level_6.hpp"
-#include "chippie/levels/level_7.hpp"
-#include "chippie/levels/level_8.hpp"
+#include "chippie/levels/level.hpp"
 
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/dialog.hpp"
@@ -55,63 +48,15 @@ void screen_init() noexcept
 
 [[nodiscard]] bool load_level(state &game_state, int level_number) noexcept
 {
-    if (level_number == 1)
+    if( level_number > level::get_max_level() )
     {
-        level_1::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
+        return false;
     }
 
-    if (level_number == 2)
-    {
-        level_2::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
+    level::load(game_state, level_number);
+    game_state.level_number = level_number;
 
-    if (level_number == 3)
-    {
-        level_3::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    if (level_number == 4)
-    {
-        level_4::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    if (level_number == 5)
-    {
-        level_5::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    if (level_number == 6)
-    {
-        level_6::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    if (level_number == 7)
-    {
-        level_7::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    if (level_number == 8)
-    {
-        level_8::load_level(game_state);
-        game_state.level_number = level_number;
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 void init_event_handlers() noexcept
@@ -359,7 +304,7 @@ void process_opening_level_dialog(state &game_state) noexcept
     screen::gfx::display_dialog_box(game_state.level_name_text);
 
     /* FIXME hack, wait for user to release button instead? */
-    sleep_ms(100);
+    sleep_ms(1000);
 
     /* spin until the user presses a button */
     while (true)
@@ -390,8 +335,8 @@ void run()
     /* menu should go here */
     // const auto result{menu.run()};
 
-    const int MAX_LEVELS = 8;
-    int level = 8;
+    const int MAX_LEVELS = level::get_max_level();
+    int level = MAX_LEVELS;
 
     while (true)
     {

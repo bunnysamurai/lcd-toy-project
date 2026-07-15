@@ -17,6 +17,8 @@ enum struct direction
     LEFT,
 };
 
+constexpr int NO_TIME_LIMIT{ -1 };
+
 [[nodiscard]] constexpr direction reverse(direction facing) noexcept
 {
     switch (facing)

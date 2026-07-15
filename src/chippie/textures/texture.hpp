@@ -80,6 +80,7 @@ enum struct texture_type
     FROG_RIGHT,
     FROG_DOWN,
     FROG_LEFT,
+    DIGIT_CLEAR,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

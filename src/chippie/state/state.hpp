@@ -13,8 +13,8 @@
 #include "screen/gfx/defs.hpp"
 
 #include "red_brown_buttons.hpp"
-#include "teleporter.hpp"
 #include "static_map.hpp"
+#include "teleporter.hpp"
 
 #include "pico/time.h"
 
@@ -36,11 +36,11 @@ struct state
     screen::gfx::Rect_<uint32_t> view_port{
         .topleft = {.x = 0, .y = 0},
         .size = {.width = 9, .height = 9},
-    }; /* rectangle of the viewable portion of the grid */
+    }; /* rectangle of the viewable portion of the play_grid */
 
     /* these are basically controlling the layout of the game's visual elements */
-    Grid play_grid;
-    Grid view_grid;
+    Grid play_grid; /* defines the full 32x32 map */
+    Grid view_grid; /* defines where on the display to draw the map */
     Grid chip_count_grid;
     Grid level_count_grid;
     Grid time_remaining_grid;
@@ -59,7 +59,7 @@ struct state
     /* level state */
     const char *hint_text;
     const char *level_name_text;
-    uint16_t time_remaining{};
+    int16_t time_remaining{};
     static_map the_map;
     embp::variable_array<entity, 128> entity_list;
     embp::variable_array<red_button, 32> red_button_list;

@@ -1,8 +1,10 @@
 #include "state.hpp"
 
+#include "chippie/chippie_common.hpp"
 #include "chippie/render/paint_utils.hpp"
 #include "chippie/textures/texture.hpp"
 #include "chippie/textures/texture_defs.hpp"
+#include "chippie/textures/tiles/background.hpp"
 
 #include "screen/gfx/dialog.hpp"
 #include "screen/gfx/shapes.hpp"
@@ -79,6 +81,89 @@ void update_view_port_position(state &game_state) noexcept
     return game_state.view_port.contains({.x = loc.x, .y = loc.y});
 }
 
+void draw_border_around_rect(const screen::gfx::Rect &rect, int thickness) noexcept
+{
+    const auto [topx, topy]{rect.topleft};
+    const auto botx{topx + rect.size.width};
+    const auto boty{topy + rect.size.height};
+
+    for (int off = thickness; off != 0; --off)
+    {
+        /* top horizontal line */
+        screen::gfx::draw_line(
+            {
+                .x = topx - off,
+                .y = topy - off,
+            },
+            {
+                .x = botx + off - 1,
+                .y = topy - off,
+            },
+            WHITE, 1);
+
+        /* top (left) vertical line */
+        screen::gfx::draw_line(
+            {
+                .x = topx - off,
+                .y = topy - off,
+            },
+            {
+                .x = topx - off,
+                .y = boty + off - 1,
+            },
+            WHITE, 1);
+
+        /* bottom horizontal line */
+        screen::gfx::draw_line(
+            {
+                .x = topx - off,
+                .y = boty + off - 1,
+            },
+            {
+                .x = botx + off,
+                .y = boty + off - 1,
+            },
+            DRKGRY, 1);
+
+        /* bottom (right) vertical line */
+        screen::gfx::draw_line(
+            {
+                .x = botx + off - 1,
+                .y = topy - off,
+            },
+            {
+                .x = botx + off - 1,
+                .y = boty + off,
+            },
+            DRKGRY, 1);
+    }
+}
+
+void draw_border_around_grid(const Grid &grid_def, int thickness) noexcept
+{
+    /*
+        for a bit of flair, draw a two pixel border around the view grid
+        the lines will be 2 pixels up and to the left, width/height + 4
+        the lines will be 1 pixels up and to the left, width/height + 2
+    */
+    const auto [topx, topy]{grid_def.to_native({.x = 0, .y = 0})};
+    const auto cfg{grid_def.config()};
+    const auto botx{cfg.xdimension.off + cfg.xdimension.scale * cfg.grid_width};
+    const auto boty{cfg.ydimension.off + cfg.ydimension.scale * cfg.grid_height};
+
+    draw_border_around_rect({.topleft =
+                                 {
+                                     .x = topx,
+                                     .y = topy,
+                                 },
+                             .size =
+                                 {
+                                     .width = botx - topx,
+                                     .height = boty - topy,
+                                 }},
+                            thickness);
+}
+
 /*===========================================================*/
 /*
     _        _               _   ____       _       _   _
@@ -89,10 +174,26 @@ void update_view_port_position(state &game_state) noexcept
                                                                 |___/
 */
 /*===========================================================*/
-void paint_the_background() noexcept
+void paint_the_background(const state &game_state) noexcept
 {
     /* we use a light grey background */
-    screen::fill_screen((LGREY << 4) | LGREY);
+    // screen::fill_screen((LGREY << 4) | LGREY);
+
+    const auto [width, height]{screen::get_virtual_screen_size()};
+    const auto tile{texture::background::get_texture()};
+    const auto step{tile.side_length};
+
+    for (int yy = 0; yy < height; yy += step)
+    {
+        for (int xx = 0; xx < width; xx += step)
+        {
+            screen::draw_tile(xx, yy, tile);
+        }
+    }
+
+    /* next, do the borders around the timer/chip/level and play grid*/
+    /* first, the view grid */
+    draw_border_around_grid(game_state.view_grid, 4);
 }
 
 void paint_the_map(state &game_state) noexcept
@@ -139,6 +240,17 @@ void paint_chip_count_display(const state &game_state) noexcept
 
 void paint_timer_display(const state &game_state) noexcept
 {
+    if (game_state.time_remaining == NO_TIME_LIMIT)
+    {
+        draw_tile_index(game_state.time_remaining_grid, {.x = 0, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_CLEAR));
+        draw_tile_index(game_state.time_remaining_grid, {.x = 1, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_CLEAR));
+        draw_tile_index(game_state.time_remaining_grid, {.x = 2, .y = 0},
+                        texture::get_texture(texture::texture_type::DIGIT_CLEAR));
+        return;
+    }
+
     const auto [msb, mmb, lsb]{screen::bcd<3>(game_state.time_remaining)};
 
     draw_tile_index(game_state.time_remaining_grid, {.x = 0, .y = 0}, texture::get_digit_texture(msb));
@@ -245,12 +357,14 @@ void paint(state &game_state) noexcept
 #endif
     screen::pause_screen();
 
-    paint_the_background();
+    paint_the_background(game_state);
 
     paint_the_map(game_state);
 
     if (!game_state.hint_displayable)
     {
+        screen::gfx::draw_rect(game_state.hint_area, LGREY, 0);
+        draw_border_around_rect(game_state.hint_area, 2);
         paint_chip_count_display(game_state);
         paint_timer_display(game_state);
         paint_level_display(game_state);

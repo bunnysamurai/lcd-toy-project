@@ -80,6 +80,22 @@ constexpr void move_relative_direction(entity &ent, relative_direction dir) noex
     ent.facing = newfac;
 }
 
+[[nodiscard]] constexpr collision_action to_collision_action(relative_direction dir) noexcept
+{
+    switch (dir)
+    {
+    case relative_direction::BACKWARD:
+        return collision_action::MOVE_BACKWARD;
+    case relative_direction::FORWARD:
+        return collision_action::MOVE_FORWARD;
+    case relative_direction::LEFT:
+        return collision_action::MOVE_LEFT;
+    case relative_direction::RIGHT:
+        return collision_action::MOVE_RIGHT;
+    }
+    return collision_action::NO_ACTION_NEEDED;
+}
+
 /**
     @brief Retrieve entity-specific functions for state machine processing.
  */

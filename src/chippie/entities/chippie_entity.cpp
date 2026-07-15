@@ -6,6 +6,7 @@
 #include "chippie/state/chippie_inventory.hpp"
 #include "chippie/state/terrain_effects.hpp"
 #include "chippie/state/terrain_types.hpp"
+
 #include "gamepad/gamepad.hpp"
 
 #include "pico/time.h"
@@ -30,8 +31,8 @@ namespace chippie::chippie
 */
 namespace
 {
-constexpr uint64_t CHIPPIE_BUTTON_POLL_US{10'000};                   /* every 10 ms? */
-constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{100'000}; /* every 100 ms? */
+constexpr uint64_t CHIPPIE_BUTTON_POLL_US{100'000};                   /* every 100 ms? */
+constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{1'000}; /* every 10 ms? */
 bool wait_for_release;
 absolute_time_t hold_time_point;
 
@@ -179,7 +180,6 @@ absolute_time_t hold_time_point;
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-    /* for level 1 */
     switch (collided_terrain)
     {
     case terrain_type::GREEN_DOOR:

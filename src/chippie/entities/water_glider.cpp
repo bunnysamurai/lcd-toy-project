@@ -29,8 +29,8 @@ constexpr uint64_t WATER_GLIDER_VELOCITY_US{250'000}; /* time is in us */
     static constexpr std::array directions{
         relative_direction::FORWARD,
         relative_direction::LEFT,
-        relative_direction::BACKWARD,
         relative_direction::RIGHT,
+        relative_direction::BACKWARD,
     };
     /*
         fire dancer movement logic is "anti-clockwise if colliding"

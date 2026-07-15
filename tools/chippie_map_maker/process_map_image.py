@@ -151,7 +151,8 @@ class UserImageDialog():
         plt.ion()
         plt.show()
         plt.pause(0.001)
-        return self._process_tree()
+        result = self._process_tree()
+        return result
     
     def _process_tree(self):
         print("Press 'h' for commands")
@@ -173,10 +174,10 @@ class UserImageDialog():
                 entity = self._process_entity()
                 continue
             if response == 'nt':
-                terrain = self._process_new_terrain()
+                self._process_new_terrain()
                 continue
             if response == 'ne':
-                entity = self._process_new_entity()
+                self._process_new_entity()
                 continue
             
         def combine_results(user_t, user_e):
@@ -185,7 +186,9 @@ class UserImageDialog():
                 result += f"+{user_e}"
             return result
 
-        return combine_results(terrain, entity)
+        final = combine_results(terrain, entity)
+        print(f"adding {final}")
+        return final
     
     def _process_new_terrain(self):
         while True:
@@ -215,6 +218,8 @@ class UserImageDialog():
 
         print("Now, select a facing:")
         facing_str = self._general_process(FACINGS)
+
+        return f"{entity_str}_{facing_str}"
     
     def _general_process(self, listing):
         while True:
@@ -234,18 +239,323 @@ class UserImageDialog():
         return listing[idx]
 
 
-            
-
-
 class ResultReport():
-    def __init__(self):
-        pass
+    '''
+    In level_*.cpp:
+
+    #include "level_*.hpp"
+    #include "chippie/entities/chippie_entity.hpp"
+    #include <cstring>
+
+    namespace chippie::level_*
+    {
+    namespace 
+    {
+        constexpr int TIME_REMAINING{ 0 };
+        constexpr int CHIPS_REMAINING{ 0 };
+        constexpr const char* HINT_TEXT{ nullptr };
+        constexpr const char* LEVEL_NAME_TEXT{ nullptr };
+
+        constexpr std::array DATA
+        {
+            terrain_type::WALL, terrain_type::WALL, etc. for the whole 1024 tiles.
+        };
+
+    }
+
+    void load_level_from_rom_stub(state &game_state) noexcept
+    {
+        /* set the time limit, if any */
+        game_state.time_remaining = TIME_REMAINING;
+        game_state.countdown_timer.reset();
+
+        /* set the amount of chips for the level */
+        game_state.chippie_inventory.set(inventory_item::CHIPS, CHIPS_REMAINING);
+
+        /* set the hint string, which can be null */
+        game_state.hint_text = HINT_TEXT;
+        /* set the level name */
+        game_state.level_name_text = LEVEL_NAME_TEXT;
+
+        /* load the map data */
+        std::memcpy(std::data(game_state.the_map.map_data), std::data(DATA), std::size(DATA) * sizeof(terrain_type));
+    }
+
+    void load_entity_list_from_rom_stub(state &game_state) noexcept
+    {
+        game_state.entity_list.clear();
+
+        // by convention, Chippie is always the first one in the entity_list
+        game_state.entity_list.push_back(chippie::create(game_state, {.x = 15, .y = 14}, direction::DOWN, 0));
+    }
+
+    }
+    '''
+    def __init__(self, level):
+        self.terrain = np.zeros((32,32), dtype=np.int8) + TERRAIN_TYPES.index("CLEAR")
+        self.entities = [] 
+        self.level = level
 
     def add(self, annotation, xy):
-        pass
+        terrain, ent = self._parse(annotation)
+        if ent is not None:
+            self.entities.append([ent, xy])
+        self.terrain[xy[1], xy[0]] = TERRAIN_TYPES.index(terrain)
 
-    def save(self, filepath):
-        pass
+    def save(self, source_path, header_path):
+        with open(source_path, 'w') as fid:
+            fid.write(self._source())
+        with open(header_path, 'w') as fid:
+            fid.write(self._header())
+        with open("level.hpp", "w") as fid:
+            fid.write(self._master_header())
+        with open("level.cpp", "w") as fid:
+            fid.write(self._master_source())
+
+    def _parse(self, string):
+        if '+' in string:
+            items = string.split('+')
+            return items[0], items[1]
+        else:
+            return string, None
+    
+    def _stringify_terrain(self, terrain):
+        return f"terrain_type::{terrain}"
+    
+    def _stringify_entity_creation(self, entity, xy):
+        if '_' in entity:
+            items = entity.split('_')
+            ent_name = '_'.join(items[0:-1]).lower()
+
+            # handle the exceptional case...
+            if ent_name == "moveable_block":
+                ent_name = "moveable_block_entity"
+
+            facing = items[-1]
+            return f"{ent_name}::create(game_state, {{.x = {xy[0]}, .y = {xy[1]}}}, direction::{facing}, uuid++)"
+    
+    def _resolve_terrain(self):
+        result = ''
+        for yy in range(32):
+            result += '        '
+            for xx in range(32):
+                terr = TERRAIN_TYPES[self.terrain[yy, xx]]
+                result += f"{self._stringify_terrain(terr)}, "
+            result += '\n'
+        return result
+    
+    def _resolve_entity_list(self):
+        chippie = [ent for ent in self.entities if "CHIPPIE" in ent[0]]
+        the_rest = [ent for ent in self.entities if "CHIPPIE" not in ent[0]]
+
+        result = ''
+        if len(chippie) > 0:
+            chipp = chippie[0]
+            print(f"BNP chippie is {chipp}")
+            result += f"    game_state.entity_list.push_back("
+            result += self._stringify_entity_creation(chipp[0], chipp[1])
+            result += f");\n"
+
+        for ent in the_rest:
+            print(f"BNP other is {ent}")
+            result += f"    game_state.entity_list.push_back("
+            result += self._stringify_entity_creation(ent[0], ent[1])
+            result += f");\n"
+        
+        return result
+
+
+    def _header(self):
+        result =  "/* AUTO GENERATED BY process_map_image.py */\n"
+        result += f"#ifndef CHIPPIE_LEVEL_{self.level}_HPP\n"
+        result += f"#define CHIPPIE_LEVEL_{self.level}_HPP\n"
+        result += f"\n"
+        result += f"#include \"chippie/state/state.hpp\"\n"
+        result += f"\n"
+        result += f"namespace chippie::level_{self.level}\n"
+        result += f"{{\n"
+        result += f"    void load_level(state&) noexcept;\n"
+        result += f"}}\n"
+        result += f"#endif\n"
+        return result
+
+    def _source(self):
+        result =  "/* AUTO GENERATED BY process_map_image.py */\n"
+        result += f"#include \"level_{self.level}.hpp\"\n"
+        result += f"#include \"chippie/entities/entities.hpp\"\n"
+        result += f"#include <cstring>\n"
+        result += f"\n"
+        result += f"namespace chippie::level_{self.level}\n"
+        result += f"{{\n"
+        result += f"namespace\n"
+        result += f"{{\n"
+        result += f"    constexpr int TIME_REMAINING{{ 0 }};\n"
+        result += f"    constexpr int CHIPS_REMAINING{{ 0 }};\n"
+        result += f"    constexpr const char* HINT_TEXT{{ nullptr }};\n"
+        result += f"    constexpr const char* LEVEL_NAME_TEXT{{ nullptr }};\n"
+        result += f"\n"
+        result += f"    /* clang-format off */\n"
+        result += f"    constexpr std::array DATA\n"
+        result += f"    {{\n"
+        result += f"{self._resolve_terrain()}"
+        result += f"    }};\n"
+        result += f"    /* clang-format on */\n"
+        result += f"\n"
+
+        result += f"void load_level_from_rom_stub(state &game_state) noexcept\n"
+        result += f"{{\n"
+        result += f"    /* set the time limit, if any */\n"
+        result += f"    game_state.time_remaining = TIME_REMAINING;\n"
+        result += f"    game_state.countdown_timer.reset();\n"
+        result += f"\n"
+        result += f"    /* set the amount of chips for the level */\n"
+        result += f"    game_state.chippie_inventory.set(inventory_item::CHIPS, CHIPS_REMAINING);\n"
+        result += f"\n"
+        result += f"    /* set the hint string, which can be null */\n"
+        result += f"    game_state.hint_text = HINT_TEXT;\n"
+        result += f"    /* set the level name */\n"
+        result += f"    game_state.level_name_text = LEVEL_NAME_TEXT;\n"
+        result += f"\n"
+        result += f"    /* load the map data */\n"
+        result += f"    std::memcpy(std::data(game_state.the_map.map_data), std::data(DATA), std::size(DATA) * sizeof(terrain_type));\n"
+        result += f"}}\n"
+        result += f"\n"
+    
+        result += f"void load_entity_list_from_rom_stub(state &game_state) noexcept\n"
+        result += f"{{\n"
+        result += f"    game_state.entity_list.clear();\n"
+        result += f"    uint8_t uuid = 0;\n"
+        result += f"\n"
+        result += f"    // by convention, Chippie is always the first one in the entity_list\n"
+        result += f"{self._resolve_entity_list()}\n"
+        result += f"}}\n"
+        result += f"\n"
+        result += f"}}\n" # closes the anonomous namespace
+
+        result += f"void load_level(state &game_state) noexcept\n"
+        result += f"{{\n"
+        result += f"    load_level_from_rom_stub(game_state);\n"
+        result += f"    load_entity_list_from_rom_stub(game_state);\n"
+        result += f"}}\n"
+        result += f"\n"
+        result += f"}}\n" # closes the chippie::level_* namespace
+        result += f"\n"
+
+        return result
+    
+    def _master_header(self):
+        result =  "/* AUTO GENERATED BY process_map_image.py */\n"
+        result += "#ifndef LEVEL_HPP\n"
+        result += "#define LEVEL_HPP"
+        result += "\n"
+        result += "#include \"chippie/state/state.hpp\"\n"
+        result += "\n"
+        result += "namespace chippie::level\n"
+        result += "{\n"
+        result += "    [[nodiscard]] uint32_t get_max_level() noexcept;\n"
+        result += "    void load(state& game_state, uint32_t level) noexcept;\n"
+        result += "}\n"
+        result += "\n"
+        result += "#endif"
+
+        return result
+
+
+    def _master_source(self):
+        '''
+        #include "level.hpp"
+
+        #include <cmath>
+        #include <array>
+        #include <cstdint>
+
+        #include "level_1.hpp"
+        #include "level_2.hpp"
+        ...
+        #include "level_{self.level}.hpp"
+
+        namespace chippie
+        {
+
+        namespace {
+
+        constexpr std::array jump_table {
+            level_1::load_level,
+            level_2::load_level,
+            ...
+            level_{self.level}::load_level
+        };
+
+        }
+
+        namespace level
+        {
+            uint32_t get_max_level() noexcept
+            {
+                return std::size(jump_table);
+            }
+
+            void load(state& game_state, uint32_t level) noexcept
+            {
+                level = std::min(std::size(jump_table)-1, std::max(1U, level));
+                jump_table[level - 1](game_state);
+            }
+        }
+
+        }
+
+        '''
+
+        def gen_includes(levels):
+            result = ''
+            for idx in range(0, self.level):
+                result += f"#include \"level_{idx+1}.hpp\"\n"
+            return result
+
+        def gen_jump_table_contents(levels):
+            result = ''
+            for idx in range(0, self.level):
+                result += f"    level_{idx+1}::load_level,\n"
+            return result
+        
+        sresult =  "/* AUTO GENERATED BY process_map_image.py */\n"
+        sresult += "#include \"level.hpp\"\n"
+        sresult += "\n"
+        sresult += "#include <cmath>\n"
+        sresult += "#include <array>\n"
+        sresult += "#include <cstdint>\n"
+        sresult += "\n"
+        sresult += f"{gen_includes(self.level)}"
+        sresult += "\n"
+        sresult += "namespace chippie\n"
+        sresult += "{\n"
+        sresult += "\n"
+        sresult += "namespace\n"
+        sresult += "{\n"
+        sresult += "\n"
+        sresult += "constexpr std::array jump_table {\n"
+        sresult += f"{gen_jump_table_contents(self.level)}"
+        sresult += "};\n"
+        sresult += "\n"
+        sresult += "}\n" # closes anon namespace
+        sresult += "\n"
+        sresult += "namespace level\n"
+        sresult += "{\n"
+        sresult += "uint32_t get_max_level() noexcept\n"
+        sresult += "{\n"
+        sresult += "    return std::size(jump_table);\n"
+        sresult += "}\n"
+        sresult += "\n"
+        sresult += "void load(state& game_state, uint32_t level) noexcept\n"
+        sresult += "{\n"
+        sresult += "    level = std::min(static_cast<uint32_t>(std::size(jump_table)), std::max(uint32_t{1U}, level));\n"
+        sresult += "    jump_table[level - 1](game_state);\n"
+        sresult += "}\n"
+        sresult += "}\n" # closes level namespace
+        sresult += "}\n" # closes chippie namespace
+
+        return sresult 
+
 
 def load_existing(filepath):
     return filepath if os.path.exists(filepath) else None
@@ -253,21 +563,22 @@ def load_existing(filepath):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="whatever")
     parser.add_argument("IMAGE", type=str, help="Image of the map from that german website")
+    parser.add_argument("LEVEL", type=int, help="Level number")
     args = parser.parse_args()
 
     mapimg = MapImage(args.IMAGE)
 
     cache = TileCache(load_existing("cache.pkl"))
 
-    result = ResultReport()
+    result = ResultReport(args.LEVEL)
 
 
     if os.path.exists('meta.pkl') is True:
         with open('meta.pkl', 'rb') as fid:
             meta = pickle.load(fid)
-            TERRAIN_TYPES = meta['TERRAIN_TYPES']
-            ENTITY_TYPES = meta['ENTITY_TYPES']
-            FACINGS = meta['FACINGS']
+            print(f"terrain types: {TERRAIN_TYPES}")
+            print(f"entity types: {ENTITY_TYPES}")
+            print(f"facings: {FACINGS}")
 
     '''
     What are we trying to accomplish?
@@ -302,7 +613,7 @@ if __name__ == "__main__":
 
             result.add(item, (xx,yy))
     
-    result.save("output.cpp")
+    result.save(f"level_{args.LEVEL}.cpp", f"level_{args.LEVEL}.hpp")
     cache.save("cache.pkl")
 
     with open('meta.pkl', 'wb') as fid:

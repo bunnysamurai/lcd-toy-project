@@ -27,7 +27,7 @@ pallete_map = {
 def to_numpy(img):
     w = img.width
     h = img.height
-    result = np.array(img.getdata())
+    result = np.array(img.get_flattened_data())
     if img.mode == "RGB":
         return np.reshape(result, (h,w,3))
     else:

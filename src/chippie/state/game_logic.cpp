@@ -171,13 +171,6 @@ void game_logic::move_entities() noexcept
             continue;
         }
 
-/* the entity's location is now updated per the move.  Process entry effects. */
-#ifdef DEBUG_PRINT
-        if (ent.identity == entity_type::PURPLE_BALL)
-        {
-            printf("apply entry effect for purple ball: %d\n", game_state.the_map[ent.loc]);
-        }
-#endif
         apply_terrain_entry_effect(ent, game_state.the_map[ent.loc]);
 
         /* finally, process the entity's exit handler */
@@ -209,7 +202,7 @@ void game_logic::move_entities() noexcept
 
 void game_logic::process_time_remaining() noexcept
 {
-    if (game_state.countdown_timer.elapsed())
+    if (game_state.time_remaining != NO_TIME_LIMIT && game_state.countdown_timer.elapsed())
     {
         game_state.countdown_timer.increment();
 

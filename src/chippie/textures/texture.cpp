@@ -39,6 +39,8 @@
 #include "tiles/digit_07.hpp"
 #include "tiles/digit_08.hpp"
 #include "tiles/digit_09.hpp"
+#include "tiles/digit_00_yellow.hpp"
+#include "tiles/digit_clear.hpp"
 
 #include "tiles/centipede_down.hpp"
 #include "tiles/centipede_left.hpp"
@@ -50,7 +52,6 @@
 #include "tiles/water_splash.hpp"
 
 #include "tiles/campfire.hpp"
-#include "tiles/digit_00_yellow.hpp"
 #include "tiles/fire_boots.hpp"
 #include "tiles/flippers.hpp"
 #include "tiles/ice.hpp"
@@ -407,6 +408,8 @@ screen::Tile get_texture(texture_type texture) noexcept
         return frog_down::get_texture();
     case texture_type::FROG_LEFT:
         return frog_left::get_texture();
+    case texture_type::DIGIT_CLEAR:
+        return digit_clear::get_texture();
     }
 
     return clear::get_texture();

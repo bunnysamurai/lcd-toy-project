@@ -20,20 +20,31 @@ namespace chippie
 {
 namespace
 {
-inline constexpr bool check_is_chip(const entity &ent) noexcept
+[[nodiscard]] inline constexpr bool check_is_chip(const entity &ent) noexcept
 {
     return ent.identity == entity_type::CHIPPIE;
 }
 
-inline constexpr bool check_has_item(const entity &ent, inventory_item item) noexcept
+[[nodiscard]] inline constexpr bool check_has_item(const entity &ent, inventory_item item) noexcept
 {
     return ent.game_state->chippie_inventory.check(item) > 0;
 }
 
-inline constexpr bool check_for_chip_and_item(const entity &ent, inventory_item item) noexcept
+[[nodiscard]] inline constexpr bool check_for_chip_and_item(const entity &ent, inventory_item item) noexcept
 {
     return check_is_chip(ent) && check_has_item(ent, item);
 };
+
+[[nodiscard]] inline constexpr bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
+{
+    const auto terrain{ent.game_state->the_map[nextloc]};
+    if (ent.identity == entity_type::CHIPPIE)
+    {
+        return check_terrain_is_opaque_for_chippie(ent, terrain);
+    }
+
+    return check_terrain_is_opaque(ent, terrain);
+}
 
 inline void apply_fire_effect(entity &ent) noexcept
 {
@@ -411,7 +422,16 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
         {
             nextloc = move(ent.loc, ent.facing);
-            nextfacing = ent.facing;
+            /* if the nextloc is opaque for this entity, reverse facing */
+            if (check_if_opaque_on_ice(ent, nextloc))
+            {
+                nextfacing = reverse(ent.facing);
+                nextloc = move(ent.loc, nextfacing);
+            }
+            else
+            {
+                nextfacing = ent.facing;
+            }
             /* force the move at a fixed rate */
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
@@ -459,8 +479,81 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     }
 }
 
-[[nodiscard]] bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
+bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain) noexcept
 {
+    switch (terrain)
+    {
+    case terrain_type::WALL:
+    case terrain_type::INVISIBLE_WALL:
+    case terrain_type::GREEN_BUTTON_WALL:
+    case terrain_type::CLONER_FIRE_DANCER:
+        return true;
+
+    case terrain_type::THIN_WALL_TOP:
+        return ent.facing == direction::DOWN;
+    case terrain_type::THIN_WALL_BOT:
+        return ent.facing == direction::UP;
+    case terrain_type::THIN_WALL_LEFT:
+        return ent.facing == direction::RIGHT;
+    case terrain_type::THIN_WALL_RIGHT:
+        return ent.facing == direction::LEFT;
+
+    case terrain_type::CLEAR:
+    case terrain_type::PORTAL:
+    case terrain_type::CHIP:
+    case terrain_type::HINT:
+    case terrain_type::SOCKET:
+    case terrain_type::WATER:
+    case terrain_type::FIRE:
+    case terrain_type::GRAVEL:
+    case terrain_type::ICE:
+    case terrain_type::DIRT:
+    case terrain_type::TRAP:
+    case terrain_type::BOMB:
+    case terrain_type::APPEARING_WALL:
+    case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::MAGIC_TILE_CLEAR:
+    case terrain_type::GREEN_BUTTON_CLEAR:
+    case terrain_type::GREEN_BUTTON:
+    case terrain_type::BLUE_BUTTON:
+    case terrain_type::BROWN_BUTTON:
+    case terrain_type::RED_BUTTON:
+    case terrain_type::GREEN_DOOR:
+    case terrain_type::RED_DOOR:
+    case terrain_type::CYAN_DOOR:
+    case terrain_type::YELLOW_DOOR:
+    case terrain_type::GREEN_KEY:
+    case terrain_type::RED_KEY:
+    case terrain_type::CYAN_KEY:
+    case terrain_type::YELLOW_KEY:
+    case terrain_type::THIEF:
+    case terrain_type::WALL_TRAP:
+    case terrain_type::ICE_TOPLEFT:
+    case terrain_type::ICE_TOPRIGHT:
+    case terrain_type::ICE_BOTLEFT:
+    case terrain_type::ICE_BOTRIGHT:
+    case terrain_type::PUSH_FLOOR_UP:
+    case terrain_type::PUSH_FLOOR_DOWN:
+    case terrain_type::PUSH_FLOOR_LEFT:
+    case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::TELEPORTER:
+    case terrain_type::FIRE_BOOTS:
+    case terrain_type::FLIPPERS:
+    case terrain_type::ICE_SKATES:
+    case terrain_type::SUCTION_BOOTS:
+        return false;
+    }
+
+    return false;
+}
+
+bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
+{
+    if (ent.identity == entity_type::CHIPPIE)
+    {
+        return check_terrain_is_opaque_for_chippie(ent, terrain);
+    }
+
     switch (terrain)
     {
     case terrain_type::WALL:
