@@ -1,7 +1,7 @@
 #if !defined(STATIC_MAP_HPP)
 #define STATIC_MAP_HPP
 
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 #include "terrain_types.hpp"
 
 #include <array>

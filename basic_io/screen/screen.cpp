@@ -8,6 +8,8 @@
 
 #include "screen_def.h"
 
+#include "pico/time.h"
+
 // #define PRINT_DEBUG
 #ifdef PRINT_DEBUG
 #include <pico/printf.h>
@@ -146,6 +148,7 @@ void pause_screen() noexcept
 void resume_screen() noexcept
 {
     screen_impl::resume_screen();
+    sleep_ms(1);
 }
 
 /* =========================================================== */

@@ -6,7 +6,7 @@
 #include "basic_entity.hpp"
 #include "chippie/chippie_common.hpp"
 #include "chippie/state/state.hpp"
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 
 namespace chippie::moveable_block_entity
 {

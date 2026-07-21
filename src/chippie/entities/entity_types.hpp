@@ -20,6 +20,7 @@ enum struct entity_type
     FROG_MONSTER,
     CENTIPEDE,
     MOVEABLE_BLOCK,
+    BLOB,
     ENTITY_TYPE_SIZE
 };
 

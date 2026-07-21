@@ -8,12 +8,15 @@
 
 #include "chippie/levels/level.hpp"
 
+#include "common/rng.hpp"
 #include "gamepad/gamepad.hpp"
+#include "screen/gfx/cursor_menu_dialog.hpp"
 #include "screen/gfx/dialog.hpp"
 #include "screen/glyphs/letters.hpp"
 
 #include "pico/time.h"
 
+#include <array>
 #include <cstring>
 
 // #define DEBUG_PRINT
@@ -48,7 +51,7 @@ void screen_init() noexcept
 
 [[nodiscard]] bool load_level(state &game_state, int level_number) noexcept
 {
-    if( level_number > level::get_max_level() )
+    if (level_number > level::get_max_level())
     {
         return false;
     }
@@ -161,8 +164,28 @@ void init_event_handlers() noexcept
         .identifier = event::event_type::OPEN_MENU,
         .handler =
             [](state &game_state) {
-                game_state.active = false;
-                game_state.inactive_reason = state::reason::USER_QUIT;
+                static constexpr std::array item_options{
+                    "Return",
+                    "Restart",
+                    "Quit",
+                };
+                screen::gfx::cursor_menu_dialog dialog{
+                    {.bright_highlight = WHITE, .shadow_highlight = DRKGRY, .background = LGREY, .font_color = WHITE},
+                    "   Menu",
+                    item_options};
+
+                const int opt{dialog.ask()};
+                if (opt == 1)
+                {
+                    game_state.active = false;
+                    game_state.inactive_reason = state::reason::RESTART_LEVEL;
+                }
+
+                if (opt == 2)
+                {
+                    game_state.active = false;
+                    game_state.inactive_reason = state::reason::USER_QUIT;
+                }
             },
     });
     event::register_handler(event::event_handler{
@@ -331,12 +354,13 @@ void run()
 {
     gamepad::five::init();
     screen_init();
+    rng::set_seed(0xB5FF93DC);
 
     /* menu should go here */
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = MAX_LEVELS;
+    int level = 13; /* TODO start on south pole for now */
 
     while (true)
     {
@@ -413,6 +437,7 @@ void run()
 
         switch (game_state.inactive_reason)
         {
+        case state::reason::RESTART_LEVEL:
         case state::reason::CHIP_DIED:
             break;
         case state::reason::PORTAL_REACHED:

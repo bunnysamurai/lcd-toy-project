@@ -434,4 +434,64 @@ void draw_circle(Point center, uint16_t radius, uint32_t value, uint16_t thickne
         }
     }
 }
+
+void draw_border(Rect rect, int thickness, uint32_t top_left_value, uint32_t bottom_right_value) noexcept
+{
+
+    const auto [topx, topy]{rect.topleft};
+    const auto botx{topx + rect.size.width};
+    const auto boty{topy + rect.size.height};
+
+    for (int off = thickness; off != 0; --off)
+    {
+        /* top horizontal line */
+        draw_line(
+            {
+                .x = topx - off,
+                .y = topy - off,
+            },
+            {
+                .x = botx + off - 1,
+                .y = topy - off,
+            },
+            top_left_value, 1);
+
+        /* top (left) vertical line */
+        draw_line(
+            {
+                .x = topx - off,
+                .y = topy - off,
+            },
+            {
+                .x = topx - off,
+                .y = boty + off - 1,
+            },
+            top_left_value, 1);
+
+        /* bottom horizontal line */
+        draw_line(
+            {
+                .x = topx - off,
+                .y = boty + off - 1,
+            },
+            {
+                .x = botx + off,
+                .y = boty + off - 1,
+            },
+            bottom_right_value, 1);
+
+        /* bottom (right) vertical line */
+        draw_line(
+            {
+                .x = botx + off - 1,
+                .y = topy - off,
+            },
+            {
+                .x = botx + off - 1,
+                .y = boty + off,
+            },
+            bottom_right_value, 1);
+    }
+}
+
 } // namespace screen::gfx

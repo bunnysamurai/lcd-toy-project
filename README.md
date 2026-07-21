@@ -29,11 +29,12 @@ $ cmake --build build_test
 
 By default, keyboard inputs are processed via tinyusb, with stdout being directed to the waveshare screen.
 
-### `-DBUILD_WITH_STDIO_USB`
+### `-DBUILD_WITH_STDIO_USB=ON`
 
 * Instead, shell will run in a terminal, and keyboard inputs accepted via the terminal.  Access it via your favourite program, for example:
   * `$ minicom -D /dev/ttyACM0`
 * Useful for development and debugging.
+* Highly recommended, as flashing the part no longer requires holding the BOOTSEL button on the Pico board.
 
 ### `-DLCD_USES_WB_MODE`
 

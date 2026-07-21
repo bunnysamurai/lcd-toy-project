@@ -8,7 +8,7 @@
 #include "pico/time.h"
 
 #include "chippie/chippie.hpp"
-#include "common/Cursor.hpp"
+#include "utils/Cursor.hpp"
 #include "demo.hpp"
 #include "gamepad/gamepad.hpp"
 #include "revenge/revenge.hpp"

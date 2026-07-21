@@ -1,8 +1,11 @@
 #include "basic_entity.hpp"
 
+#include "bacteria.hpp"
+#include "blob.hpp"
 #include "blue_tank.hpp"
 #include "centipede.hpp"
 #include "chippie_entity.hpp"
+#include "cyan_stick_ball.hpp"
 #include "fire_dancer.hpp"
 #include "frog_monster.hpp"
 #include "moveable_block.hpp"
@@ -30,15 +33,17 @@ namespace chippie
     case entity_type::PURPLE_BALL:
         return purple_ball::get_state_functions();
     case entity_type::CYAN_STICK_BALL:
-        return {};
+        return cyan_stick_ball::get_state_functions();
     case entity_type::BACTERIA:
-        return {};
+        return bacteria::get_state_functions();
     case entity_type::FROG_MONSTER:
         return frog_monster::get_state_functions();
     case entity_type::CENTIPEDE:
         return centipede::get_state_functions();
     case entity_type::MOVEABLE_BLOCK:
         return moveable_block_entity::get_state_functions();
+    case entity_type::BLOB:
+        return blob::get_state_functions();
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }
@@ -63,15 +68,17 @@ namespace chippie
     case entity_type::PURPLE_BALL:
         return purple_ball::get_velocity();
     case entity_type::CYAN_STICK_BALL:
-        return {};
+        return cyan_stick_ball::get_velocity();
     case entity_type::BACTERIA:
-        return {};
+        return bacteria::get_velocity();
     case entity_type::FROG_MONSTER:
         return frog_monster::get_velocity();
     case entity_type::CENTIPEDE:
         return centipede::get_velocity();
     case entity_type::MOVEABLE_BLOCK:
         return moveable_block_entity::get_velocity();
+    case entity_type::BLOB:
+        return blob::get_velocity();
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }

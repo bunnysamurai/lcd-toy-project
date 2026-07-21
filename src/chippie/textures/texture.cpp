@@ -30,6 +30,7 @@
 #include "tiles/yellow_key.hpp"
 
 #include "tiles/digit_00.hpp"
+#include "tiles/digit_00_yellow.hpp"
 #include "tiles/digit_01.hpp"
 #include "tiles/digit_02.hpp"
 #include "tiles/digit_03.hpp"
@@ -39,7 +40,6 @@
 #include "tiles/digit_07.hpp"
 #include "tiles/digit_08.hpp"
 #include "tiles/digit_09.hpp"
-#include "tiles/digit_00_yellow.hpp"
 #include "tiles/digit_clear.hpp"
 
 #include "tiles/centipede_down.hpp"
@@ -80,9 +80,12 @@
 #include "tiles/blue_tank_up.hpp"
 
 #include "tiles/bomb.hpp"
-#include "tiles/cloner_fire_dancer.hpp"
 #include "tiles/fire_dancer.hpp"
 #include "tiles/trap.hpp"
+
+#include "tiles/cloner_fire_dancer.hpp"
+#include "tiles/cloner_frog_monster.hpp"
+#include "tiles/cloner_moveable_block.hpp"
 
 #include "tiles/water_glider_down.hpp"
 #include "tiles/water_glider_left.hpp"
@@ -100,8 +103,21 @@
 #include "tiles/frog_right.hpp"
 #include "tiles/frog_up.hpp"
 
+#include "tiles/thin_wall_botright.hpp"
 #include "tiles/thin_wall_bottom.hpp"
+#include "tiles/thin_wall_left.hpp"
+#include "tiles/thin_wall_right.hpp"
+#include "tiles/thin_wall_top.hpp"
 
+#include "tiles/cyan_stick_ball.hpp"
+#include "tiles/cyan_stick_ball_mirrored.hpp"
+
+#include "tiles/bacteria_down.hpp"
+#include "tiles/bacteria_left.hpp"
+#include "tiles/bacteria_right.hpp"
+#include "tiles/bacteria_up.hpp"
+
+#include "tiles/blob.hpp"
 namespace chippie::texture
 {
 
@@ -204,12 +220,18 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::WALL_TRAP;
     case terrain_type::GRAVEL:
         return texture_type::GRAVEL;
-
-    /* not yet implemented */
     case terrain_type::THIN_WALL_TOP:
+        return texture_type::THIN_WALL_TOP;
     case terrain_type::THIN_WALL_LEFT:
+        return texture_type::THIN_WALL_LEFT;
     case terrain_type::THIN_WALL_RIGHT:
-        return texture_type::CLEAR;
+        return texture_type::THIN_WALL_RIGHT;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        return texture_type::THIN_WALL_BOTRIGHT;
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
+        return texture_type::CLONER_MOVEABLE_BLOCK;
+    case terrain_type::CLONER_FROG_MONSTER:
+        return texture_type::CLONER_FROG_MONSTER;
     }
 
     return texture_type::CLEAR;
@@ -234,13 +256,21 @@ texture_type get_entity_texture_type(const chippie::entity &ent) noexcept
     case entity_type::PURPLE_BALL:
         return texture_type::PURPLE_BALL;
     case entity_type::CYAN_STICK_BALL:
+        if (ent.facing == direction::UP || ent.facing == direction::DOWN)
+        {
+            return texture_type::CYAN_STICK_BALL;
+        }
+        return texture_type::CYAN_STICK_BALL_MIRRORED;
     case entity_type::BACTERIA:
+        return static_cast<texture_type>(static_cast<int>(texture_type::BACTERIA_UP) + static_cast<int>(ent.facing));
     case entity_type::FROG_MONSTER:
         return static_cast<texture_type>(static_cast<int>(texture_type::FROG_UP) + static_cast<int>(ent.facing));
     case entity_type::CENTIPEDE:
         return static_cast<texture_type>(static_cast<int>(texture_type::CENTIPEDE_UP) + static_cast<int>(ent.facing));
     case entity_type::MOVEABLE_BLOCK:
         return texture_type::MOVING_BLOCK;
+    case entity_type::BLOB:
+        return texture_type::BLOB;
     case entity_type::ENTITY_TYPE_SIZE:
         return texture_type::CLEAR; /* TODO not yet implemented*/
     }
@@ -410,6 +440,32 @@ screen::Tile get_texture(texture_type texture) noexcept
         return frog_left::get_texture();
     case texture_type::DIGIT_CLEAR:
         return digit_clear::get_texture();
+    case texture_type::CYAN_STICK_BALL:
+        return cyan_stick_ball::get_texture();
+    case texture_type::CYAN_STICK_BALL_MIRRORED:
+        return cyan_stick_ball_mirrored::get_texture();
+    case texture_type::THIN_WALL_TOP:
+        return thin_wall_top::get_texture();
+    case texture_type::THIN_WALL_RIGHT:
+        return thin_wall_right::get_texture();
+    case texture_type::THIN_WALL_LEFT:
+        return thin_wall_left::get_texture();
+    case texture_type::THIN_WALL_BOTRIGHT:
+        return thin_wall_botright::get_texture();
+    case texture_type::BACTERIA_UP:
+        return bacteria_up::get_texture();
+    case texture_type::BACTERIA_RIGHT:
+        return bacteria_right::get_texture();
+    case texture_type::BACTERIA_DOWN:
+        return bacteria_down::get_texture();
+    case texture_type::BACTERIA_LEFT:
+        return bacteria_left::get_texture();
+    case texture_type::BLOB:
+        return blob::get_texture();
+    case texture_type::CLONER_MOVEABLE_BLOCK:
+        return cloner_moveable_block::get_texture();
+    case texture_type::CLONER_FROG_MONSTER:
+        return cloner_frog_monster::get_texture();
     }
 
     return clear::get_texture();

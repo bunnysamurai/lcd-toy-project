@@ -85,9 +85,12 @@ DEFAULT_FACINGS = [
     "DOWN",
 ]
 
-TERRAIN_TYPES = DEFAULT_TERRAIN_TYPES
-ENTITY_TYPES = DEFAULT_ENTITY_TYPES
-FACINGS = DEFAULT_FACINGS
+# TERRAIN_TYPES = DEFAULT_TERRAIN_TYPES
+# ENTITY_TYPES = DEFAULT_ENTITY_TYPES
+# FACINGS = DEFAULT_FACINGS
+TERRAIN_TYPES = []
+ENTITY_TYPES = []
+FACINGS = []
 
 class MapImage():
     TILELEN = 32
@@ -564,21 +567,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="whatever")
     parser.add_argument("IMAGE", type=str, help="Image of the map from that german website")
     parser.add_argument("LEVEL", type=int, help="Level number")
+    parser.add_argument("--meta", type=str, default='meta.pkl')
+    parser.add_argument("--tiles", type=str, default='cache.pkl')
     args = parser.parse_args()
+
+    if os.path.exists(args.meta) is True:
+        with open(args.meta, 'rb') as fid:
+            meta = pickle.load(fid)
+            TERRAIN_TYPES = meta['TERRAIN_TYPES']
+            ENTITY_TYPES = meta['ENTITY_TYPES']
+            FACINGS = meta['FACINGS']
+            print(f"terrain types: {TERRAIN_TYPES}")
+            print(f"entity types: {ENTITY_TYPES}")
+            print(f"facings: {FACINGS}")
 
     mapimg = MapImage(args.IMAGE)
 
-    cache = TileCache(load_existing("cache.pkl"))
+    cache = TileCache(load_existing(args.tiles))
 
     result = ResultReport(args.LEVEL)
 
 
-    if os.path.exists('meta.pkl') is True:
-        with open('meta.pkl', 'rb') as fid:
-            meta = pickle.load(fid)
-            print(f"terrain types: {TERRAIN_TYPES}")
-            print(f"entity types: {ENTITY_TYPES}")
-            print(f"facings: {FACINGS}")
 
     '''
     What are we trying to accomplish?
@@ -614,9 +623,9 @@ if __name__ == "__main__":
             result.add(item, (xx,yy))
     
     result.save(f"level_{args.LEVEL}.cpp", f"level_{args.LEVEL}.hpp")
-    cache.save("cache.pkl")
+    cache.save(args.tiles)
 
-    with open('meta.pkl', 'wb') as fid:
+    with open(args.meta, 'wb') as fid:
         meta = {}
         meta['TERRAIN_TYPES'] = TERRAIN_TYPES
         meta['ENTITY_TYPES'] = ENTITY_TYPES

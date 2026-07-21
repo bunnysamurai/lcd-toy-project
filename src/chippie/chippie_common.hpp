@@ -1,7 +1,7 @@
 #if !defined(CHIPPIE_COMMON_HPP)
 #define CHIPPIE_COMMON_HPP
 
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 
 #include <cstdint>
 #include <utility>
@@ -17,7 +17,7 @@ enum struct direction
     LEFT,
 };
 
-constexpr int NO_TIME_LIMIT{ -1 };
+constexpr int NO_TIME_LIMIT{-1};
 
 [[nodiscard]] constexpr direction reverse(direction facing) noexcept
 {
@@ -46,6 +46,21 @@ constexpr int NO_TIME_LIMIT{ -1 };
         return direction::DOWN;
     case direction::LEFT:
         return direction::UP;
+    }
+}
+
+[[nodiscard]] constexpr direction rotate_anticlockwise(direction facing) noexcept
+{
+    switch (facing)
+    {
+    case direction::UP:
+        return direction::LEFT;
+    case direction::DOWN:
+        return direction::RIGHT;
+    case direction::RIGHT:
+        return direction::UP;
+    case direction::LEFT:
+        return direction::DOWN;
     }
 }
 

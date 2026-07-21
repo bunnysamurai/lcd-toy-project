@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "screen/TileDef.h"
 #include "chippie/textures/texture.hpp"

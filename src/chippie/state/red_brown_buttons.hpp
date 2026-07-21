@@ -3,7 +3,7 @@
 
 #include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 
 namespace chippie
 {

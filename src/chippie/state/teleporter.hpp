@@ -2,7 +2,7 @@
 #define TELEPORTER_HPP
 
 #include "chippie/chippie_common.hpp"
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 
 #include <array>
 #include <utility>

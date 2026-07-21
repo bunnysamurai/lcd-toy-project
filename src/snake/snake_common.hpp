@@ -2,7 +2,7 @@
 #define SNAKE_COMMON_HPP
 
 #include <cstdint>
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 
 namespace snake {
 

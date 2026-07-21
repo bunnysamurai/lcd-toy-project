@@ -81,6 +81,19 @@ enum struct texture_type
     FROG_DOWN,
     FROG_LEFT,
     DIGIT_CLEAR,
+    CYAN_STICK_BALL,
+    CYAN_STICK_BALL_MIRRORED,
+    THIN_WALL_TOP,
+    THIN_WALL_RIGHT,
+    THIN_WALL_LEFT,
+    THIN_WALL_BOTRIGHT,
+    BACTERIA_UP, /* maintain this ordering for entites with facings, please */
+    BACTERIA_RIGHT,
+    BACTERIA_DOWN,
+    BACTERIA_LEFT,
+    BLOB,
+    CLONER_MOVEABLE_BLOCK,
+    CLONER_FROG_MONSTER,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

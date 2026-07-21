@@ -29,6 +29,7 @@ struct state
     {
         CHIP_DIED,
         PORTAL_REACHED,
+        RESTART_LEVEL,
         USER_QUIT
     };
     bool active{true}; /* set to false when game should end */

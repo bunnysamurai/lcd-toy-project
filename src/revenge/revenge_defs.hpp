@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "common/BitImage.hpp"
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 #include "common/pico_sdk_timer_details.hpp"
 #include "common/timer.hpp"
 

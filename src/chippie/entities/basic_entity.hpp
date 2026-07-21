@@ -3,7 +3,7 @@
 
 #include "chippie/chippie_common.hpp"
 #include "chippie/state/terrain_types.hpp"
-#include "common/Grid.hpp"
+#include "utils/Grid.hpp"
 #include "entity_types.hpp"
 
 #include <cstdint>

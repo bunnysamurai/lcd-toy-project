@@ -2,7 +2,7 @@
 #define BIT_MANIP_HPP
 
 #include <cstdint>
-// #include <bitset>
+#include <cstddef>
 
 namespace bit_manip
 {

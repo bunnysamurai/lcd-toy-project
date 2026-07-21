@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.19)
 add_executable(${PROJECT_NAME} 
     main.cpp
     status_utilities.cpp
+    common/rng.cpp
     demo.cpp
     snake/snake.cpp
     tetris/tetris.cpp
@@ -24,12 +25,14 @@ add_executable(${PROJECT_NAME}
     chippie/entities/fire_dancer.cpp
     chippie/entities/water_glider.cpp
     chippie/entities/frog_monster.cpp
+    chippie/entities/cyan_stick_ball.cpp
+    chippie/entities/bacteria.cpp
+    chippie/entities/blob.cpp
     chippie/render/paint_utils.cpp
     chippie/state/chippie_inventory.cpp
     chippie/state/terrain_effects.cpp
     chippie/state/red_brown_buttons.cpp
     chippie/state/teleporter.cpp
-    # chippie/state/input_processor.cpp
     chippie/textures/texture.cpp
     chippie/levels/level.cpp
     chippie/levels/level_1.cpp
@@ -48,6 +51,19 @@ add_executable(${PROJECT_NAME}
     chippie/levels/level_14.cpp
     chippie/levels/level_15.cpp
     chippie/levels/level_16.cpp
+    chippie/levels/level_17.cpp
+    chippie/levels/level_18.cpp
+    chippie/levels/level_19.cpp
+    chippie/levels/level_20.cpp
+    chippie/levels/level_21.cpp
+    chippie/levels/level_22.cpp
+    chippie/levels/level_23.cpp
+    chippie/levels/level_24.cpp
+    chippie/levels/level_25.cpp
+    chippie/levels/level_26.cpp
+    chippie/levels/level_27.cpp
+    chippie/levels/level_28.cpp
+    chippie/levels/level_29.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

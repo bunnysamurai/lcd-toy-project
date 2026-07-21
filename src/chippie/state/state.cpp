@@ -81,64 +81,6 @@ void update_view_port_position(state &game_state) noexcept
     return game_state.view_port.contains({.x = loc.x, .y = loc.y});
 }
 
-void draw_border_around_rect(const screen::gfx::Rect &rect, int thickness) noexcept
-{
-    const auto [topx, topy]{rect.topleft};
-    const auto botx{topx + rect.size.width};
-    const auto boty{topy + rect.size.height};
-
-    for (int off = thickness; off != 0; --off)
-    {
-        /* top horizontal line */
-        screen::gfx::draw_line(
-            {
-                .x = topx - off,
-                .y = topy - off,
-            },
-            {
-                .x = botx + off - 1,
-                .y = topy - off,
-            },
-            WHITE, 1);
-
-        /* top (left) vertical line */
-        screen::gfx::draw_line(
-            {
-                .x = topx - off,
-                .y = topy - off,
-            },
-            {
-                .x = topx - off,
-                .y = boty + off - 1,
-            },
-            WHITE, 1);
-
-        /* bottom horizontal line */
-        screen::gfx::draw_line(
-            {
-                .x = topx - off,
-                .y = boty + off - 1,
-            },
-            {
-                .x = botx + off,
-                .y = boty + off - 1,
-            },
-            DRKGRY, 1);
-
-        /* bottom (right) vertical line */
-        screen::gfx::draw_line(
-            {
-                .x = botx + off - 1,
-                .y = topy - off,
-            },
-            {
-                .x = botx + off - 1,
-                .y = boty + off,
-            },
-            DRKGRY, 1);
-    }
-}
-
 void draw_border_around_grid(const Grid &grid_def, int thickness) noexcept
 {
     /*
@@ -151,17 +93,17 @@ void draw_border_around_grid(const Grid &grid_def, int thickness) noexcept
     const auto botx{cfg.xdimension.off + cfg.xdimension.scale * cfg.grid_width};
     const auto boty{cfg.ydimension.off + cfg.ydimension.scale * cfg.grid_height};
 
-    draw_border_around_rect({.topleft =
-                                 {
-                                     .x = topx,
-                                     .y = topy,
-                                 },
-                             .size =
-                                 {
-                                     .width = botx - topx,
-                                     .height = boty - topy,
-                                 }},
-                            thickness);
+    screen::gfx::draw_border({.topleft =
+                                  {
+                                      .x = topx,
+                                      .y = topy,
+                                  },
+                              .size =
+                                  {
+                                      .width = botx - topx,
+                                      .height = boty - topy,
+                                  }},
+                             thickness, WHITE, DRKGRY);
 }
 
 /*===========================================================*/
@@ -364,7 +306,7 @@ void paint(state &game_state) noexcept
     if (!game_state.hint_displayable)
     {
         screen::gfx::draw_rect(game_state.hint_area, LGREY, 0);
-        draw_border_around_rect(game_state.hint_area, 2);
+        screen::gfx::draw_border(game_state.hint_area, 2, WHITE, DRKGRY);
         paint_chip_count_display(game_state);
         paint_timer_display(game_state);
         paint_level_display(game_state);

@@ -15,6 +15,9 @@ transparent_list+=(blue_tank_up.png blue_tank_down.png blue_tank_left.png blue_t
 transparent_list+=(fire_dancer.png purple_ball.png)
 transparent_list+=(water_glider_up.png water_glider_down.png water_glider_left.png water_glider_right.png)
 transparent_list+=(frog_up.png frog_down.png frog_left.png frog_right.png)
+transparent_list+=(cyan_stick_ball.png cyan_stick_ball_mirrored.png)
+transparent_list+=(bacteria_up.png bacteria_down.png bacteria_left.png bacteria_right.png)
+transparent_list+=(blob.png)
 
 for f in ${transparent_list[@]}; do
 	echo $f
@@ -39,7 +42,10 @@ opaque_list+=(green_button_clear.png green_button_wall.png)
 opaque_list+=(bomb.png cloner_fire_dancer.png trap.png magic_wall.png)
 opaque_list+=(thief.png teleporter.png wall_trap.png gravel.png)
 
-opaque_list+=(thin_wall_bottom.png)
+opaque_list+=(thin_wall_top.png thin_wall_bottom.png thin_wall_left.png thin_wall_right.png)
+opaque_list+=(thin_wall_botright.png)
+
+opaque_list+=(cloner_moveable_block.png cloner_frog_monster.png)
 
 opaque_list+=(background.png)
 

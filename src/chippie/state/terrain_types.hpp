@@ -56,6 +56,8 @@ enum struct terrain_type : uint8_t
     THIEF,
     WALL_TRAP,
     CLONER_FIRE_DANCER,
+    CLONER_MOVEABLE_BLOCK,
+    CLONER_FROG_MONSTER,
 
     /* directional terrain features */
     ICE_TOPLEFT,
@@ -70,6 +72,7 @@ enum struct terrain_type : uint8_t
     THIN_WALL_BOT,
     THIN_WALL_LEFT,
     THIN_WALL_RIGHT,
+    THIN_WALL_BOTRIGHT,
     TELEPORTER,
 
     /* the loot! (boot) */

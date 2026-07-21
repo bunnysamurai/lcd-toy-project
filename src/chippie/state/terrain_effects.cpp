@@ -328,6 +328,7 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
+    case terrain_type::THIN_WALL_BOTRIGHT:
         break;
     }
 }
@@ -381,6 +382,7 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
+    case terrain_type::THIN_WALL_BOTRIGHT:
         break;
     }
 }
@@ -463,13 +465,37 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
         break;
+    case terrain_type::THIN_WALL_TOP:
+        if (nextfacing == direction::UP)
+        {
+            nextloc = ent.loc;
+        }
+        break;
     case terrain_type::THIN_WALL_BOT:
-        /* inhibit the movement */
         if (nextfacing == direction::DOWN)
         {
             nextloc = ent.loc;
         }
         break;
+    case terrain_type::THIN_WALL_LEFT:
+        if (nextfacing == direction::LEFT)
+        {
+            nextloc = ent.loc;
+        }
+        break;
+    case terrain_type::THIN_WALL_RIGHT:
+        if (nextfacing == direction::RIGHT)
+        {
+            nextloc = ent.loc;
+        }
+        break;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        if (nextfacing == direction::RIGHT || nextfacing == direction::DOWN)
+        {
+            nextloc = ent.loc;
+        }
+        break;
+
     case terrain_type::TELEPORTER:
         nextloc = move(ent.loc, ent.facing);
         nextfacing = ent.facing;
@@ -497,6 +523,8 @@ bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain
         return ent.facing == direction::RIGHT;
     case terrain_type::THIN_WALL_RIGHT:
         return ent.facing == direction::LEFT;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        return ent.facing == direction::LEFT || ent.facing == direction::UP;
 
     case terrain_type::CLEAR:
     case terrain_type::PORTAL:
@@ -576,6 +604,8 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
         return ent.facing == direction::RIGHT;
     case terrain_type::THIN_WALL_RIGHT:
         return ent.facing == direction::LEFT;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        return ent.facing == direction::LEFT || ent.facing == direction::UP;
 
     case terrain_type::ICE_TOPLEFT:
         return ent.facing == direction::DOWN || ent.facing == direction::RIGHT;
@@ -637,6 +667,8 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
         return dir == direction::RIGHT;
     case terrain_type::THIN_WALL_RIGHT:
         return dir == direction::LEFT;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        return dir == direction::LEFT || dir == direction::UP;
 
     case terrain_type::ICE_TOPLEFT:
         return dir == direction::DOWN || dir == direction::RIGHT;

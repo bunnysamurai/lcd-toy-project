@@ -21,6 +21,19 @@
 #include "level_14.hpp"
 #include "level_15.hpp"
 #include "level_16.hpp"
+#include "level_17.hpp"
+#include "level_18.hpp"
+#include "level_19.hpp"
+#include "level_20.hpp"
+#include "level_21.hpp"
+#include "level_22.hpp"
+#include "level_23.hpp"
+#include "level_24.hpp"
+#include "level_25.hpp"
+#include "level_26.hpp"
+#include "level_27.hpp"
+#include "level_28.hpp"
+#include "level_29.hpp"
 
 namespace chippie
 {
@@ -45,6 +58,19 @@ constexpr std::array jump_table {
     level_14::load_level,
     level_15::load_level,
     level_16::load_level,
+    level_17::load_level,
+    level_18::load_level,
+    level_19::load_level,
+    level_20::load_level,
+    level_21::load_level,
+    level_22::load_level,
+    level_23::load_level,
+    level_24::load_level,
+    level_25::load_level,
+    level_26::load_level,
+    level_27::load_level,
+    level_28::load_level,
+    level_29::load_level,
 };
 
 }
