@@ -64,6 +64,10 @@ add_executable(${PROJECT_NAME}
     chippie/levels/level_27.cpp
     chippie/levels/level_28.cpp
     chippie/levels/level_29.cpp
+    chippie/levels/level_30.cpp
+    chippie/levels/level_31.cpp
+    chippie/levels/level_32.cpp
+    chippie/levels/level_33.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

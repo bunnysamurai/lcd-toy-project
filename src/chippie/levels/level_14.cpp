@@ -119,6 +119,8 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.teleport_list.back().set_exit(direction::DOWN, start_tele, direction::DOWN);
     game_state.teleport_list.back().set_exit(direction::LEFT, start_tele, direction::LEFT);
     game_state.teleport_list.back().set_exit(direction::RIGHT, start_tele, direction::RIGHT);
+
+    static_assert(decltype(game_state.teleport_list){}.capacity() >= 3);
 }
 
 } // namespace

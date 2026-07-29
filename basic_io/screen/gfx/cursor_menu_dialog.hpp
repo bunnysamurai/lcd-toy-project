@@ -27,13 +27,13 @@ struct cursor_menu_dialog_palette
 
   TODO only supports screens in 4bpp mode
 */
-class cursor_menu_dialog
+class cursor_menu_dialog final
 {
   public:
     cursor_menu_dialog(cursor_menu_dialog_palette palette, const char *title,
                        std::span<const char *const> items) noexcept;
 
-    int ask() noexcept;
+    [[nodiscard]] int ask() noexcept;
 
   private:
     [[nodiscard]] Rect compute_background_shape() const noexcept;

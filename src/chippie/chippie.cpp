@@ -360,7 +360,7 @@ void run()
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = 13; /* TODO start on south pole for now */
+    int level = 33;
 
     while (true)
     {

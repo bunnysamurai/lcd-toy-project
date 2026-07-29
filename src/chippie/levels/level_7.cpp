@@ -113,6 +113,8 @@ void load_level_from_rom_stub(state &game_state) noexcept
     game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 17, .y = 16}});
     game_state.teleport_list.back().set_exit(direction::LEFT, {.x = 15, .y = 16}, direction::LEFT);
     game_state.teleport_list.back().set_exit(direction::UP, {.x = 17, .y = 14}, direction::UP);
+
+    static_assert(decltype(game_state.teleport_list){}.capacity() >= 4);
 }
 
 void load_entity_list_from_rom_stub(state &game_state) noexcept

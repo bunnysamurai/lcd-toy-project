@@ -110,6 +110,8 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
         .clone_type = entity_type::MOVEABLE_BLOCK,
     });
 
+    static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
+
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 30, .y = 22},
         .trap = {.x = 29, .y = 23},
@@ -134,6 +136,18 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
         .button = {.x = 30, .y = 27},
         .trap = {.x = 29, .y = 28},
     });
+
+    static_assert(decltype(game_state.brown_button_list){}.capacity() >= 6);
+
+    /* teleporters */
+    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 5, .y = 4}});
+    game_state.teleport_list.back().set_exit(direction::LEFT, {.x = 30, .y = 30}, direction::LEFT);
+
+    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 30, .y = 30}});
+    game_state.teleport_list.back().set_exit(direction::RIGHT, {.x = 5, .y = 4}, direction::RIGHT);
+
+    static_assert(decltype(game_state.teleport_list){}.capacity() >= 2);
+
 }
 
 } // namespace

@@ -82,6 +82,8 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
         .clone_facing = direction::UP,
         .clone_type = entity_type::MOVEABLE_BLOCK,
     });
+
+    static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
 }
 
 }

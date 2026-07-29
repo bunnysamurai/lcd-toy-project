@@ -16,6 +16,7 @@
 #include "../../utils/Cursor.hpp"
 #include "../glyphs/letter_utils.hpp"
 #include "../glyphs/letters.hpp"
+#include "details/dialog_utils.hpp"
 
 #include "defs.hpp"
 #include "shapes.hpp"
@@ -146,13 +147,9 @@ int cursor_menu_dialog::ask() noexcept
     const auto width_in_chars{longest_length + 2 * g_cfg.startcol};
     const auto height_in_chars{std::size(m_items) * g_cfg.row_spacing + g_cfg.titlestartline + 2};
 
-    /* we will center this on the screen */
-    const auto [swidth, sheight]{screen::get_virtual_screen_size()};
-    const auto left_col{(swidth / 2) - ((width_in_chars / 2) * GRID_WIDTH)};
-    const auto top_row{(sheight / 2) - ((height_in_chars / 2) * GRID_HEIGHT)};
+    const auto rect_shape{details::to_size_in_pixels({.width = width_in_chars, .height = height_in_chars})};
 
-    return {.topleft = {.x = left_col, .y = top_row},
-            .size = {.width = width_in_chars * GRID_WIDTH, .height = height_in_chars * GRID_HEIGHT}};
+    return details::compute_screen_centered_rectangle(rect_shape);
 }
 
 void cursor_menu_dialog::draw_letter(const uint32_t xpos, const uint32_t ypos, const char letter) const noexcept

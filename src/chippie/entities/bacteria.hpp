@@ -3,12 +3,12 @@
 
 #include "basic_entity.hpp"
 #include "chippie/events/event.hpp"
-#include "chippie/state/static_map.hpp"
+#include "chippie/state/state.hpp"
 
 namespace chippie::bacteria
 {
 
-[[nodiscard]] entity create(state &game_state, Grid::Location, direction, uint8_t) noexcept;
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept;
 [[nodiscard]] entity_state_machine get_state_functions() noexcept;
 
 /**

@@ -104,6 +104,8 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
         .clone_type = entity_type::FIRE_DANCER,
     });
 
+    static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
+
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 16, .y = 10},
         .trap = {.x = 18, .y = 10},
@@ -112,6 +114,9 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
         .button = {.x = 16, .y = 7},
         .trap = {.x = 18, .y = 7},
     });
+
+    static_assert(decltype(game_state.brown_button_list){}.capacity() >= 2);
+
 }
 
 } // namespace

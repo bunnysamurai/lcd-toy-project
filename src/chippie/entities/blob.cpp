@@ -3,6 +3,8 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
+#include "common/rng.hpp"
+
 namespace chippie::blob
 {
 
@@ -17,11 +19,14 @@ namespace chippie::blob
 namespace
 {
 
-constexpr uint64_t BLOB_VELOCITY_US{250'000}; /* time is in us */
+constexpr uint64_t BLOB_VELOCITY_US{1'000'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    return std::make_pair(move(ent.loc, ent.facing), ent.facing);
+    /* simply picks a random direction to move */
+    const uint32_t random_value{rng::prng()};
+    const auto new_facing{static_cast<direction>(static_cast<uint8_t>(direction::UP) + (random_value & 0b11))};
+    return std::make_pair(move(ent.loc, new_facing), new_facing);
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
@@ -38,10 +43,7 @@ constexpr uint64_t BLOB_VELOCITY_US{250'000}; /* time is in us */
         {
             register_event(event::event_type::ROLLED_BY_BALL);
         }
-        else
-        {
-            return collision_action::MOVE_BACKWARD;
-        }
+        return collision_action::NO_ACTION_NEEDED;
     }
 
     if (!check_terrain_is_opaque(ent, collided_terrain))
@@ -50,7 +52,7 @@ constexpr uint64_t BLOB_VELOCITY_US{250'000}; /* time is in us */
     }
     else
     {
-        return collision_action::MOVE_BACKWARD;
+        return collision_action::NO_ACTION_NEEDED;
     }
 }
 

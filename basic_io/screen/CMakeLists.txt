@@ -10,6 +10,7 @@ add_library(${PROJECT_NAME} STATIC
     gfx/shapes.cpp
     gfx/dialog.cpp
     gfx/cursor_menu_dialog.cpp
+    gfx/details/dialog_utils.cpp
 )
 target_compile_options(${PROJECT_NAME} PUBLIC -O3)
 target_link_options(${PROJECT_NAME} PUBLIC -flto)
