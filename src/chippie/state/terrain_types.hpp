@@ -68,6 +68,7 @@ enum struct terrain_type : uint8_t
     PUSH_FLOOR_DOWN,
     PUSH_FLOOR_LEFT,
     PUSH_FLOOR_RIGHT,
+    PUSH_FLOOR_MULTI,
     THIN_WALL_TOP,
     THIN_WALL_BOT,
     THIN_WALL_LEFT,

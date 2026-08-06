@@ -32,6 +32,7 @@ constexpr int NO_TIME_LIMIT{-1};
     case direction::LEFT:
         return direction::RIGHT;
     }
+    return facing;
 }
 
 [[nodiscard]] constexpr direction rotate_clockwise(direction facing) noexcept
@@ -47,6 +48,7 @@ constexpr int NO_TIME_LIMIT{-1};
     case direction::LEFT:
         return direction::UP;
     }
+    return facing;
 }
 
 [[nodiscard]] constexpr direction rotate_anticlockwise(direction facing) noexcept
@@ -62,6 +64,7 @@ constexpr int NO_TIME_LIMIT{-1};
     case direction::LEFT:
         return direction::DOWN;
     }
+    return facing;
 }
 
 [[nodiscard]] constexpr Grid::Location move(Grid::Location loc, direction facing) noexcept

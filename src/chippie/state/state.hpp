@@ -64,8 +64,8 @@ struct state
     static_map the_map;
     embp::variable_array<entity, 128> entity_list;
     embp::variable_array<red_button, 7> red_button_list;
-    embp::variable_array<brown_button, 8> brown_button_list;
-    embp::variable_array<teleporter, 8> teleport_list;
+    embp::variable_array<brown_button, 18> brown_button_list;
+    embp::variable_array<teleporter, 9> teleport_list;
 };
 
 void paint(state &) noexcept;

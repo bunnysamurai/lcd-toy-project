@@ -65,6 +65,7 @@
 #include "tiles/push_floor_left.hpp"
 #include "tiles/push_floor_right.hpp"
 #include "tiles/push_floor_up.hpp"
+#include "tiles/push_floor_multi.hpp"
 #include "tiles/suction_boots.hpp"
 
 #include "tiles/blue_button.hpp"
@@ -232,6 +233,8 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::CLONER_MOVEABLE_BLOCK;
     case terrain_type::CLONER_FROG_MONSTER:
         return texture_type::CLONER_FROG_MONSTER;
+    case terrain_type::PUSH_FLOOR_MULTI:
+        return texture_type::PUSH_FLOOR_MULTI;
     }
 
     return texture_type::CLEAR;
@@ -466,6 +469,8 @@ screen::Tile get_texture(texture_type texture) noexcept
         return cloner_moveable_block::get_texture();
     case texture_type::CLONER_FROG_MONSTER:
         return cloner_frog_monster::get_texture();
+    case texture_type::PUSH_FLOOR_MULTI:
+        return push_floor_multi::get_texture();
     }
 
     return clear::get_texture();

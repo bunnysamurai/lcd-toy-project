@@ -370,43 +370,46 @@ class ResultReport():
 
         # we'll also throw in static asserts for red button, brown button, and teleporter lists
         # as well as helpful messages that these lists need manual updating
-        def count_terrain_type(terrain):
-            acc = 0
+        def list_terrain_type(terrain):
+            acc = [] 
             for yy in range(32):
                 for xx in range(32):
                     if terrain == TERRAIN_TYPES[self.terrain[yy, xx]]:
-                        acc = acc + 1
+                        acc.append([xx,yy])
             return acc
         
-        number_of_red_buttons = count_terrain_type("RED_BUTTON")
-        number_of_brown_buttons = count_terrain_type("BROWN_BUTTON")
-        number_of_teleporters = count_terrain_type("TELEPORTER")
+        list_of_red_buttons = list_terrain_type("RED_BUTTON")
+        list_of_brown_buttons = list_terrain_type("BROWN_BUTTON")
+        list_of_teleporters = list_terrain_type("TELEPORTER")
 
-        if number_of_red_buttons > 0:
-            for idx in range(0, number_of_red_buttons):
+        if len(list_of_red_buttons) > 0:
+            for item in list_of_red_buttons:
+                [xloc, yloc] = item
                 result += f"    game_state.red_button_list.push_back(red_button{{\n"
-                result += f"        .button = {{.x = <INT>, .y = <INT>}},\n"
+                result += f"        .button = {{.x = {xloc}, .y = {yloc}}},\n"
                 result += f"        .clone_spawn = {{.x = <INT>, .y = <INT>}},\n"
                 result += f"        .clone_facing = <direction::>,\n"
                 result += f"        .clone_type = <entity_type::>,\n"
                 result += f"    }});\n"
-            result += f"    static_assert(decltype(game_state.red_button_list){{}}.capacity() >= {number_of_red_buttons});\n"
+            result += f"    static_assert(decltype(game_state.red_button_list){{}}.capacity() >= {len(list_of_red_buttons)});\n"
             result += f"#error \"Just a friendly reminder to fill in red_button_list :)\"\n"
-        if number_of_brown_buttons > 0:
-            for idx in range(0, number_of_brown_buttons):
+        if len(list_of_brown_buttons) > 0:
+            for item in list_of_brown_buttons:
+                [xloc, yloc] = item
                 result += f"    game_state.brown_button_list.push_back(brown_button{{\n"
-                result += f"        .button = {{.x = <INT>, .y = <INT>}},\n"
+                result += f"        .button = {{.x = {xloc}, .y = {yloc}}},\n"
                 result += f"        .trap = {{.x = <INT>, .y = <INT>}},\n"
                 result += f"    }});\n"
-            result += f"    static_assert(decltype(game_state.brown_button_list){{}}.capacity() >= {number_of_brown_buttons});\n"
+            result += f"    static_assert(decltype(game_state.brown_button_list){{}}.capacity() >= {len(list_of_brown_buttons)});\n"
             result += f"#error \"Just a friendly reminder to fill in brown_button_list :)\"\n"
-        if number_of_teleporters > 0:
-            for idx in range(0, number_of_brown_buttons):
-                result += f"    game_state.teleport_list.push_back(teleporter{{.entry_location = {{.x = <INT>, .y = <INT> }}}});\n"
+        if len(list_of_teleporters) > 0:
+            for item in list_of_teleporters:
+                [xloc, yloc] = item
+                result += f"    game_state.teleport_list.push_back(teleporter{{.entry_location = {{.x = {xloc}, .y = {yloc} }}}});\n"
                 result += f"    game_state.teleport_list.back().set_exit(<direction::>, {{.x = <INT>, .y = <INT>}}, <direction::>);\n"
                 result += f"    // plus other directions, if needed\n"
                 result += f"\n"
-            result += f"    static_assert(decltype(game_state.teleport_list){{}}.capacity() >= {number_of_teleporters});\n"
+            result += f"    static_assert(decltype(game_state.teleport_list){{}}.capacity() >= {len(list_of_teleporters)});\n"
             result += f"#error \"Just a friendly reminder to fill in teleport_list :)\"\n"
 
         return result

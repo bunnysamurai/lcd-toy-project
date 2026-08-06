@@ -35,7 +35,7 @@ namespace
     return check_is_chip(ent) && check_has_item(ent, item);
 };
 
-[[nodiscard]] inline constexpr bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
+[[nodiscard]] inline bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
 {
     const auto terrain{ent.game_state->the_map[nextloc]};
     if (ent.identity == entity_type::CHIPPIE)
@@ -329,6 +329,7 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::THIN_WALL_LEFT:
     case terrain_type::THIN_WALL_RIGHT:
     case terrain_type::THIN_WALL_BOTRIGHT:
+    case terrain_type::PUSH_FLOOR_MULTI:
         break;
     }
 }
@@ -378,6 +379,7 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::PUSH_FLOOR_MULTI:
     case terrain_type::THIN_WALL_BOT:
     case terrain_type::THIN_WALL_TOP:
     case terrain_type::THIN_WALL_LEFT:
@@ -465,6 +467,15 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
             ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
         }
         break;
+    case terrain_type::PUSH_FLOOR_MULTI:
+        if (!(check_for_chip_and_item(ent, inventory_item::SUCTION_BOOTS) || (ent.facing != nextfacing)))
+        {
+            nextloc = move(ent.loc, ent.facing);
+            nextfacing = ent.facing;
+            /* force the move at a fixed rate */
+            ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
+        }
+        break;
     case terrain_type::THIN_WALL_TOP:
         if (nextfacing == direction::UP)
         {
@@ -513,6 +524,8 @@ bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain
     case terrain_type::INVISIBLE_WALL:
     case terrain_type::GREEN_BUTTON_WALL:
     case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
+    case terrain_type::CLONER_FROG_MONSTER:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -594,6 +607,9 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
     case terrain_type::GREEN_BUTTON_WALL:
+    case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
+    case terrain_type::CLONER_FROG_MONSTER:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -657,6 +673,9 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CYAN_DOOR:
     case terrain_type::YELLOW_DOOR:
     case terrain_type::GREEN_BUTTON_WALL:
+    case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
+    case terrain_type::CLONER_FROG_MONSTER:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -700,6 +719,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::PUSH_FLOOR_MULTI:
         return false;
     }
 

@@ -38,6 +38,13 @@
 #include "level_31.hpp"
 #include "level_32.hpp"
 #include "level_33.hpp"
+#include "level_34.hpp"
+#include "level_35.hpp"
+#include "level_36.hpp"
+#include "level_37.hpp"
+#include "level_38.hpp"
+#include "level_39.hpp"
+#include "level_40.hpp"
 
 namespace chippie
 {
@@ -79,6 +86,13 @@ constexpr std::array jump_table {
     level_31::load_level,
     level_32::load_level,
     level_33::load_level,
+    level_34::load_level,
+    level_35::load_level,
+    level_36::load_level,
+    level_37::load_level,
+    level_38::load_level,
+    level_39::load_level,
+    level_40::load_level,
 };
 
 }
