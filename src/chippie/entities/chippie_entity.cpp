@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <pico/types.h>
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include <pico/printf.h>
 #endif
@@ -190,6 +190,8 @@ absolute_time_t hold_time_point;
     case terrain_type::WALL:
     case terrain_type::GREEN_BUTTON_WALL:
     case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::CLONER_FROG_MONSTER:
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
     case terrain_type::INVISIBLE_WALL:
         return collision_action::NO_ACTION_NEEDED;
     case terrain_type::THIN_WALL_BOT:

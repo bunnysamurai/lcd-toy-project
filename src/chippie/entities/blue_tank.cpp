@@ -107,7 +107,7 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
 {
     auto &&to_identity{[](const direction entdir) {
         switch (entdir)
@@ -128,6 +128,7 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
         .loc = xy,
         .identity = to_identity(dir),
         .facing = dir,
+        .next_time = next_time,
         .alive = true,
         .trapped = false,
         .uuid = uuid,

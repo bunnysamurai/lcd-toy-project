@@ -328,14 +328,17 @@ class ResultReport():
     def _stringify_entity_creation(self, entity, xy):
         if '_' in entity:
             items = entity.split('_')
-            ent_name = '_'.join(items[0:-1]).lower()
+            ent_name = '_'.join(items[0:-1])#.lower()
 
             # handle the exceptional case...
-            if ent_name == "moveable_block":
-                ent_name = "moveable_block_entity"
+            # if ent_name == "moveable_block":
+            #     ent_name = "moveable_block_entity"
+            # if "blue_tank" in ent_name:
+            #     ent_name = "blue_tank"
 
             facing = items[-1]
-            return f"{ent_name}::create(game_state, {{.x = {xy[0]}, .y = {xy[1]}}}, direction::{facing}, uuid++)"
+            # return f"{ent_name}::create(game_state, {{.x = {xy[0]}, .y = {xy[1]}}}, direction::{facing}, uuid++)"
+            return f"create_entity(entity_type::{ent_name}, {{.x = {xy[0]}, .y = {xy[1]}}}, direction::{facing}, uuid++, game_state)"
     
     def _resolve_terrain(self):
         result = ''

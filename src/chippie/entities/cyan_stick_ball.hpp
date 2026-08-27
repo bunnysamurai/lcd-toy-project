@@ -8,7 +8,7 @@
 namespace chippie::cyan_stick_ball
 {
 
-[[nodiscard]] entity create(state &game_state, Grid::Location, direction, uint8_t) noexcept;
+[[nodiscard]] entity create(state &game_state, Grid::Location, direction, uint8_t, uint64_t next_time = 0) noexcept;
 [[nodiscard]] entity_state_machine get_state_functions() noexcept;
 
 /**

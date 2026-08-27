@@ -3,8 +3,9 @@
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
+#include "chippie/events/event.hpp"
 
-// #define DEBUG_PRINT
+#define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
@@ -23,7 +24,7 @@ namespace chippie::moveable_block_entity
 namespace
 {
 
-constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{0}; /* time is in us */
+constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> move_if_chippie_is_on_us(const entity &ent) noexcept
 {
@@ -35,20 +36,20 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{0}; /* time is in us */
      * that. */
 
 #ifdef DEBUG_PRINT
-    printf("moveable block: processing a move...\n");
+    // printf("moveable block: processing a move...\n");
 #endif
     const auto &chippie_as_entity{ent.game_state->entity_list.front()};
 
     if (ent.loc == chippie_as_entity.loc)
     {
 #ifdef DEBUG_PRINT
-        printf("moveable block: has chippie on top!\n");
+        // printf("moveable block: has chippie on top!\n");
 #endif
         return std::make_pair(move(ent.loc, chippie_as_entity.facing), chippie_as_entity.facing);
     }
 
 #ifdef DEBUG_PRINT
-        printf("moveable block: no chippie on top...\n");
+        // printf("moveable block: no chippie on top...\n");
 #endif
     return std::make_pair(ent.loc, ent.facing);
 }
@@ -57,6 +58,37 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{0}; /* time is in us */
                                                           [[maybe_unused]] entity *collided_entity,
                                                           [[maybe_unused]] terrain_type collided_terrain) noexcept
 {
+
+#ifdef DEBUG_PRINT
+    // printf("moveable block collision handling start\n");
+#endif
+    if (collided_entity != nullptr)
+    {
+        printf("moveable block: collision detected!\n");
+        if (collided_entity->identity == entity_type::CHIPPIE)
+        {
+#ifdef DEBUG_PRINT
+            printf("  collided with chip\n");
+#endif
+            register_event(event::event_type::SMUSHED);
+        }
+        else
+        {
+#ifdef DEBUG_PRINT
+            printf("  can't move, check if current location contains chip...\n");
+#endif
+            if( ent.game_state->entity_list.front().loc == ent.loc)
+            {
+                register_event(event::event_type::SMUSHED);
+            }
+            return collision_action::NO_ACTION_NEEDED;
+        }
+    }
+
+#ifdef DEBUG_PRINT
+    // printf("moveable block collision handling end\n");
+#endif
+
     return collision_action::APPLY_NEXT_LOCATION;
 }
 
@@ -70,12 +102,13 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{0}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
 {
     return {
         .loc = xy,
         .identity = entity_type::MOVEABLE_BLOCK,
         .facing = dir,
+        .next_time = next_time,
         .alive = true,
         .trapped = false,
         .uuid = uuid,

@@ -32,6 +32,7 @@ enum struct event_type
     GLIDED_OVER,     /* touched a water glider */
     ROLLED_BY_BALL,  /* touched a purple ball */
     CHOMPED_BY_FROG, /* touched a frog monster */
+    SMUSHED,         /* block crushed us */
     MAX_EVENT_TYPE
 };
 

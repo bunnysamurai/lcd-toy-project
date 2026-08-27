@@ -133,8 +133,11 @@ static void lcdPrvWriteData(uint8_t val) {
         "bpp" bits of y 3 times for 4bpp, 6 for 2bpp, 12 for 1bpp. this wors becuase for
         4 BPP y is the sample and we want that to go into R, G, B. for 2bpp, screen is
         still in RGB444 mode, so to upcovert from 2bpp to 4bpp we duplicate the sample.
-        this is correct!. same applies to 1bpp again: in X, bpp goto again if X--
+        this is correct!. same applies to 1bpp 
 
+              again: 
+                in X, bpp 
+                goto again if X--
                 wait irq 4
                 jump more, if osr_not_empty
                 LOOP_TO_START

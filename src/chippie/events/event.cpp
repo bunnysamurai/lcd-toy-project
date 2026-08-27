@@ -54,8 +54,20 @@ std::array<event_cb_t, static_cast<size_t>(event_type::MAX_EVENT_TYPE)> handlers
         return "GAME_OVER";
     case event_type::MOVE_MOVABLE_BLOCK:
         return "MOVE_MOVABLE_BLOCK";
-    case event_type::MAX_EVENT_TYPE:
-        return "MAX_EVENT_TYPE";
+    case event_type::FLATTENED_BY_TANK:
+        return "FLATTENED_BY_TANK";
+    case event_type::DANCED_BY_FIRE:
+        return "DANCED_BY_FIRE";
+    case event_type::EXPLODED:
+        return "EXPLODED";
+    case event_type::GLIDED_OVER:
+        return "GLIDED_OVER";
+    case event_type::ROLLED_BY_BALL:
+        return "ROLLED_BY_BALL";
+    case event_type::CHOMPED_BY_FROG:
+        return "CHOMPED_BY_FROG";
+    case event_type::SMUSHED:
+        return "SMUSHED";
     default:
         return "OTHER";
     }

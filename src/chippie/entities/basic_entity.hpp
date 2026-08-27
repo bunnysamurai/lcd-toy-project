@@ -22,6 +22,7 @@ struct state;
     process-terrain-type-to-be-entered
     end-of-loop
 
+    See game_logic.cpp for the actual details of the processing loop.  The above may be out-of-date.
  */
 
 /** entities are anything in the game that can "move"
@@ -32,12 +33,20 @@ struct entity
     Grid::Location loc;
     entity_type identity;
     direction facing;
-    uint64_t next_time; /* useful for knowning when to processing moving */
+    uint64_t next_time; /* useful for knowing when to processing moving */
     bool alive{true};
     bool trapped{false};
     uint8_t uuid;
     state *game_state;
 };
+
+[[nodiscard]] entity create_entity(
+    entity_type ent_id, 
+    Grid::Location location, 
+    direction facing, 
+    uint8_t uuid, 
+    state& game_state, 
+    uint64_t next_time = 0) noexcept;
 
 enum struct collision_action
 {

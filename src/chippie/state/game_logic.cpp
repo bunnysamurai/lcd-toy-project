@@ -51,7 +51,6 @@ void game_logic::process() noexcept
 
 void game_logic::move_entities() noexcept
 {
-    // for (auto &ent : game_state.entity_list)
     for (uint32_t ii = 0;; ++ii)
     {
         if (ii >= std::size(game_state.entity_list))
@@ -70,7 +69,8 @@ void game_logic::move_entities() noexcept
 
         /*  If the timer hasn't expired yet for a move, then skip.
          */
-        if (absolute_time_diff_us(get_absolute_time(), ent.next_time) > 0)
+        const auto current_time{get_absolute_time()};
+        if (absolute_time_diff_us(current_time, ent.next_time) > 0)
         {
             continue;
         }
@@ -99,12 +99,6 @@ void game_logic::move_entities() noexcept
            note that the collision handler may further edit the facing. */
         ent.facing = nextfacing;
 
-        /* if the next location is the same as the current, then there's nothing more to do */
-        if (nextloc == ent.loc)
-        {
-            continue;
-        }
-
         /* then, determine and resolve collisions */
         const collision_result collision{find_collisions(ent, nextloc)};
 
@@ -122,6 +116,12 @@ void game_logic::move_entities() noexcept
         if (action == collision_action::MARK_DEAD)
         {
             ent.alive = false;
+            continue;
+        }
+
+        /* if the next location is the same as the current, then there's nothing more to do */
+        if (nextloc == ent.loc)
+        {
             continue;
         }
 
@@ -208,7 +208,6 @@ void game_logic::process_time_remaining() noexcept
 
         if (game_state.time_remaining == 0)
         {
-
             event::register_event(event::event_type::TIME_UP);
             return;
         }

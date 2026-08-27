@@ -4,6 +4,7 @@
 #include "blob.hpp"
 #include "blue_tank.hpp"
 #include "centipede.hpp"
+#include "chippie/entities/entity_types.hpp"
 #include "chippie_entity.hpp"
 #include "cyan_stick_ball.hpp"
 #include "fire_dancer.hpp"
@@ -79,6 +80,42 @@ namespace chippie
         return moveable_block_entity::get_velocity();
     case entity_type::BLOB:
         return blob::get_velocity();
+    case entity_type::ENTITY_TYPE_SIZE:
+        return {};
+    }
+    return {};
+}
+
+entity create_entity(entity_type ent_id, Grid::Location location, direction facing, uint8_t uuid, state &game_state,
+                     uint64_t next_time) noexcept
+{
+    switch (ent_id)
+    {
+    case entity_type::CHIPPIE:
+        return chippie::create(game_state, location, facing, uuid);
+    case entity_type::BLUE_TANK_THAT_MOVES_DOWN:
+    case entity_type::BLUE_TANK_THAT_MOVES_LEFT:
+    case entity_type::BLUE_TANK_THAT_MOVES_RIGHT:
+    case entity_type::BLUE_TANK_THAT_MOVES_UP:
+        return blue_tank::create(game_state, location, facing, uuid, next_time);
+    case entity_type::WATER_GLIDER:
+        return water_glider::create(game_state, location, facing, uuid, next_time);
+    case entity_type::FIRE_DANCER:
+        return fire_dancer::create(game_state, location, facing, uuid, next_time);
+    case entity_type::PURPLE_BALL:
+        return purple_ball::create(game_state, location, facing, uuid, next_time);
+    case entity_type::CYAN_STICK_BALL:
+        return cyan_stick_ball::create(game_state, location, facing, uuid, next_time);
+    case entity_type::BACTERIA:
+        return bacteria::create(game_state, location, facing, uuid, next_time);
+    case entity_type::FROG_MONSTER:
+        return frog_monster::create(game_state, location, facing, uuid, next_time);
+    case entity_type::CENTIPEDE:
+        return centipede::create(game_state, location, facing, uuid, next_time);
+    case entity_type::MOVEABLE_BLOCK:
+        return moveable_block_entity::create(game_state, location, facing, uuid, next_time);
+    case entity_type::BLOB:
+        return blob::create(game_state, location, facing, uuid, next_time);
     case entity_type::ENTITY_TYPE_SIZE:
         return {};
     }

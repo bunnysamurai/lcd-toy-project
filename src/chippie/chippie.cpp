@@ -65,6 +65,14 @@ void screen_init() noexcept
 void init_event_handlers() noexcept
 {
     event::register_handler(event::event_handler{
+        .identifier = event::event_type::SMUSHED,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
+    event::register_handler(event::event_handler{
         .identifier = event::event_type::CHOMPED_BY_FROG,
         .handler =
             [](state &game_state) {

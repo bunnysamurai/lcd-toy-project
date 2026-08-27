@@ -1,8 +1,7 @@
 #include "red_brown_buttons.hpp"
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
-
-#include "chippie/entities/fire_dancer.hpp"
-#include "chippie/entities/moveable_block.hpp"
+#include "chippie/state/state.hpp"
 
 #include <algorithm>
 
@@ -40,28 +39,16 @@ void red_button::generate(state &game_state) noexcept
     printf("with uuid %d ", next_uuid);
 #endif
 
-    switch (clone_type)
-    {
-    case entity_type::MOVEABLE_BLOCK:
+    /* should guarentee the new entity will move within the game_logic processing loop it was added */
+    auto &chippie{game_state.entity_list.front()};
+    const uint64_t next_move_time{chippie.next_time - get_entity_velocity(chippie.identity)};
 #ifdef DEBUG_PRINT
-        printf("a moveable block");
+    const uint64_t current_time{get_absolute_time()};
+    printf("at time %llu, next move time is %llu... entity: (%d)", current_time, next_move_time, static_cast<int>(clone_type));
 #endif
-        game_state.entity_list.push_back(
-            moveable_block_entity::create(game_state, clone_spawn, clone_facing, next_uuid));
-        break;
-    case entity_type::FIRE_DANCER:
-#ifdef DEBUG_PRINT
-        printf("a fire dancer");
-#endif
-        game_state.entity_list.push_back(fire_dancer::create(game_state, clone_spawn, clone_facing, next_uuid));
-        break;
-    default:
-        break;
-    }
 
-    /* if this introduces a bit of drift, we probably won't notice... */
-    game_state.entity_list.back().next_time =
-        delayed_by_us(get_absolute_time(), get_entity_velocity(game_state.entity_list.back().identity));
+    game_state.entity_list.push_back(
+        create_entity(clone_type, clone_spawn, clone_facing, next_uuid, game_state, next_move_time));
 
 #ifdef DEBUG_PRINT
     printf("\n");
