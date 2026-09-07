@@ -13,6 +13,10 @@
 #include "purple_ball.hpp"
 #include "water_glider.hpp"
 
+#include "chippie/state/state.hpp"
+
+#include <algorithm>
+
 namespace chippie
 {
 
@@ -120,6 +124,22 @@ entity create_entity(entity_type ent_id, Grid::Location location, direction faci
         return {};
     }
     return {};
+}
+
+void enforce_superposition_principle(entity &myself) noexcept
+{
+    auto &game_state{*myself.game_state};
+
+    /* search for other entities */
+    auto entitr =
+        std::find_if(std::begin(game_state.entity_list), std::end(game_state.entity_list),
+                     [&](const auto &other) { return (other.loc == myself.loc) && (myself.uuid != other.uuid); });
+
+    /* if we occupy a space with another entity, sorry, but we need to die. */
+    if (entitr != std::end(game_state.entity_list))
+    {
+        myself.alive = false;
+    }
 }
 
 } // namespace chippie

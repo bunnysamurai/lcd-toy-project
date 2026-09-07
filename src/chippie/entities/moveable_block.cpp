@@ -2,8 +2,8 @@
 #include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
-#include "chippie/state/terrain_effects.hpp"
 #include "chippie/events/event.hpp"
+#include "chippie/state/terrain_effects.hpp"
 
 #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
@@ -49,14 +49,13 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
     }
 
 #ifdef DEBUG_PRINT
-        // printf("moveable block: no chippie on top...\n");
+    // printf("moveable block: no chippie on top...\n");
 #endif
     return std::make_pair(ent.loc, ent.facing);
 }
 
-[[nodiscard]] collision_action always_apply_next_location([[maybe_unused]] entity &ent,
-                                                          [[maybe_unused]] entity *collided_entity,
-                                                          [[maybe_unused]] terrain_type collided_terrain) noexcept
+[[nodiscard]] collision_action handle_collision([[maybe_unused]] entity &ent, [[maybe_unused]] entity *collided_entity,
+                                                [[maybe_unused]] terrain_type collided_terrain) noexcept
 {
 
 #ifdef DEBUG_PRINT
@@ -77,10 +76,16 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
 #ifdef DEBUG_PRINT
             printf("  can't move, check if current location contains chip...\n");
 #endif
-            if( ent.game_state->entity_list.front().loc == ent.loc)
+            if (ent.game_state->entity_list.front().loc == ent.loc)
             {
                 register_event(event::event_type::SMUSHED);
             }
+            else
+            {
+                /* somehow we are overlaid with a non-chippie entity, likely from a cloner. Mark it dead. */
+                collided_entity->alive = false;
+            }
+
             return collision_action::NO_ACTION_NEEDED;
         }
     }
@@ -102,7 +107,8 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,
@@ -121,7 +127,7 @@ entity_state_machine get_state_functions() noexcept
     return {
         .entry_handler = nullptr,
         .process_move_handler = move_if_chippie_is_on_us,
-        .entity_collision_handler = always_apply_next_location,
+        .entity_collision_handler = handle_collision,
         .exit_handler = nullptr,
     };
 }

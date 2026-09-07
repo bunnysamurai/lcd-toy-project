@@ -20,12 +20,6 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
 [[nodiscard]] bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept;
 
 /**
-    @brief Check for terrain that is ALWAYS opaque for chippie and requires no side-effects.  Can be facing dependent
-   (aka thin walls).
- */
-[[nodiscard]] bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain) noexcept;
-
-/**
     @brief dir is the direction the moveable block is moving
 */
 [[nodiscard]] bool check_terrain_is_opaque_for_moveable(direction dir, terrain_type terrain) noexcept;

@@ -1,5 +1,6 @@
 #include "blue_tank.hpp"
 #include "chippie/chippie_common.hpp"
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
@@ -139,7 +140,7 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 entity_state_machine get_state_functions() noexcept
 {
     return {
-        .entry_handler = nullptr,
+        .entry_handler = enforce_superposition_principle,
         .process_move_handler = compute_next_location,
         .entity_collision_handler = handle_collision,
         .exit_handler = nullptr,

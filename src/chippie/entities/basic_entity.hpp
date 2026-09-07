@@ -115,6 +115,16 @@ constexpr void move_relative_direction(entity &ent, relative_direction dir) noex
  */
 [[nodiscard]] uint64_t get_entity_velocity(entity_type id) noexcept;
 
+/** @brief common catch-all for entity edge case.
+    
+    A common cleanup utility, this will make the entity as dead if, on entry, 
+    this entity occupies the same space as another.  Used for 
+    entity_state_machine's entry_handler, mostly.
+
+    Does run an entire find_collision check, just to raise awareness.
+ */
+void enforce_superposition_principle(entity& myself) noexcept;
+
 } // namespace chippie
 
 #endif

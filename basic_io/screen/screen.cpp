@@ -402,7 +402,7 @@ void melt(uint32_t replacement_value)
 
     for (;;)
     {
-        // sleep_us(10);
+        sleep_us(10);
         bool we_are_done{true};
         for (uint32_t idx = 0; idx < SECARRLEN; ++idx)
         {

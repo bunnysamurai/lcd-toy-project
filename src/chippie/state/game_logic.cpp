@@ -60,12 +60,8 @@ void game_logic::move_entities() noexcept
 
         auto &ent{game_state.entity_list[ii]};
 
-        /*  If this guy is dead, then skip.  Dead entities are cleaned up later.
-         */
-        if (!ent.alive)
-        {
-            continue;
-        }
+        /* get the function table for this entity */
+        const auto entity_handles{get_state_functions(ent.identity)};
 
         /*  If the timer hasn't expired yet for a move, then skip.
          */
@@ -75,17 +71,21 @@ void game_logic::move_entities() noexcept
             continue;
         }
 
-        /* Update next move time w/o drift */
-        ent.next_time = delayed_by_us(ent.next_time, get_entity_velocity(ent.identity));
-
-        /* get the function table for this entity */
-        const auto entity_handles{get_state_functions(ent.identity)};
-
         /* begin processing with the entry handler */
         if (entity_handles.entry_handler != nullptr)
         {
             entity_handles.entry_handler(ent);
         }
+
+        /*  If this guy is dead, then skip.  Dead entities are cleaned up later.
+         */
+        if (!ent.alive)
+        {
+            continue;
+        }
+
+        /* If we make it here, we are good to process a move.  Update next move time w/o drift */
+        ent.next_time = delayed_by_us(ent.next_time, get_entity_velocity(ent.identity));
 
         /* next, compute where this entity wants to move */
         auto [nextloc, nextfacing]{entity_handles.process_move_handler != nullptr

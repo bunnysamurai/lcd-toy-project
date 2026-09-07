@@ -20,6 +20,82 @@ namespace chippie
 {
 namespace
 {
+/**
+    @brief Check for terrain that is ALWAYS opaque for chippie and requires no side-effects.  Can be facing dependent
+   (aka thin walls).
+ */
+[[nodiscard]] bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain) noexcept
+{
+    switch (terrain)
+    {
+    case terrain_type::WALL:
+    case terrain_type::INVISIBLE_WALL:
+    case terrain_type::GREEN_BUTTON_WALL:
+    case terrain_type::CLONER_FIRE_DANCER:
+    case terrain_type::CLONER_MOVEABLE_BLOCK:
+    case terrain_type::CLONER_FROG_MONSTER:
+        return true;
+
+    case terrain_type::THIN_WALL_TOP:
+        return ent.facing == direction::DOWN;
+    case terrain_type::THIN_WALL_BOT:
+        return ent.facing == direction::UP;
+    case terrain_type::THIN_WALL_LEFT:
+        return ent.facing == direction::RIGHT;
+    case terrain_type::THIN_WALL_RIGHT:
+        return ent.facing == direction::LEFT;
+    case terrain_type::THIN_WALL_BOTRIGHT:
+        return ent.facing == direction::LEFT || ent.facing == direction::UP;
+
+    case terrain_type::CLEAR:
+    case terrain_type::PORTAL:
+    case terrain_type::CHIP:
+    case terrain_type::HINT:
+    case terrain_type::SOCKET:
+    case terrain_type::WATER:
+    case terrain_type::FIRE:
+    case terrain_type::GRAVEL:
+    case terrain_type::ICE:
+    case terrain_type::DIRT:
+    case terrain_type::TRAP:
+    case terrain_type::BOMB:
+    case terrain_type::APPEARING_WALL:
+    case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::MAGIC_TILE_CLEAR:
+    case terrain_type::GREEN_BUTTON_CLEAR:
+    case terrain_type::GREEN_BUTTON:
+    case terrain_type::BLUE_BUTTON:
+    case terrain_type::BROWN_BUTTON:
+    case terrain_type::RED_BUTTON:
+    case terrain_type::GREEN_DOOR:
+    case terrain_type::RED_DOOR:
+    case terrain_type::CYAN_DOOR:
+    case terrain_type::YELLOW_DOOR:
+    case terrain_type::GREEN_KEY:
+    case terrain_type::RED_KEY:
+    case terrain_type::CYAN_KEY:
+    case terrain_type::YELLOW_KEY:
+    case terrain_type::THIEF:
+    case terrain_type::WALL_TRAP:
+    case terrain_type::ICE_TOPLEFT:
+    case terrain_type::ICE_TOPRIGHT:
+    case terrain_type::ICE_BOTLEFT:
+    case terrain_type::ICE_BOTRIGHT:
+    case terrain_type::PUSH_FLOOR_UP:
+    case terrain_type::PUSH_FLOOR_DOWN:
+    case terrain_type::PUSH_FLOOR_LEFT:
+    case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::TELEPORTER:
+    case terrain_type::FIRE_BOOTS:
+    case terrain_type::FLIPPERS:
+    case terrain_type::ICE_SKATES:
+    case terrain_type::SUCTION_BOOTS:
+        return false;
+    }
+
+    return false;
+}
+
 [[nodiscard]] inline constexpr bool check_is_chip(const entity &ent) noexcept
 {
     return ent.identity == entity_type::CHIPPIE;
@@ -514,78 +590,6 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     default:
         break;
     }
-}
-
-bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain) noexcept
-{
-    switch (terrain)
-    {
-    case terrain_type::WALL:
-    case terrain_type::INVISIBLE_WALL:
-    case terrain_type::GREEN_BUTTON_WALL:
-    case terrain_type::CLONER_FIRE_DANCER:
-    case terrain_type::CLONER_MOVEABLE_BLOCK:
-    case terrain_type::CLONER_FROG_MONSTER:
-        return true;
-
-    case terrain_type::THIN_WALL_TOP:
-        return ent.facing == direction::DOWN;
-    case terrain_type::THIN_WALL_BOT:
-        return ent.facing == direction::UP;
-    case terrain_type::THIN_WALL_LEFT:
-        return ent.facing == direction::RIGHT;
-    case terrain_type::THIN_WALL_RIGHT:
-        return ent.facing == direction::LEFT;
-    case terrain_type::THIN_WALL_BOTRIGHT:
-        return ent.facing == direction::LEFT || ent.facing == direction::UP;
-
-    case terrain_type::CLEAR:
-    case terrain_type::PORTAL:
-    case terrain_type::CHIP:
-    case terrain_type::HINT:
-    case terrain_type::SOCKET:
-    case terrain_type::WATER:
-    case terrain_type::FIRE:
-    case terrain_type::GRAVEL:
-    case terrain_type::ICE:
-    case terrain_type::DIRT:
-    case terrain_type::TRAP:
-    case terrain_type::BOMB:
-    case terrain_type::APPEARING_WALL:
-    case terrain_type::MAGIC_TILE_WALL:
-    case terrain_type::MAGIC_TILE_CLEAR:
-    case terrain_type::GREEN_BUTTON_CLEAR:
-    case terrain_type::GREEN_BUTTON:
-    case terrain_type::BLUE_BUTTON:
-    case terrain_type::BROWN_BUTTON:
-    case terrain_type::RED_BUTTON:
-    case terrain_type::GREEN_DOOR:
-    case terrain_type::RED_DOOR:
-    case terrain_type::CYAN_DOOR:
-    case terrain_type::YELLOW_DOOR:
-    case terrain_type::GREEN_KEY:
-    case terrain_type::RED_KEY:
-    case terrain_type::CYAN_KEY:
-    case terrain_type::YELLOW_KEY:
-    case terrain_type::THIEF:
-    case terrain_type::WALL_TRAP:
-    case terrain_type::ICE_TOPLEFT:
-    case terrain_type::ICE_TOPRIGHT:
-    case terrain_type::ICE_BOTLEFT:
-    case terrain_type::ICE_BOTRIGHT:
-    case terrain_type::PUSH_FLOOR_UP:
-    case terrain_type::PUSH_FLOOR_DOWN:
-    case terrain_type::PUSH_FLOOR_LEFT:
-    case terrain_type::PUSH_FLOOR_RIGHT:
-    case terrain_type::TELEPORTER:
-    case terrain_type::FIRE_BOOTS:
-    case terrain_type::FLIPPERS:
-    case terrain_type::ICE_SKATES:
-    case terrain_type::SUCTION_BOOTS:
-        return false;
-    }
-
-    return false;
 }
 
 bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept

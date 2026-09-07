@@ -136,7 +136,8 @@ constexpr uint64_t BACTERIA_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,
@@ -153,7 +154,7 @@ constexpr uint64_t BACTERIA_VELOCITY_US{250'000}; /* time is in us */
 entity_state_machine get_state_functions() noexcept
 {
     return {
-        .entry_handler = nullptr,
+        .entry_handler = enforce_superposition_principle,
         .process_move_handler = compute_next_location,
         .entity_collision_handler = handle_collision,
         .exit_handler = nullptr,

@@ -153,7 +153,7 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 entity_state_machine get_state_functions() noexcept
 {
     return {
-        .entry_handler = nullptr,
+        .entry_handler = enforce_superposition_principle,
         .process_move_handler = compute_next_location,
         .entity_collision_handler = handle_collision,
         .exit_handler = nullptr,

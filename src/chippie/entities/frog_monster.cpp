@@ -165,10 +165,7 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
 #endif
             register_event(event::event_type::CHOMPED_BY_FROG);
         }
-        else
-        {
-            return collision_action::NO_ACTION_NEEDED;
-        }
+        return collision_action::NO_ACTION_NEEDED;
     }
 
 #ifdef DEBUG_PRINT
@@ -188,7 +185,8 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,
@@ -205,7 +203,7 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
 entity_state_machine get_state_functions() noexcept
 {
     return {
-        .entry_handler = nullptr,
+        .entry_handler = enforce_superposition_principle,
         .process_move_handler = compute_next_location,
         .entity_collision_handler = handle_collision,
         .exit_handler = nullptr,
