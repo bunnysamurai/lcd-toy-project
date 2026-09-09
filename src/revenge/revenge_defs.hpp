@@ -5,12 +5,12 @@
 
 #include "common/BitImage.hpp"
 #include "utils/Grid.hpp"
-#include "common/pico_sdk_timer_details.hpp"
-#include "common/timer.hpp"
+#include "common/pico_sdk_clock_details.hpp"
+#include "common/time_utils.hpp"
 
 namespace revenge {
 
-using Timer_t = Timer<timer_details::PicoSdk>;
+using Timer_t = embp::timer<clock_details::pico_sdk_steady_clock>;
 using pix_t = uint16_t;
 using grid_t = uint8_t;
 

@@ -9,9 +9,9 @@
 
 #include "gamepad/gamepad.hpp"
 
-#include "pico/time.h"
 #include <algorithm>
 #include <cstddef>
+
 #include <pico/types.h>
 
 // #define DEBUG_PRINT
@@ -34,7 +34,7 @@ namespace
 constexpr uint64_t CHIPPIE_BUTTON_POLL_US{100'000};                   /* every 100 ms? */
 constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{1'000}; /* every 10 ms? */
 bool wait_for_release;
-absolute_time_t hold_time_point;
+steady_clock_source::time_base_t hold_time_point;
 
 [[nodiscard]] bool check_entity_present(state &game_state, Grid::Location loc) noexcept
 {
@@ -49,15 +49,17 @@ absolute_time_t hold_time_point;
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    const auto current_time{get_absolute_time()};
+    
+    const auto current_time{steady_clock_source::now()};
 
     /* hold any new moves until a timer has expired */
-    if (absolute_time_diff_us(current_time, hold_time_point) > 0)
+    
+    if (steady_clock_source::time_diff(current_time, hold_time_point) > 0)
     {
         return std::make_pair(ent.loc, ent.facing);
     }
 
-    hold_time_point = delayed_by_us(hold_time_point, CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US);
+    hold_time_point = steady_clock_source::increment_time_point(hold_time_point, CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US);
 
     const gamepad::five::State buttons{gamepad::five::get()};
 
@@ -251,7 +253,7 @@ absolute_time_t hold_time_point;
 */
 entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid) noexcept
 {
-    hold_time_point = get_absolute_time();
+    hold_time_point = steady_clock_source::now();
     wait_for_release = true; /* just in case the button is still being pressed when a level loads */
 
     return {

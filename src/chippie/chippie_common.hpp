@@ -1,6 +1,8 @@
 #if !defined(CHIPPIE_COMMON_HPP)
 #define CHIPPIE_COMMON_HPP
 
+#include "common/pico_sdk_clock_details.hpp"
+#include "common/time_utils.hpp"
 #include "utils/Grid.hpp"
 
 #include <cstdint>
@@ -8,6 +10,9 @@
 
 namespace chippie
 {
+
+using steady_clock_source = clock_details::pico_sdk_steady_clock;
+using game_clock_t = embp::pauseable_clock<steady_clock_source>;
 
 enum struct direction
 {

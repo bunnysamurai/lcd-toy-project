@@ -20,12 +20,13 @@ namespace chippie
 
 game_logic::game_logic(state &injected_state) noexcept : game_state{injected_state}
 {
-    const auto game_start_time{get_absolute_time()};
+    const auto game_start_time{injected_state.the_clock.now()};
 
     /* synchronize all entities in time */
     for (auto &ent : game_state.entity_list)
     {
-        ent.next_time = delayed_by_us(game_start_time, get_entity_velocity(ent.identity));
+        ent.next_time =
+            injected_state.the_clock.increment_time_point(game_start_time, get_entity_velocity(ent.identity));
     }
 }
 
@@ -65,8 +66,8 @@ void game_logic::move_entities() noexcept
 
         /*  If the timer hasn't expired yet for a move, then skip.
          */
-        const auto current_time{get_absolute_time()};
-        if (absolute_time_diff_us(current_time, ent.next_time) > 0)
+        const auto current_time{game_state.the_clock.now()};
+        if (game_state.the_clock.time_diff(current_time, ent.next_time) > 0)
         {
             continue;
         }
@@ -85,7 +86,7 @@ void game_logic::move_entities() noexcept
         }
 
         /* If we make it here, we are good to process a move.  Update next move time w/o drift */
-        ent.next_time = delayed_by_us(ent.next_time, get_entity_velocity(ent.identity));
+        ent.next_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
 
         /* next, compute where this entity wants to move */
         auto [nextloc, nextfacing]{entity_handles.process_move_handler != nullptr

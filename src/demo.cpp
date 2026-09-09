@@ -17,8 +17,8 @@
 #include "screen/gfx/shapes.hpp"
 #include "screen/screen.hpp"
 
-#include "common/pico_sdk_timer_details.hpp"
-#include "common/timer.hpp"
+#include "common/pico_sdk_clock_details.hpp"
+#include "common/time_utils.hpp"
 #include "common/utilities.hpp"
 
 namespace demo
@@ -216,10 +216,10 @@ void run_linebounce_screensaver() noexcept
     screen::fill_screen(BLACK | (BLACK << 4));
 
     static constexpr uint16_t CONSTANT_RADIUS{31};
-    Timer<timer_details::PicoSdk> button_timer{1000};
+    embp::timer<clock_details::pico_sdk_steady_clock> button_timer{1000};
     /* timer kicks every 1/60 seconds-ish. */
-    Timer<timer_details::PicoSdk> update_timer{1 << 14};
-    Timer<timer_details::PicoSdk> draw_timer{33'333};
+    embp::timer<clock_details::pico_sdk_steady_clock> update_timer{1 << 14};
+    embp::timer<clock_details::pico_sdk_steady_clock> draw_timer{33'333};
     std::array<screen::gfx::Point, 4> prvpoints{};
     std::array<screen::gfx::Point, 4> points{};
     static_assert(std::size(prvpoints) == std::size(position));

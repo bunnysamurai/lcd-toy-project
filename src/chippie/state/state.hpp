@@ -5,8 +5,7 @@
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie_inventory.hpp"
 
-#include "common/pico_sdk_timer_details.hpp"
-#include "common/timer.hpp"
+#include "common/time_utils.hpp"
 
 #include "embp/containers.hpp"
 
@@ -15,8 +14,6 @@
 #include "red_brown_buttons.hpp"
 #include "static_map.hpp"
 #include "teleporter.hpp"
-
-#include "pico/time.h"
 
 #include <cstdint>
 
@@ -49,8 +46,10 @@ struct state
     Grid inventory_grid;
 
     static constexpr int COUNTDOWN_US{1'000'000};
-    Timer<timer_details::PicoSdk> countdown_timer{COUNTDOWN_US}; /* period of 1 second*/
-    absolute_time_t last_paint_time{};
+    /* used by the "Time Remaining" element on the game's GUI */
+    game_clock_t the_clock;
+    embp::timer<game_clock_t&> countdown_timer{COUNTDOWN_US, the_clock};
+    steady_clock_source::time_base_t last_paint_time{};
     bool hint_displayable{false};
     screen::gfx::Rect hint_area;
     bool display_level_name_once{true};

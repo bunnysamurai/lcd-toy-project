@@ -1,3 +1,4 @@
+#include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/chippie_entity.hpp"
 #include "chippie/events/event.hpp"
@@ -172,6 +173,11 @@ void init_event_handlers() noexcept
         .identifier = event::event_type::OPEN_MENU,
         .handler =
             [](state &game_state) {
+                /*
+                  TODO "pause" the clock that the game logic uses somehow
+                  so that if the user selects "Return", the game logic processing will
+                  pick up right where it left off...
+                 */
                 static constexpr std::array item_options{
                     "Return",
                     "Restart",
@@ -182,7 +188,10 @@ void init_event_handlers() noexcept
                     "   Menu",
                     item_options};
 
+                game_state.the_clock.pause();
+
                 const int opt{dialog.ask()};
+
                 if (opt == 1)
                 {
                     game_state.active = false;
@@ -194,6 +203,8 @@ void init_event_handlers() noexcept
                     game_state.active = false;
                     game_state.inactive_reason = state::reason::USER_QUIT;
                 }
+
+                game_state.the_clock.resume();
             },
     });
     event::register_handler(event::event_handler{
@@ -353,7 +364,7 @@ void process_opening_level_dialog(state &game_state) noexcept
     }
 
     game_state.countdown_timer.reset();
-    game_state.last_paint_time = get_absolute_time();
+    game_state.last_paint_time = steady_clock_source::now();
 }
 
 } // namespace
@@ -368,7 +379,7 @@ void run()
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = 33;
+    int level = 40; /* the starting level */
 
     while (true)
     {
@@ -397,33 +408,41 @@ void run()
 
         static constexpr int64_t GAME_LOOP_INTERVAL_US{1'000};
 
-        const auto beginning_of_game{get_absolute_time()};
-
         while (the_game.is_active())
         {
 #ifdef DEBUG_PRINT
             printf("top of game logic loop\n");
 #endif
-            const auto start{get_absolute_time()};
+            const auto start{steady_clock_source::now()};
 
             the_game.process();
 
             /* paint the entire frame every 33 ms */
-            if (absolute_time_diff_us(game_state.last_paint_time, get_absolute_time()) > PAINT_TIME_INTERVAL_US)
+            const auto now_time_for_painting{steady_clock_source::now()};
+            if (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
+                PAINT_TIME_INTERVAL_US)
             {
-                game_state.last_paint_time = delayed_by_us(game_state.last_paint_time, PAINT_TIME_INTERVAL_US);
+                /* calls to the_game.process() may take arbitrary long amount of time...
+                   guarentee the next time we paint will be in the future */
+                while (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
+                       PAINT_TIME_INTERVAL_US)
+                {
+                    game_state.last_paint_time =
+                        steady_clock_source::increment_time_point(game_state.last_paint_time, PAINT_TIME_INTERVAL_US);
+                }
                 paint(game_state);
             }
 
-            const auto process_duration{absolute_time_diff_us(start, get_absolute_time())};
+            const auto process_duration{steady_clock_source::time_diff(start, steady_clock_source::now())};
 #ifdef DEBUG_PRINT
-            printf("[%09lld] Process duration: %lld us\n", absolute_time_diff_us(start, get_absolute_time()),
+            printf("[%09lld] Process duration: %lld us\n", steady_clock_source::time_diff(start, steady_clock_source::now())),
                    process_duration);
 #endif
             if (process_duration < GAME_LOOP_INTERVAL_US)
             {
 #ifdef DEBUG_PRINT
-                printf("[%09lld] Delaying for: %lld us\n", absolute_time_diff_us(start, get_absolute_time()),
+                printf("[%09lld] Delaying for: %lld us\n",
+                       steady_clock_source::time_diff(start, steady_clock_source::now()),
                        GAME_LOOP_INTERVAL_US - process_duration);
 #endif
                 sleep_us(GAME_LOOP_INTERVAL_US - process_duration);

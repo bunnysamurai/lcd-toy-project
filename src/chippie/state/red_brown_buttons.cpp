@@ -1,11 +1,11 @@
 #include "red_brown_buttons.hpp"
+
+#include "chippie/chippie_common.hpp"
 #include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/state.hpp"
 
 #include <algorithm>
-
-#include "pico/time.h"
 
 #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
@@ -43,7 +43,7 @@ void red_button::generate(state &game_state) noexcept
     auto &chippie{game_state.entity_list.front()};
     const uint64_t next_move_time{chippie.next_time - get_entity_velocity(chippie.identity)};
 #ifdef DEBUG_PRINT
-    const uint64_t current_time{get_absolute_time()};
+    const uint64_t current_time{game_state.the_clock.now()};
     printf("at time %llu, next move time is %llu... entity: (%d)", current_time, next_move_time, static_cast<int>(clone_type));
 #endif
 
