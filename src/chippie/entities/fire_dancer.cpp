@@ -3,11 +3,6 @@
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
-// #define DEBUG_PRINT
-#ifdef DEBUG_PRINT
-#include "pico/printf.h"
-#endif
-
 namespace chippie::fire_dancer
 {
 
@@ -70,16 +65,10 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-#ifdef DEBUG_PRINT
-    // printf("fire dancer collision handling start\n");
-#endif
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-#ifdef DEBUG_PRINT
-            printf("collided with chip\n");
-#endif
             register_event(event::event_type::DANCED_BY_FIRE);
         }
         else
@@ -87,10 +76,6 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
             return collision_action::NO_ACTION_NEEDED;
         }
     }
-
-#ifdef DEBUG_PRINT
-    // printf("fire dancer collision handling end\n");
-#endif
 
     return collision_action::APPLY_NEXT_LOCATION;
 }

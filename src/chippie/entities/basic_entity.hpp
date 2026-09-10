@@ -3,9 +3,10 @@
 
 #include "chippie/chippie_common.hpp"
 #include "chippie/state/terrain_types.hpp"
-#include "utils/Grid.hpp"
 #include "entity_types.hpp"
+#include "utils/Grid.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <utility>
 
@@ -34,19 +35,19 @@ struct entity
     entity_type identity;
     direction facing;
     uint64_t next_time; /* useful for knowing when to processing moving */
-    bool alive{true};
-    bool trapped{false};
+
+    /* bitfield for various states */
+    uint8_t alive : 1 {true};    /* if set to false, game logic will remove this entity from the game state */
+    uint8_t trapped : 1 {false}; /* special handling for brown button uses */
+    uint8_t has_summoning_sickness : 1 {false}; /* special handling just for red button uses */
+    uint8_t reserved : 5;
+
     uint8_t uuid;
     state *game_state;
 };
 
-[[nodiscard]] entity create_entity(
-    entity_type ent_id, 
-    Grid::Location location, 
-    direction facing, 
-    uint8_t uuid, 
-    state& game_state, 
-    uint64_t next_time = 0) noexcept;
+[[nodiscard]] entity create_entity(entity_type ent_id, Grid::Location location, direction facing, uint8_t uuid,
+                                   state &game_state, uint64_t next_time = 0) noexcept;
 
 enum struct collision_action
 {
@@ -116,14 +117,27 @@ constexpr void move_relative_direction(entity &ent, relative_direction dir) noex
 [[nodiscard]] uint64_t get_entity_velocity(entity_type id) noexcept;
 
 /** @brief common catch-all for entity edge case.
-    
-    A common cleanup utility, this will make the entity as dead if, on entry, 
-    this entity occupies the same space as another.  Used for 
+
+    A common cleanup utility, this will make the entity as dead if, on entry,
+    this entity occupies the same space as another.  Used for
     entity_state_machine's entry_handler, mostly.
 
     Does run an entire find_collision check, just to raise awareness.
  */
-void enforce_superposition_principle(entity& myself) noexcept;
+void enforce_superposition_principle(entity &myself) noexcept;
+
+/**
+    @brief Find an entity in the same location as another
+ */
+template <class Iter>
+[[nodiscard]] constexpr Iter find_entity_collision(const entity &current_processing_ent,
+                                                   Grid::Location location_to_test, Iter entity_list_begin,
+                                                   Iter entity_list_end) noexcept
+{
+    return std::find_if(entity_list_begin, entity_list_end, [&](const auto &other) {
+        return (other.loc == location_to_test) && (current_processing_ent.uuid != other.uuid);
+    });
+}
 
 } // namespace chippie
 

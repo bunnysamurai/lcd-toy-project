@@ -1,5 +1,6 @@
 #include "game_logic.hpp"
 
+#include "chippie/entities/basic_entity.hpp"
 #include "state.hpp"
 #include "terrain_effects.hpp"
 
@@ -88,10 +89,15 @@ void game_logic::move_entities() noexcept
         /* If we make it here, we are good to process a move.  Update next move time w/o drift */
         ent.next_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
 
-        /* next, compute where this entity wants to move */
-        auto [nextloc, nextfacing]{entity_handles.process_move_handler != nullptr
-                                       ? entity_handles.process_move_handler(ent)
-                                       : std::make_pair(ent.loc, ent.facing)};
+        /* next, compute where this entity wants to move 
+           we consider creation-by-red-button to count as a move, which is signalled
+           by the "has_summoning_sickenss" field.
+         */
+        auto [nextloc, nextfacing]{(entity_handles.process_move_handler == nullptr || ent.has_summoning_sickness)
+                                       ? std::make_pair(ent.loc, ent.facing)
+                                       : entity_handles.process_move_handler(ent)};
+
+        ent.has_summoning_sickness = false;
 
         /* after the entity has its say about where to move, we now allow the terrain to possibly override it */
         apply_terrain_override_effect(ent, nextloc, nextfacing, game_state.the_map[ent.loc]);
@@ -188,10 +194,8 @@ void game_logic::move_entities() noexcept
     collision_result result{.other = nullptr, .tile = game_state.the_map[next_location]};
 
     /* search for other entities */
-    auto entitr =
-        std::find_if(std::begin(game_state.entity_list), std::end(game_state.entity_list), [&](const auto &other) {
-            return (other.loc == next_location) && (current_processing_ent.uuid != other.uuid);
-        });
+    auto entitr = find_entity_collision(current_processing_ent, next_location, std::begin(game_state.entity_list),
+                                        std::end(game_state.entity_list));
 
     if (entitr != std::end(game_state.entity_list))
     {

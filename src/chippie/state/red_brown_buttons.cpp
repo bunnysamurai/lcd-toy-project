@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include "pico/printf.h"
 #endif
@@ -49,6 +49,9 @@ void red_button::generate(state &game_state) noexcept
 
     game_state.entity_list.push_back(
         create_entity(clone_type, clone_spawn, clone_facing, next_uuid, game_state, next_move_time));
+
+    /* this supresses an immediate move, which looks weird on the display */
+    game_state.entity_list.back().has_summoning_sickness = true;
 
 #ifdef DEBUG_PRINT
     printf("\n");

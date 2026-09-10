@@ -128,6 +128,12 @@ entity create_entity(entity_type ent_id, Grid::Location location, direction faci
 
 void enforce_superposition_principle(entity &myself) noexcept
 {
+    /* only apply superposition principle if we weren't just created by a red button */
+    if (myself.has_summoning_sickness)
+    {
+        return;
+    }
+
     auto &game_state{*myself.game_state};
 
     /* search for other entities */

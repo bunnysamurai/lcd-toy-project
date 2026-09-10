@@ -31,6 +31,7 @@ namespace
 {
 
 constexpr int PAINT_TIME_INTERVAL_US{33'333};
+constexpr int64_t GAME_LOOP_INTERVAL_US{1'000};
 
 void screen_init() noexcept
 {
@@ -367,6 +368,40 @@ void process_opening_level_dialog(state &game_state) noexcept
     game_state.last_paint_time = steady_clock_source::now();
 }
 
+void process_screen_painting(state &game_state) noexcept
+{
+    const auto now_time_for_painting{steady_clock_source::now()};
+    if (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) > PAINT_TIME_INTERVAL_US)
+    {
+        /* calls to the_game.process() may take arbitrary long amount of time...
+           guarentee the next time we paint will be in the future */
+        while (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
+               PAINT_TIME_INTERVAL_US)
+        {
+            game_state.last_paint_time =
+                steady_clock_source::increment_time_point(game_state.last_paint_time, PAINT_TIME_INTERVAL_US);
+        }
+        paint(game_state);
+    }
+}
+
+void sleep_until_next_game_loop_iteration(const steady_clock_source::time_base_t start) noexcept
+{
+    const auto process_duration{steady_clock_source::time_diff(start, steady_clock_source::now())};
+#ifdef DEBUG_PRINT
+            printf("[%09lld] Process duration: %lld us\n", steady_clock_source::time_diff(start, steady_clock_source::now())),
+                   process_duration);
+#endif
+            if (process_duration < GAME_LOOP_INTERVAL_US)
+            {
+#ifdef DEBUG_PRINT
+                printf("[%09lld] Delaying for: %lld us\n",
+                       steady_clock_source::time_diff(start, steady_clock_source::now()),
+                       GAME_LOOP_INTERVAL_US - process_duration);
+#endif
+                sleep_us(GAME_LOOP_INTERVAL_US - process_duration);
+            }
+}
 } // namespace
 
 void run()
@@ -379,14 +414,12 @@ void run()
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = 40; /* the starting level */
+    int level = 1; /* the starting level */
 
     while (true)
     {
         state game_state;
-#ifdef DEBUG_PRINT
-        printf("top of main loop\n");
-#endif
+
         /* state init */
         init_event_handlers();
         init_play_grid(game_state);
@@ -402,55 +435,17 @@ void run()
         process_opening_level_dialog(game_state);
 
         game_logic the_game{game_state};
-#ifdef DEBUG_PRINT
-        printf("game logic intialized\n");
-#endif
-
-        static constexpr int64_t GAME_LOOP_INTERVAL_US{1'000};
 
         while (the_game.is_active())
         {
-#ifdef DEBUG_PRINT
-            printf("top of game logic loop\n");
-#endif
             const auto start{steady_clock_source::now()};
 
             the_game.process();
 
-            /* paint the entire frame every 33 ms */
-            const auto now_time_for_painting{steady_clock_source::now()};
-            if (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
-                PAINT_TIME_INTERVAL_US)
-            {
-                /* calls to the_game.process() may take arbitrary long amount of time...
-                   guarentee the next time we paint will be in the future */
-                while (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
-                       PAINT_TIME_INTERVAL_US)
-                {
-                    game_state.last_paint_time =
-                        steady_clock_source::increment_time_point(game_state.last_paint_time, PAINT_TIME_INTERVAL_US);
-                }
-                paint(game_state);
-            }
+            /* paint the entire frame on a periodic rate, different from the game loop */
+            process_screen_painting(game_state);
 
-            const auto process_duration{steady_clock_source::time_diff(start, steady_clock_source::now())};
-#ifdef DEBUG_PRINT
-            printf("[%09lld] Process duration: %lld us\n", steady_clock_source::time_diff(start, steady_clock_source::now())),
-                   process_duration);
-#endif
-            if (process_duration < GAME_LOOP_INTERVAL_US)
-            {
-#ifdef DEBUG_PRINT
-                printf("[%09lld] Delaying for: %lld us\n",
-                       steady_clock_source::time_diff(start, steady_clock_source::now()),
-                       GAME_LOOP_INTERVAL_US - process_duration);
-#endif
-                sleep_us(GAME_LOOP_INTERVAL_US - process_duration);
-            }
-
-#ifdef DEBUG_PRINT
-            printf("bottom of game logic loop\n");
-#endif
+            sleep_until_next_game_loop_iteration(start);
         }
 
         /* TODO add logic for an "end of game", maybe go back to a menu?

@@ -88,7 +88,6 @@ template <class clock_details> class pauseable_clock final
     constexpr void pause() noexcept
     {
         m_pause_point = clock_details::now();
-        printf("paused at time point %u\n", (uint32_t)m_pause_point);
     }
 
     /**
@@ -99,8 +98,6 @@ template <class clock_details> class pauseable_clock final
         /* advance m_base by the duration of time since the last call to pause */
         const auto nowtime{clock_details::now()};
         m_base = increment_time_point(m_base, time_diff(m_pause_point, nowtime));
-        printf("resumed at time point %u\n", (uint32_t)nowtime);
-        printf("time elapsed since pause is %d microseconds\n", (int32_t)time_diff(m_pause_point, nowtime));
     }
 
   private:
