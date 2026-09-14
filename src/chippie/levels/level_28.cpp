@@ -75,15 +75,15 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 
     // by convention, Chippie is always the first one in the entity_list
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 1, .y = 1}, direction::DOWN, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 7, .y = 8}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 8, .y = 8}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 9, .y = 8}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 10, .y = 8}, direction::UP, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 4, .y = 3}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 13, .y = 3}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 18, .y = 3}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 27, .y = 3}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 4, .y = 8}, direction::RIGHT, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 7, .y = 8}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 8, .y = 8}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 9, .y = 8}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 10, .y = 8}, direction::UP, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 14, .y = 8}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 17, .y = 8}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 27, .y = 8}, direction::RIGHT, uuid++));

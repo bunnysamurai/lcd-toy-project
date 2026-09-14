@@ -75,16 +75,12 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 
     // by convention, Chippie is always the first one in the entity_list
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 18, .y = 15}, direction::DOWN, uuid++));
-    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 15, .y = 5}, direction::UP, uuid++));
-    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 22, .y = 5}, direction::UP, uuid++));
-    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 5, .y = 11}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 14, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 16, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 17, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 18, .y = 12}, direction::UP, uuid++));
-    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 28, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 12, .y = 13}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 19, .y = 13}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 12, .y = 14}, direction::UP, uuid++));
@@ -95,7 +91,6 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 19, .y = 16}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 12, .y = 17}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 19, .y = 17}, direction::UP, uuid++));
-    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 22, .y = 17}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 12, .y = 18}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 19, .y = 18}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 19}, direction::UP, uuid++));
@@ -104,6 +99,11 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 16, .y = 19}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 17, .y = 19}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 18, .y = 19}, direction::UP, uuid++));
+    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 15, .y = 5}, direction::UP, uuid++));
+    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 22, .y = 5}, direction::UP, uuid++));
+    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 5, .y = 11}, direction::UP, uuid++));
+    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 28, .y = 12}, direction::UP, uuid++));
+    game_state.entity_list.push_back(water_glider::create(game_state, {.x = 22, .y = 17}, direction::UP, uuid++));
     game_state.entity_list.push_back(water_glider::create(game_state, {.x = 22, .y = 19}, direction::UP, uuid++));
     game_state.entity_list.push_back(water_glider::create(game_state, {.x = 28, .y = 19}, direction::UP, uuid++));
     game_state.entity_list.push_back(water_glider::create(game_state, {.x = 5, .y = 20}, direction::UP, uuid++));

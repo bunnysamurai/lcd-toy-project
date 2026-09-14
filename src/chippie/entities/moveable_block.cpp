@@ -30,52 +30,34 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
 {
     /* moveable block is a bit of a special snowflake, in that if chippie is on our location,
     then it is ALWAYS okay to move.  This is because by design part of the logic to move this block is contained in
-    chippie_entity.cpp, a la, chippie will check if the space behind the block is clear to move.  */
+    chippie_entity.cpp, a la, chippie will check if the space behind the block is clear to move.
+    It's also required that moveable blocks are processed before any other entities in the entity list. */
 
     /* TODO by convention, chippie is always the first entity in the entity_list.. should probably write a test for
      * that. */
 
-#ifdef DEBUG_PRINT
-    // printf("moveable block: processing a move...\n");
-#endif
     const auto &chippie_as_entity{ent.game_state->entity_list.front()};
 
     if (ent.loc == chippie_as_entity.loc)
     {
-#ifdef DEBUG_PRINT
-        // printf("moveable block: has chippie on top!\n");
-#endif
         return std::make_pair(move(ent.loc, chippie_as_entity.facing), chippie_as_entity.facing);
     }
 
-#ifdef DEBUG_PRINT
-    // printf("moveable block: no chippie on top...\n");
-#endif
     return std::make_pair(ent.loc, ent.facing);
 }
 
 [[nodiscard]] collision_action handle_collision([[maybe_unused]] entity &ent, [[maybe_unused]] entity *collided_entity,
                                                 [[maybe_unused]] terrain_type collided_terrain) noexcept
 {
-
-#ifdef DEBUG_PRINT
-    // printf("moveable block collision handling start\n");
-#endif
     if (collided_entity != nullptr)
     {
         printf("moveable block: collision detected!\n");
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-#ifdef DEBUG_PRINT
-            printf("  collided with chip\n");
-#endif
             register_event(event::event_type::SMUSHED);
         }
         else
         {
-#ifdef DEBUG_PRINT
-            printf("  can't move, check if current location contains chip...\n");
-#endif
             if (ent.game_state->entity_list.front().loc == ent.loc)
             {
                 register_event(event::event_type::SMUSHED);
@@ -90,9 +72,10 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
         }
     }
 
-#ifdef DEBUG_PRINT
-    // printf("moveable block collision handling end\n");
-#endif
+    if (check_terrain_is_opaque_for_moveable(ent.facing, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
 
     return collision_action::APPLY_NEXT_LOCATION;
 }

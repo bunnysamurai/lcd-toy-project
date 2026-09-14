@@ -1,5 +1,6 @@
 #include "fire_dancer.hpp"
 #include "chippie/chippie_common.hpp"
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/entities/entity_types.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
@@ -22,6 +23,14 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 [[nodiscard]] bool check_terrain_is_opaque_for_fire_dancer(const entity &ent, terrain_type candidate_terrain) noexcept
 {
     return check_terrain_is_opaque(ent, candidate_terrain);
+}
+
+[[nodiscard]] bool check_tile_is_already_occupied(const entity &ent, const Grid::Location loc) noexcept
+{
+    const auto &the_list{ent.game_state->entity_list};
+    const auto itr{find_entity_collision(ent, loc, std::begin(the_list), std::end(the_list))};
+
+    return itr != std::end(the_list) && itr->identity != entity_type::CHIPPIE;
 }
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
@@ -51,7 +60,8 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
         /* check if */
-        if (check_terrain_is_opaque_for_fire_dancer(ent, candidate_terrain))
+        if (check_terrain_is_opaque_for_fire_dancer(ent, candidate_terrain) ||
+            check_tile_is_already_occupied(ent, candidate_loc))
         {
             continue;
         }
@@ -90,7 +100,8 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,

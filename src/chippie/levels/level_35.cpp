@@ -75,6 +75,13 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 
     // by convention, Chippie is always the first one in the entity_list
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 14, .y = 24}, direction::DOWN, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 25}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 29, .y = 26}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 27, .y = 27}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 23, .y = 28}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 28}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 22, .y = 29}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 25, .y = 29}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 22, .y = 8}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 24, .y = 8}, direction::RIGHT, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 26, .y = 8}, direction::DOWN, uuid++));
@@ -117,13 +124,6 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 19, .y = 19}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 23, .y = 19}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 25, .y = 19}, direction::LEFT, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 25}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 29, .y = 26}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 27, .y = 27}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 23, .y = 28}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 28}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 22, .y = 29}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 25, .y = 29}, direction::UP, uuid++));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 50);
 
 }

@@ -7,12 +7,12 @@ namespace chippie::level_22
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 300 };
-    constexpr int CHIPS_REMAINING{ 8 };
-    constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ "FORCED\nENTRY\nPassword: WZIN" };
+constexpr int TIME_REMAINING{300};
+constexpr int CHIPS_REMAINING{8};
+constexpr const char *HINT_TEXT{nullptr};
+constexpr const char *LEVEL_NAME_TEXT{"FORCED\nENTRY\nPassword: WZIN"};
 
-    /* clang-format off */
+/* clang-format off */
     constexpr std::array DATA
     {
         terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, 
@@ -48,7 +48,7 @@ namespace
         terrain_type::WALL, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::ICE, terrain_type::ICE, terrain_type::ICE, terrain_type::ICE, terrain_type::ICE, terrain_type::ICE, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_UP, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_UP, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_UP, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::PUSH_FLOOR_RIGHT, terrain_type::ICE, terrain_type::CLEAR, terrain_type::SOCKET, terrain_type::PORTAL, terrain_type::WALL, 
         terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, 
     };
-    /* clang-format on */
+/* clang-format on */
 
 void load_level_from_rom_stub(state &game_state) noexcept
 {
@@ -77,23 +77,22 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 1, .y = 1}, direction::DOWN, uuid++));
 
     /* teleporters */
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 2, .y = 2}});
-    game_state.teleport_list.back().set_exit(direction::DOWN, {.x = 28, .y = 29}, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, {.x = 28, .y = 29}, direction::UP);
+    static constexpr Grid::Location topleft{.x = 2, .y = 2};
+    static constexpr Grid::Location botright{.x = 28, .y = 29};
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 28, .y = 29}});
-    game_state.teleport_list.back().set_exit(direction::DOWN, {.x = 2, .y = 2}, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, {.x = 2, .y = 2}, direction::UP);
+    game_state.teleport_list.locations.clear();
 
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 2);
+    game_state.teleport_list.locations.push_back(topleft);
+    game_state.teleport_list.locations.push_back(botright);
+
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 2);
 }
 
-}
+} // namespace
 void load_level(state &game_state) noexcept
 {
     load_level_from_rom_stub(game_state);
     load_entity_list_from_rom_stub(game_state);
 }
 
-}
-
+} // namespace chippie::level_22

@@ -414,7 +414,7 @@ void run()
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = 1; /* the starting level */
+    int level = 35; /* the starting level */
 
     while (true)
     {

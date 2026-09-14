@@ -75,24 +75,24 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 
     // by convention, Chippie is always the first one in the entity_list
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 29, .y = 1}, direction::DOWN, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 2}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 3}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 5}, direction::UP, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 6}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 7}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 9}, direction::UP, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 10}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 11}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 13}, direction::UP, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 14}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 15}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 17}, direction::UP, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 18}, direction::LEFT, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 19}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 21}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 23}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 25}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 2, .y = 27}, direction::UP, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 2}, direction::LEFT, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 6}, direction::LEFT, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 10}, direction::LEFT, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 14}, direction::LEFT, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 13, .y = 18}, direction::LEFT, uuid++));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 19);
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 6, .y = 2},

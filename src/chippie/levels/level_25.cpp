@@ -77,66 +77,28 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 29, .y = 21}, direction::DOWN, uuid++));
 
     /* teleporters */
+    // in order
     const Grid::Location teleporter_A{.x = 26, .y = 3};
-    const Grid::Location teleporter_B{.x = 11, .y = 7};
+    const Grid::Location teleporter_H{.x = 25, .y = 26};
+    const Grid::Location teleporter_F{.x = 17, .y = 22};
     const Grid::Location teleporter_C{.x = 5, .y = 20};
+    const Grid::Location teleporter_G{.x = 27, .y = 17};
     const Grid::Location teleporter_D{.x = 11, .y = 16};
     const Grid::Location teleporter_E{.x = 23, .y = 13};
-    const Grid::Location teleporter_F{.x = 17, .y = 22};
-    const Grid::Location teleporter_G{.x = 27, .y = 17};
-    const Grid::Location teleporter_H{.x = 25, .y = 26};
+    const Grid::Location teleporter_B{.x = 11, .y = 7};
 
-    game_state.teleport_list.clear();
+    game_state.teleport_list.locations.clear();
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_A});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_H, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_H, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_H, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_H, direction::RIGHT);
+    game_state.teleport_list.locations.push_back(teleporter_A);
+    game_state.teleport_list.locations.push_back(teleporter_H);
+    game_state.teleport_list.locations.push_back(teleporter_F);
+    game_state.teleport_list.locations.push_back(teleporter_C);
+    game_state.teleport_list.locations.push_back(teleporter_G);
+    game_state.teleport_list.locations.push_back(teleporter_D);
+    game_state.teleport_list.locations.push_back(teleporter_E);
+    game_state.teleport_list.locations.push_back(teleporter_B);
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_B});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_A, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_A, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_A, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_A, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_C});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_G, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_G, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_G, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_G, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_D});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_E, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_E, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_E, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_E, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_E});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_B, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_B, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_B, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_B, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_F});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_C, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_C, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_C, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_C, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_G});
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_D, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_D, direction::RIGHT);
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_D, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_D, direction::LEFT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = teleporter_H});
-    game_state.teleport_list.back().set_exit(direction::DOWN, teleporter_F, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::UP, teleporter_F, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::LEFT, teleporter_F, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, teleporter_F, direction::RIGHT);
-
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 8);
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 8);
 }
 
 } // namespace

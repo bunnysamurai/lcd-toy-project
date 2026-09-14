@@ -88,64 +88,28 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     static_assert(decltype(game_state.entity_list){}.capacity() >= 11);
 
     /* teleporters */
-    static constexpr Grid::Location zone_a{.x = 4, .y = 5};
-    static constexpr Grid::Location zone_b{.x = 14, .y = 5};
+    static constexpr Grid::Location zone_e{.x = 14, .y = 15};
     static constexpr Grid::Location zone_c{.x = 24, .y = 5};
     static constexpr Grid::Location zone_d{.x = 4, .y = 15};
-    static constexpr Grid::Location zone_e{.x = 14, .y = 15};
-    static constexpr Grid::Location zone_f{.x = 24, .y = 15};
-    static constexpr Grid::Location zone_g{.x = 4, .y = 25};
+    static constexpr Grid::Location zone_a{.x = 4, .y = 5};
+    static constexpr Grid::Location zone_b{.x = 14, .y = 5};
     static constexpr Grid::Location zone_h{.x = 14, .y = 25};
     static constexpr Grid::Location zone_i{.x = 24, .y = 25};
+    static constexpr Grid::Location zone_f{.x = 24, .y = 15};
+    static constexpr Grid::Location zone_g{.x = 4, .y = 25};
 
     // Zone A
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_a});
-    game_state.teleport_list.back().set_exit(direction::UP, zone_h, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, zone_h, direction::DOWN);
+    game_state.teleport_list.locations.push_back(zone_e);
+    game_state.teleport_list.locations.push_back(zone_c);
+    game_state.teleport_list.locations.push_back(zone_d);
+    game_state.teleport_list.locations.push_back(zone_a);
+    game_state.teleport_list.locations.push_back(zone_b);
+    game_state.teleport_list.locations.push_back(zone_h);
+    game_state.teleport_list.locations.push_back(zone_i);
+    game_state.teleport_list.locations.push_back(zone_f);
+    game_state.teleport_list.locations.push_back(zone_g);
 
-    // Zone B
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_b});
-    game_state.teleport_list.back().set_exit(direction::LEFT, zone_i, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, zone_i, direction::RIGHT);
-
-    // Zone C
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_c});
-    game_state.teleport_list.back().set_exit(direction::UP, zone_a, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, zone_a, direction::DOWN);
-
-    // Zone D
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_d});
-    game_state.teleport_list.back().set_exit(direction::LEFT, zone_b, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, zone_b, direction::RIGHT);
-
-    // Zone E
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_e});
-    game_state.teleport_list.back().set_exit(direction::UP, zone_c, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, zone_c, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::LEFT, zone_d, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, zone_d, direction::RIGHT);
-
-    // Zone F
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_f});
-    game_state.teleport_list.back().set_exit(direction::UP, zone_e, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, zone_e, direction::DOWN);
-
-    // Zone G
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_g});
-    game_state.teleport_list.back().set_exit(direction::LEFT, zone_e, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, zone_e, direction::RIGHT);
-
-    // Zone H
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_h});
-    game_state.teleport_list.back().set_exit(direction::UP, zone_f, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, zone_f, direction::DOWN);
-
-    // Zone I
-    game_state.teleport_list.push_back(teleporter{.entry_location = zone_i});
-    game_state.teleport_list.back().set_exit(direction::LEFT, zone_g, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, zone_g, direction::RIGHT);
-
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 9);
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 9);
 }
 
 } // namespace

@@ -98,23 +98,19 @@ void load_level_from_rom_stub(state &game_state) noexcept
     game_state.the_map[Grid::Location{.x = 20, .y = 17}] = terrain_type::PORTAL;
 
     /* teleporters */
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 15, .y = 14}});
-    game_state.teleport_list.back().set_exit(direction::RIGHT, {.x = 17, .y = 16}, direction::RIGHT);
-    game_state.teleport_list.back().set_exit(direction::DOWN, {.x = 17, .y = 16}, direction::DOWN);
+    static constexpr Grid::Location topleft{.x = 15, .y = 14};
+    static constexpr Grid::Location topright{.x = 17, .y = 14};
+    static constexpr Grid::Location botleft{.x = 15, .y = 16};
+    static constexpr Grid::Location botright{.x = 17, .y = 16};
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 17, .y = 14}});
-    game_state.teleport_list.back().set_exit(direction::LEFT, {.x = 15, .y = 14}, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::DOWN, {.x = 17, .y = 16}, direction::DOWN);
+    game_state.teleport_list.locations.clear();
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 15, .y = 16}});
-    game_state.teleport_list.back().set_exit(direction::RIGHT, {.x = 17, .y = 14}, direction::RIGHT);
-    game_state.teleport_list.back().set_exit(direction::UP, {.x = 17, .y = 14}, direction::UP);
+    game_state.teleport_list.locations.push_back(topleft);
+    game_state.teleport_list.locations.push_back(botright);
+    game_state.teleport_list.locations.push_back(botleft);
+    game_state.teleport_list.locations.push_back(topright);
 
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 17, .y = 16}});
-    game_state.teleport_list.back().set_exit(direction::LEFT, {.x = 15, .y = 16}, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::UP, {.x = 17, .y = 14}, direction::UP);
-
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 4);
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 4);
 }
 
 void load_entity_list_from_rom_stub(state &game_state) noexcept

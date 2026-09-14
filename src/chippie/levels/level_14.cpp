@@ -99,28 +99,13 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     static constexpr Grid::Location red_door_tele{.x = 22, .y = 14};
     static constexpr Grid::Location water_tele{.x = 8, .y = 9};
 
-    /* start teleporter */
-    game_state.teleport_list.push_back(teleporter{.entry_location = start_tele});
-    game_state.teleport_list.back().set_exit(direction::UP, red_door_tele, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, red_door_tele, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::LEFT, red_door_tele, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, red_door_tele, direction::RIGHT);
+    game_state.teleport_list.locations.clear();
 
-    /* red door teleporter */
-    game_state.teleport_list.push_back(teleporter{.entry_location = red_door_tele});
-    game_state.teleport_list.back().set_exit(direction::UP, water_tele, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, water_tele, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::LEFT, water_tele, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, water_tele, direction::RIGHT);
+    game_state.teleport_list.locations.push_back(start_tele);
+    game_state.teleport_list.locations.push_back(red_door_tele);
+    game_state.teleport_list.locations.push_back(water_tele);
 
-    /* water teleporter */
-    game_state.teleport_list.push_back(teleporter{.entry_location = water_tele});
-    game_state.teleport_list.back().set_exit(direction::UP, start_tele, direction::UP);
-    game_state.teleport_list.back().set_exit(direction::DOWN, start_tele, direction::DOWN);
-    game_state.teleport_list.back().set_exit(direction::LEFT, start_tele, direction::LEFT);
-    game_state.teleport_list.back().set_exit(direction::RIGHT, start_tele, direction::RIGHT);
-
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 3);
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 3);
 }
 
 } // namespace

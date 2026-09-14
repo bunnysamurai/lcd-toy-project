@@ -94,9 +94,9 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 18, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 29, .y = 12}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 17, .y = 13}, direction::UP, uuid++));
-    game_state.entity_list.push_back(bacteria::create(game_state, {.x = 18, .y = 13}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 19, .y = 13}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 29, .y = 13}, direction::UP, uuid++));
+    game_state.entity_list.push_back(bacteria::create(game_state, {.x = 18, .y = 13}, direction::UP, uuid++));
     game_state.entity_list.push_back(bacteria::create(game_state, {.x = 30, .y = 13}, direction::DOWN, uuid++));
 
 }

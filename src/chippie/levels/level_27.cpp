@@ -77,20 +77,11 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 21, .y = 9}, direction::DOWN, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 6}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 17, .y = 7}, direction::UP, uuid++));
-    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 24, .y = 8}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 9}, direction::UP, uuid++));
     game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 11}, direction::UP, uuid++));
+    game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 24, .y = 8}, direction::UP, uuid++));
     game_state.entity_list.push_back(blue_tank::create(game_state, {.x = 24, .y = 11}, direction::UP, uuid++));
     game_state.entity_list.push_back(purple_ball::create(game_state, {.x = 24, .y = 19}, direction::UP, uuid++));
-
-    /* teleporters */
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 30, .y = 30}});
-    game_state.teleport_list.back().set_exit(direction::RIGHT, {.x = 5, .y = 4}, direction::RIGHT);
-
-    game_state.teleport_list.push_back(teleporter{.entry_location = {.x = 5, .y = 4}});
-    game_state.teleport_list.back().set_exit(direction::LEFT, {.x = 30, .y = 30}, direction::LEFT);
-
-    static_assert(decltype(game_state.teleport_list){}.capacity() >= 2);
 }
 
 }

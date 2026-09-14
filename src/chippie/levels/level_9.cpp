@@ -81,6 +81,16 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
 
     // by convention, Chippie is always the first one in the entity_list
     game_state.entity_list.push_back(chippie::create(game_state, {.x = 1, .y = 24}, direction::DOWN, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 6}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 7, .y = 13}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 9, .y = 13}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 6, .y = 14}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 8, .y = 14}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 16}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 25}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 14, .y = 26}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 27}, direction::UP, uuid++));
+    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 27}, direction::UP, uuid++));
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 6, .y = 2}, direction::UP, uuid++));
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 9, .y = 2}, direction::UP, uuid++));
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 12, .y = 2}, direction::UP, uuid++));
@@ -93,21 +103,11 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 5, .y = 6}, direction::UP, uuid++));
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 8, .y = 6}, direction::UP, uuid++));
     game_state.entity_list.push_back(centipede::create(game_state, {.x = 11, .y = 6}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 28, .y = 6}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 21, .y = 11}, direction::LEFT, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 7, .y = 13}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 9, .y = 13}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 6, .y = 14}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 8, .y = 14}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 15, .y = 14}, direction::DOWN, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 27, .y = 14}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 16}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 21, .y = 17}, direction::RIGHT, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 25}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 2, .y = 26}, direction::RIGHT, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 14, .y = 26}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 13, .y = 27}, direction::UP, uuid++));
-    game_state.entity_list.push_back(moveable_block_entity::create(game_state, {.x = 15, .y = 27}, direction::UP, uuid++));
     game_state.entity_list.push_back(fire_dancer::create(game_state, {.x = 4, .y = 30}, direction::LEFT, uuid++));
 
     game_state.brown_button_list.push_back(brown_button{

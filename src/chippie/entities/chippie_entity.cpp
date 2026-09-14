@@ -31,7 +31,7 @@ namespace chippie::chippie
 */
 namespace
 {
-constexpr uint64_t CHIPPIE_BUTTON_POLL_US{100'000};                   /* every 100 ms? */
+constexpr uint64_t CHIPPIE_BUTTON_POLL_US{100'000};                /* every 100 ms? */
 constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{1'000}; /* every 10 ms? */
 bool wait_for_release;
 steady_clock_source::time_base_t hold_time_point;
@@ -49,17 +49,18 @@ steady_clock_source::time_base_t hold_time_point;
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
-    
+
     const auto current_time{steady_clock_source::now()};
 
     /* hold any new moves until a timer has expired */
-    
+
     if (steady_clock_source::time_diff(current_time, hold_time_point) > 0)
     {
         return std::make_pair(ent.loc, ent.facing);
     }
 
-    hold_time_point = steady_clock_source::increment_time_point(hold_time_point, CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US);
+    hold_time_point =
+        steady_clock_source::increment_time_point(hold_time_point, CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US);
 
     const gamepad::five::State buttons{gamepad::five::get()};
 
@@ -182,6 +183,11 @@ steady_clock_source::time_base_t hold_time_point;
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
     switch (collided_terrain)
     {
     case terrain_type::GREEN_DOOR:
@@ -189,19 +195,6 @@ steady_clock_source::time_base_t hold_time_point;
     case terrain_type::YELLOW_DOOR:
     case terrain_type::RED_DOOR:
         return handle_door(ent.game_state->chippie_inventory, collided_terrain);
-    case terrain_type::WALL:
-    case terrain_type::GREEN_BUTTON_WALL:
-    case terrain_type::CLONER_FIRE_DANCER:
-    case terrain_type::CLONER_FROG_MONSTER:
-    case terrain_type::CLONER_MOVEABLE_BLOCK:
-    case terrain_type::INVISIBLE_WALL:
-        return collision_action::NO_ACTION_NEEDED;
-    case terrain_type::THIN_WALL_BOT:
-        if (ent.facing == direction::UP)
-        {
-            return collision_action::NO_ACTION_NEEDED;
-        }
-        break;
     case terrain_type::APPEARING_WALL:
     case terrain_type::MAGIC_TILE_WALL:
         ent.game_state->the_map[move(ent.loc, ent.facing)] = terrain_type::WALL;
@@ -232,6 +225,18 @@ steady_clock_source::time_base_t hold_time_point;
         event::register_event(event::event_type::DANCED_BY_FIRE);
         return collision_action::NO_ACTION_NEEDED;
     case entity_type::PURPLE_BALL:
+        event::register_event(event::event_type::ROLLED_BY_BALL);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::CYAN_STICK_BALL:
+        event::register_event(event::event_type::ROLLED_BY_BALL);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::BACTERIA:
+        event::register_event(event::event_type::ROLLED_BY_BALL);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::FROG_MONSTER:
+        event::register_event(event::event_type::ROLLED_BY_BALL);
+        return collision_action::NO_ACTION_NEEDED;
+    case entity_type::BLOB:
         event::register_event(event::event_type::ROLLED_BY_BALL);
         return collision_action::NO_ACTION_NEEDED;
     default:

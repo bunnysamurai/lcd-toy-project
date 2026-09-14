@@ -47,6 +47,15 @@ namespace
     case terrain_type::THIN_WALL_BOTRIGHT:
         return ent.facing == direction::LEFT || ent.facing == direction::UP;
 
+    case terrain_type::ICE_TOPLEFT:
+        return ent.facing == direction::DOWN || ent.facing == direction::RIGHT;
+    case terrain_type::ICE_TOPRIGHT:
+        return ent.facing == direction::DOWN || ent.facing == direction::LEFT;
+    case terrain_type::ICE_BOTLEFT:
+        return ent.facing == direction::UP || ent.facing == direction::RIGHT;
+    case terrain_type::ICE_BOTRIGHT:
+        return ent.facing == direction::UP || ent.facing == direction::LEFT;
+
     case terrain_type::CLEAR:
     case terrain_type::PORTAL:
     case terrain_type::CHIP:
@@ -77,10 +86,6 @@ namespace
     case terrain_type::YELLOW_KEY:
     case terrain_type::THIEF:
     case terrain_type::WALL_TRAP:
-    case terrain_type::ICE_TOPLEFT:
-    case terrain_type::ICE_TOPRIGHT:
-    case terrain_type::ICE_BOTLEFT:
-    case terrain_type::ICE_BOTRIGHT:
     case terrain_type::PUSH_FLOOR_UP:
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
@@ -232,11 +237,16 @@ inline void handle_teleporter(entity &ent) noexcept
 {
     static constexpr uint64_t TELEPORT_TIC_PERIOD_US{100'000};
 
-    /* by definition, this search cannot fail */
+/* by definition, this search cannot fail */
+#if 0 /* old way */
     auto tele_itr{std::ranges::find_if(ent.game_state->teleport_list,
                                        [&](const auto &tele) { return tele.entry_location == ent.loc; })};
 
     const auto [newfacing, newloc]{tele_itr->compute_exit(ent.facing)};
+#else /* new way... thanks, Sam! */
+    const auto [newfacing,
+                newloc]{ent.game_state->teleport_list.compute_exit(ent, ent.loc, ent.facing)};
+#endif
 
     ent.loc = newloc;
     ent.facing = newfacing;
@@ -601,6 +611,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
 
     switch (terrain)
     {
+    case terrain_type::PORTAL:
     case terrain_type::WALL:
     case terrain_type::SOCKET:
     case terrain_type::CHIP:
@@ -614,6 +625,10 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CLONER_FIRE_DANCER:
     case terrain_type::CLONER_MOVEABLE_BLOCK:
     case terrain_type::CLONER_FROG_MONSTER:
+    case terrain_type::GREEN_KEY:
+    case terrain_type::RED_KEY:
+    case terrain_type::CYAN_KEY:
+    case terrain_type::YELLOW_KEY:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -637,7 +652,6 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
         return ent.facing == direction::UP || ent.facing == direction::LEFT;
 
     case terrain_type::CLEAR:
-    case terrain_type::PORTAL:
     case terrain_type::HINT:
     case terrain_type::WATER:
     case terrain_type::FIRE:
@@ -649,10 +663,6 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::BLUE_BUTTON:
     case terrain_type::BROWN_BUTTON:
     case terrain_type::RED_BUTTON:
-    case terrain_type::GREEN_KEY:
-    case terrain_type::RED_KEY:
-    case terrain_type::CYAN_KEY:
-    case terrain_type::YELLOW_KEY:
     case terrain_type::PUSH_FLOOR_UP:
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
