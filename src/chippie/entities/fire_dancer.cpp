@@ -20,11 +20,6 @@ namespace
 
 constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
 
-[[nodiscard]] bool check_terrain_is_opaque_for_fire_dancer(const entity &ent, terrain_type candidate_terrain) noexcept
-{
-    return check_terrain_is_opaque(ent, candidate_terrain);
-}
-
 [[nodiscard]] bool check_tile_is_already_occupied(const entity &ent, const Grid::Location loc) noexcept
 {
     const auto &the_list{ent.game_state->entity_list};
@@ -60,8 +55,7 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
         /* check if */
-        if (check_terrain_is_opaque_for_fire_dancer(ent, candidate_terrain) ||
-            check_tile_is_already_occupied(ent, candidate_loc))
+        if (check_terrain_is_opaque(ent, candidate_terrain) || check_tile_is_already_occupied(ent, candidate_loc))
         {
             continue;
         }
@@ -81,10 +75,13 @@ constexpr uint64_t FIRE_DANCER_VELOCITY_US{250'000}; /* time is in us */
         {
             register_event(event::event_type::DANCED_BY_FIRE);
         }
-        else
-        {
-            return collision_action::NO_ACTION_NEEDED;
-        }
+
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
     }
 
     return collision_action::APPLY_NEXT_LOCATION;
