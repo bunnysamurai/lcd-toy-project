@@ -58,6 +58,10 @@ enum struct terrain_type : uint8_t
     CLONER_FIRE_DANCER,
     CLONER_MOVEABLE_BLOCK,
     CLONER_FROG_MONSTER,
+    CLONER_BLUE_TANK_THAT_MOVES_LEFT,
+    CLONER_CENTIPEDE,
+    CLONER_PURPLE_BALL,
+    CLONER_CYAN_STICK_BALL,
 
     /* directional terrain features */
     ICE_TOPLEFT,

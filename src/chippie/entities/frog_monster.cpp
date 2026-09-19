@@ -26,11 +26,6 @@ namespace
 
 constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
 
-[[nodiscard]] bool check_terrain_is_opaque_for_frog_monster(const entity &ent, terrain_type candidate_terrain) noexcept
-{
-    return check_terrain_is_opaque(ent, candidate_terrain);
-}
-
 [[nodiscard]] direction to_direction_x(int amount)
 {
     if (amount < 0)
@@ -83,11 +78,6 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
     const int32_t dx{static_cast<int32_t>(chipx) - monster_loc.x};
     const int32_t dy{static_cast<int32_t>(chipy) - monster_loc.y};
 
-#ifdef DEBUG_PRINT
-    printf("chipx, chipy: { %u, %u }\n", chipx, chipy);
-    printf("dx, dy: { %d, %d }\n", dx, dy);
-#endif
-
     const int xmove{dx == 0 ? 0 : (dx < 0 ? -1 : 1)};
     const int ymove{dy == 0 ? 0 : (dy < 0 ? -1 : 1)};
 
@@ -106,7 +96,7 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
         const direction cand_dir{is_x_direction ? to_direction_x(amount) : to_direction_y(amount)};
         const auto candidate_location{move(ent.loc, cand_dir)};
         const auto candidate_terrain{ent.game_state->the_map[candidate_location]};
-        if (!check_terrain_is_opaque_for_frog_monster(ent, candidate_terrain))
+        if (!check_terrain_is_opaque(ent, candidate_terrain))
         {
             return std::make_tuple(true, candidate_location, cand_dir);
         }
@@ -114,9 +104,6 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
     }};
 
     const auto [xamount, yamount]{compute_candidate_direction(ent.loc, *ent.game_state)};
-#ifdef DEBUG_PRINT
-    printf("xamount, yamount: { %d, %d }\n", xamount, yamount);
-#endif
 
     /* if randval is set, try x first, then y */
     const auto randval{(ent.loc.x + 1) * (ent.loc.y + 1) & 0b1};
@@ -126,9 +113,6 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
         const auto [try_move, candidate_location, cand_dir]{make_attempt(first_move, randval)};
         if (try_move)
         {
-#ifdef DEBUG_PRINT
-            printf("trying the first move, which is %s\n", randval ? "xdirection" : "ydirection");
-#endif
             return std::make_pair(candidate_location, cand_dir);
         }
     }
@@ -136,41 +120,30 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
         const auto [try_move, candidate_location, cand_dir]{make_attempt(second_move, !randval)};
         if (try_move)
         {
-#ifdef DEBUG_PRINT
-            printf("trying the second move, which is %s\n", randval ? "xdirection" : "ydirection");
-#endif
             return std::make_pair(candidate_location, cand_dir);
         }
     }
 
     /* made it here?  Then don't move */
-#ifdef DEBUG_PRINT
-    printf("not trying a move\n");
-#endif
     return std::make_pair(ent.loc, ent.facing);
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-#ifdef DEBUG_PRINT
-    printf("frog_monster collision handling start\n");
-#endif
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-#ifdef DEBUG_PRINT
-            printf("collided with chip\n");
-#endif
             register_event(event::event_type::CHOMPED_BY_FROG);
         }
         return collision_action::NO_ACTION_NEEDED;
     }
 
-#ifdef DEBUG_PRINT
-    printf("frog_monster collision handling end\n");
-#endif
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
 
     return collision_action::APPLY_NEXT_LOCATION;
 }

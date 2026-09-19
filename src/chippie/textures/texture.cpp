@@ -87,6 +87,10 @@
 #include "tiles/cloner_fire_dancer.hpp"
 #include "tiles/cloner_frog_monster.hpp"
 #include "tiles/cloner_moveable_block.hpp"
+#include "tiles/cloner_blue_tank_left.hpp"
+#include "tiles/cloner_centipede_up.hpp"
+#include "tiles/cloner_purple_ball.hpp"
+#include "tiles/cloner_cyan_stick_ball.hpp"
 
 #include "tiles/water_glider_down.hpp"
 #include "tiles/water_glider_left.hpp"
@@ -235,6 +239,14 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::CLONER_FROG_MONSTER;
     case terrain_type::PUSH_FLOOR_MULTI:
         return texture_type::PUSH_FLOOR_MULTI;
+    case terrain_type::CLONER_BLUE_TANK_THAT_MOVES_LEFT:
+        return texture_type::CLONER_BLUE_TANK_LEFT;
+    case terrain_type::CLONER_CENTIPEDE:
+        return texture_type::CLONER_CENTIPEDE_UP;
+    case terrain_type::CLONER_PURPLE_BALL:
+        return texture_type::CLONER_PURPLE_BALL;
+    case terrain_type::CLONER_CYAN_STICK_BALL:
+        return texture_type::CLONER_CYAN_STICK_BALL;
     }
 
     return texture_type::CLEAR;
@@ -471,6 +483,14 @@ screen::Tile get_texture(texture_type texture) noexcept
         return cloner_frog_monster::get_texture();
     case texture_type::PUSH_FLOOR_MULTI:
         return push_floor_multi::get_texture();
+    case texture_type::CLONER_BLUE_TANK_LEFT:
+        return cloner_blue_tank_left::get_texture();
+    case texture_type::CLONER_CENTIPEDE_UP:
+        return cloner_centipede_up::get_texture();
+    case texture_type::CLONER_PURPLE_BALL:
+        return cloner_purple_ball::get_texture();
+    case texture_type::CLONER_CYAN_STICK_BALL:
+        return cloner_cyan_stick_ball::get_texture();
     }
 
     return clear::get_texture();

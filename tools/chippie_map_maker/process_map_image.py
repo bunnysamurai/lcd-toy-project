@@ -408,12 +408,10 @@ class ResultReport():
         if len(list_of_teleporters) > 0:
             for item in list_of_teleporters:
                 [xloc, yloc] = item
-                result += f"    game_state.teleport_list.push_back(teleporter{{.entry_location = {{.x = {xloc}, .y = {yloc} }}}});\n"
-                result += f"    game_state.teleport_list.back().set_exit(<direction::>, {{.x = <INT>, .y = <INT>}}, <direction::>);\n"
-                result += f"    // plus other directions, if needed\n"
+                result += f"    game_state.teleport_list.locations.push_back({{.x = {xloc}, .y = {yloc} }});\n"
                 result += f"\n"
-            result += f"    static_assert(decltype(game_state.teleport_list){{}}.capacity() >= {len(list_of_teleporters)});\n"
-            result += f"#error \"Just a friendly reminder to fill in teleport_list :)\"\n"
+            result += f"    static_assert(decltype(game_state..teleport_list.locations){{}}.capacity() >= {len(list_of_teleporters)});\n"
+            result += f"#error \"Just a friendly reminder to order the teleport locations correctly :)\"\n"
 
         return result
 

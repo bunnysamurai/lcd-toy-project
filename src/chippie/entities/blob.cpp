@@ -19,7 +19,7 @@ namespace chippie::blob
 namespace
 {
 
-constexpr uint64_t BLOB_VELOCITY_US{1'000'000}; /* time is in us */
+constexpr uint64_t BLOB_VELOCITY_US{400'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
@@ -32,28 +32,21 @@ constexpr uint64_t BLOB_VELOCITY_US{1'000'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-    /* in the case of the purple ball:
-            if it's clear, allow the move,
-            if it's the player, game over,
-            otherwise, reverse facing and move again
-    */
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-            register_event(event::event_type::ROLLED_BY_BALL);
+            register_event(event::event_type::BLOBIFIED);
         }
         return collision_action::NO_ACTION_NEEDED;
     }
 
-    if (!check_terrain_is_opaque(ent, collided_terrain))
-    {
-        return collision_action::MOVE_FORWARD;
-    }
-    else
-    {
-        return collision_action::NO_ACTION_NEEDED;
-    }
+    return collision_action::MOVE_FORWARD;
 }
 
 } // namespace

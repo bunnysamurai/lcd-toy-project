@@ -34,6 +34,10 @@ namespace
     case terrain_type::CLONER_FIRE_DANCER:
     case terrain_type::CLONER_MOVEABLE_BLOCK:
     case terrain_type::CLONER_FROG_MONSTER:
+    case terrain_type::CLONER_BLUE_TANK_THAT_MOVES_LEFT:
+    case terrain_type::CLONER_CENTIPEDE:
+    case terrain_type::CLONER_PURPLE_BALL:
+    case terrain_type::CLONER_CYAN_STICK_BALL:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -90,12 +94,14 @@ namespace
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::PUSH_FLOOR_MULTI:
     case terrain_type::TELEPORTER:
     case terrain_type::FIRE_BOOTS:
     case terrain_type::FLIPPERS:
     case terrain_type::ICE_SKATES:
     case terrain_type::SUCTION_BOOTS:
         return false;
+        break;
     }
 
     return false;
@@ -118,13 +124,44 @@ namespace
 
 [[nodiscard]] inline bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
 {
+    /* helper lambda used twice in the logic below */
+    const auto check_loc_has_moveable{[&](const Grid::Location testloc) -> bool {
+        const auto entitr{find_entity_collision(ent, testloc, std::begin(ent.game_state->entity_list),
+                                                std::end(ent.game_state->entity_list))};
+        return entitr != std::end(ent.game_state->entity_list) && entitr->identity == entity_type::MOVEABLE_BLOCK;
+    }};
+
     const auto terrain{ent.game_state->the_map[nextloc]};
+
+    const auto next_loc_has_moveable{check_loc_has_moveable(nextloc)};
+
     if (ent.identity == entity_type::CHIPPIE)
     {
-        return check_terrain_is_opaque_for_chippie(ent, terrain);
+        /* extra check if the space behind the moveable block is clear */
+        /* if there's a moveable block AND the space behind the moveable block is opaque, then it
+         * is opaque for us */
+        const auto moveable_present_and_space_behind_is_opaque{[&]() {
+            if (!next_loc_has_moveable)
+            {
+                return false;
+            }
+
+            /* if any of the following are true, the move is disallowed and check_if_opaque_on_ice should return
+               true
+
+                the terrain the moveable block will move into is opaque
+                the location the moveable block will move into already has a moveable block
+            */
+            const auto nextnextloc{move(nextloc, ent.facing)}; /* simulates the move the block will make */
+            const auto nextnexterrain{ent.game_state->the_map[nextnextloc]};
+            const auto already_has_moveable_block{check_loc_has_moveable(nextnextloc)};
+            return check_terrain_is_opaque_for_moveable(ent.facing, nextnexterrain) || already_has_moveable_block;
+        }()};
+
+        return moveable_present_and_space_behind_is_opaque || check_terrain_is_opaque_for_chippie(ent, terrain);
     }
 
-    return check_terrain_is_opaque(ent, terrain);
+    return next_loc_has_moveable || check_terrain_is_opaque(ent, terrain);
 }
 
 inline void apply_fire_effect(entity &ent) noexcept
@@ -237,16 +274,8 @@ inline void handle_teleporter(entity &ent) noexcept
 {
     static constexpr uint64_t TELEPORT_TIC_PERIOD_US{100'000};
 
-/* by definition, this search cannot fail */
-#if 0 /* old way */
-    auto tele_itr{std::ranges::find_if(ent.game_state->teleport_list,
-                                       [&](const auto &tele) { return tele.entry_location == ent.loc; })};
-
-    const auto [newfacing, newloc]{tele_itr->compute_exit(ent.facing)};
-#else /* new way... thanks, Sam! */
-    const auto [newfacing,
-                newloc]{ent.game_state->teleport_list.compute_exit(ent, ent.loc, ent.facing)};
-#endif
+    /* by definition, this search cannot fail */
+    const auto [newfacing, newloc]{ent.game_state->teleport_list.compute_exit(ent, ent.loc, ent.facing)};
 
     ent.loc = newloc;
     ent.facing = newfacing;
@@ -523,7 +552,8 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
                 nextfacing = ent.facing;
             }
             /* force the move at a fixed rate */
-            ent.next_time = ent.next_time - get_entity_velocity(ent.identity) + FIXED_PERIOD_US;
+            ent.next_time = ent.game_state->the_clock.increment_time_point(
+                (ent.next_time - get_entity_velocity(ent.identity)), FIXED_PERIOD_US);
         }
         break;
     /* push floors allow movements if it's orthogonal to the floor's direction */
@@ -629,6 +659,17 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::RED_KEY:
     case terrain_type::CYAN_KEY:
     case terrain_type::YELLOW_KEY:
+    case terrain_type::INVISIBLE_WALL:
+    case terrain_type::APPEARING_WALL:
+    case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::CLONER_BLUE_TANK_THAT_MOVES_LEFT:
+    case terrain_type::CLONER_CENTIPEDE:
+    case terrain_type::CLONER_PURPLE_BALL:
+    case terrain_type::CLONER_CYAN_STICK_BALL:
+    case terrain_type::FIRE_BOOTS:
+    case terrain_type::FLIPPERS:
+    case terrain_type::ICE_SKATES:
+    case terrain_type::SUCTION_BOOTS:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -651,10 +692,13 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::ICE_BOTRIGHT:
         return ent.facing == direction::UP || ent.facing == direction::LEFT;
 
+    case terrain_type::FIRE:
+        return ent.identity != entity_type::WATER_GLIDER && ent.identity != entity_type::FIRE_DANCER &&
+               ent.identity != entity_type::MOVEABLE_BLOCK;
+
     case terrain_type::CLEAR:
     case terrain_type::HINT:
     case terrain_type::WATER:
-    case terrain_type::FIRE:
     case terrain_type::ICE:
     case terrain_type::TRAP:
     case terrain_type::BOMB:
@@ -667,7 +711,13 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
+    case terrain_type::THIEF:
+    case terrain_type::MAGIC_TILE_CLEAR:
+    case terrain_type::WALL_TRAP:
+    case terrain_type::PUSH_FLOOR_MULTI:
+    case terrain_type::TELEPORTER:
         return false;
+        break;
     }
 
     return false;

@@ -95,6 +95,10 @@ enum struct texture_type
     CLONER_MOVEABLE_BLOCK,
     CLONER_FROG_MONSTER,
     PUSH_FLOOR_MULTI,
+    CLONER_BLUE_TANK_LEFT,
+    CLONER_CENTIPEDE_UP,
+    CLONER_PURPLE_BALL,
+    CLONER_CYAN_STICK_BALL,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

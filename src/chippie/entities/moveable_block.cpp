@@ -28,10 +28,15 @@ constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> move_if_chippie_is_on_us(const entity &ent) noexcept
 {
-    /* moveable block is a bit of a special snowflake, in that if chippie is on our location,
-    then it is ALWAYS okay to move.  This is because by design part of the logic to move this block is contained in
-    chippie_entity.cpp, a la, chippie will check if the space behind the block is clear to move.
-    It's also required that moveable blocks are processed before any other entities in the entity list. */
+    /*  moveable block is a bit of a special snowflake, in that if chippie is on our location,
+        then it is ALWAYS okay to move.  This is because by design part of the logic to move this block is contained in
+        chippie_entity.cpp, a la, chippie will check if the space behind the block is clear to move.
+
+        It's also required that moveable blocks are processed before any other entities in the entity list. 
+        Although for the life of me I can't remember why... it might have been fixed when we updated
+        the chippie_entity code to check for clear terrain AND no other entities present in the 
+        candidate location for the moveable block.
+    */
 
     /* TODO by convention, chippie is always the first entity in the entity_list.. should probably write a test for
      * that. */

@@ -1,13 +1,10 @@
 #include "cursor_menu_dialog.hpp"
 
-#include <cstdint>
-#include <span>
-
-// #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstring>
 #include <numeric>
+#include <span>
 #include <utility>
 
 #include "pico/time.h"

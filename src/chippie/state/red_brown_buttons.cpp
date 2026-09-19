@@ -30,22 +30,11 @@ namespace
 
 void red_button::generate(state &game_state) noexcept
 {
-#ifdef DEBUG_PRINT
-    printf("generating ");
-#endif
-
     const auto next_uuid{find_next_uuid(game_state)};
-#ifdef DEBUG_PRINT
-    printf("with uuid %d ", next_uuid);
-#endif
 
     /* should guarentee the new entity will move within the game_logic processing loop it was added */
     auto &chippie{game_state.entity_list.front()};
     const uint64_t next_move_time{chippie.next_time - get_entity_velocity(chippie.identity)};
-#ifdef DEBUG_PRINT
-    const uint64_t current_time{game_state.the_clock.now()};
-    printf("at time %llu, next move time is %llu... entity: (%d)", current_time, next_move_time, static_cast<int>(clone_type));
-#endif
 
     game_state.entity_list.push_back(
         create_entity(clone_type, clone_spawn, clone_facing, next_uuid, game_state, next_move_time));
@@ -53,9 +42,6 @@ void red_button::generate(state &game_state) noexcept
     /* this supresses an immediate move, which otherwise looks weird on the display */
     game_state.entity_list.back().has_summoning_sickness = true;
 
-#ifdef DEBUG_PRINT
-    printf("\n");
-#endif
 }
 
 bool brown_button::check_trap_is_set(const state &game_state) const noexcept

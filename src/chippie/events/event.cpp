@@ -50,6 +50,10 @@ std::array<event_cb_t, static_cast<size_t>(event_type::MAX_EVENT_TYPE)> handlers
         return "TIME_UP";
     case event_type::FELL_IN_WATER:
         return "FELL_IN_WATER";
+    case event_type::EATEN_BY_BUG:
+        return "EATEN_BY_BUG";
+    case event_type::GOT_BURNED:
+        return "GOT_BURNED";
     case event_type::GAME_OVER:
         return "GAME_OVER";
     case event_type::MOVE_MOVABLE_BLOCK:
@@ -68,8 +72,10 @@ std::array<event_cb_t, static_cast<size_t>(event_type::MAX_EVENT_TYPE)> handlers
         return "CHOMPED_BY_FROG";
     case event_type::SMUSHED:
         return "SMUSHED";
-    default:
-        return "OTHER";
+    case event_type::BLOBIFIED:
+        return "BLOBIFIED";
+    case event_type::MAX_EVENT_TYPE:
+        return "MAX_EVENT_TYPE";
     }
 
     return "OTHER";

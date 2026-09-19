@@ -27,11 +27,6 @@ namespace
 
 constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 
-[[nodiscard]] bool check_terrain_is_opaque_for_blue_tank(const entity &ent, terrain_type candidate_terrain) noexcept
-{
-    return check_terrain_is_opaque(ent, candidate_terrain);
-}
-
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
 {
     static constexpr std::array clockwise_move_table{
@@ -63,37 +58,19 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-    /* in the case of the blue_tank:
-            if it's clear, allow the move,
-            if it's the player, game over,
-            otherwise, reverse facing and move again
-    */
-#ifdef DEBUG_PRINT
-    printf("blue_tank collision handling start\n");
-#endif
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-#ifdef DEBUG_PRINT
-            printf("collided with chip\n");
-#endif
             register_event(event::event_type::FLATTENED_BY_TANK);
         }
-        else
-        {
-            return collision_action::NO_ACTION_NEEDED;
-        }
-    }
-
-    if (check_terrain_is_opaque_for_blue_tank(ent, collided_terrain))
-    {
         return collision_action::NO_ACTION_NEEDED;
     }
 
-#ifdef DEBUG_PRINT
-    printf("blue_tank collision handling end\n");
-#endif
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
 
     return collision_action::APPLY_NEXT_LOCATION;
 }
@@ -108,7 +85,8 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     auto &&to_identity{[](const direction entdir) {
         switch (entdir)

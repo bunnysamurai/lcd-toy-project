@@ -11,7 +11,7 @@
 
 #include <pico/time.h>
 
-#define DEBUG_PRINT
+// #define DEBUG_PRINT
 #ifdef DEBUG_PRINT
 #include <pico/printf.h>
 #endif
@@ -21,13 +21,17 @@ namespace chippie
 
 game_logic::game_logic(state &injected_state) noexcept : game_state{injected_state}
 {
-    const auto game_start_time{injected_state.the_clock.now()};
+    const auto game_start_time{game_state.the_clock.now()};
+
+#ifdef DEBUG_PRINT
+    printf("All entities synced to time %llu\n", game_start_time);
+#endif
 
     /* synchronize all entities in time */
     for (auto &ent : game_state.entity_list)
     {
         ent.next_time =
-            injected_state.the_clock.increment_time_point(game_start_time, get_entity_velocity(ent.identity));
+            game_state.the_clock.increment_time_point(game_start_time, get_entity_velocity(ent.identity));
     }
 }
 
@@ -72,6 +76,16 @@ void game_logic::move_entities() noexcept
         {
             continue;
         }
+#ifdef DEBUG_PRINT
+        if (ent.identity == entity_type::MOVEABLE_BLOCK)
+        {
+            const auto terrain{ game_state.the_map[ent.loc]};
+            if( terrain == terrain_type::ICE )
+            {
+                printf("processing movable block time %llu (cur time %llu)\n", ent.next_time, current_time);
+            }
+        }
+#endif
 
         /* begin processing with the entry handler */
         if (entity_handles.entry_handler != nullptr)
@@ -86,8 +100,9 @@ void game_logic::move_entities() noexcept
             continue;
         }
 
-        /* If we make it here, we are good to process a move.  Update next move time w/o drift */
-        ent.next_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
+        /* If we make it here, we are good to process a move.  Update next move time w/o drift if possible, otherwise resync if other processing took too long */
+        const auto proposed_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
+        ent.next_time = proposed_time < current_time ? game_state.the_clock.increment_time_point(current_time, get_entity_velocity(ent.identity)) : proposed_time;
 
         /* next, compute where this entity wants to move 
            we consider creation-by-red-button to count as a move, which is signalled

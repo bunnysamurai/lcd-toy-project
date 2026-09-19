@@ -1,5 +1,6 @@
 #include "teleporter.hpp"
 
+#include "chippie/entities/basic_entity.hpp"
 #include "chippie/state/state.hpp"
 #include "chippie/state/terrain_effects.hpp"
 
@@ -81,7 +82,17 @@ std::pair<direction, Grid::Location> teleporter_chain::compute_exit(const entity
 
         if (!check_terrain_is_opaque(this_ent, game_state.the_map[possible_exit_location]))
         {
-            return std::make_pair(entry_facing, *candidate_itr);
+            /* do one more check, which is if a moveable block is present */
+            /* we make the check within this branch as the collision finder can be expensive */
+            const auto entitr{find_entity_collision(this_ent, possible_exit_location,
+                                                    std::begin(game_state.entity_list),
+                                                    std::end(game_state.entity_list))};
+
+            if (entitr->identity != entity_type::MOVEABLE_BLOCK)
+            {
+                /* we've found a valid opening, so we'll take it. */
+                return std::make_pair(entry_facing, *candidate_itr);
+            }
         }
 
         advance_with_wrap(candidate_itr);

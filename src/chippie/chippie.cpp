@@ -13,6 +13,7 @@
 #include "gamepad/gamepad.hpp"
 #include "screen/gfx/cursor_menu_dialog.hpp"
 #include "screen/gfx/dialog.hpp"
+#include "screen/gfx/number_dialog.hpp"
 #include "screen/glyphs/letters.hpp"
 
 #include "pico/time.h"
@@ -66,6 +67,14 @@ void screen_init() noexcept
 
 void init_event_handlers() noexcept
 {
+    event::register_handler(event::event_handler{
+        .identifier = event::event_type::BLOBIFIED,
+        .handler =
+            [](state &game_state) {
+                game_state.active = false;
+                game_state.inactive_reason = state::reason::CHIP_DIED;
+            },
+    });
     event::register_handler(event::event_handler{
         .identifier = event::event_type::SMUSHED,
         .handler =
@@ -414,7 +423,9 @@ void run()
     // const auto result{menu.run()};
 
     const int MAX_LEVELS = level::get_max_level();
-    int level = 35; /* the starting level */
+    static constexpr screen::gfx::number_dialog_palette plt{
+        .bright_highlight = WHITE, .shadow_highlight = DRKGRY, .background = LGREY, .font_color = WHITE};
+    int level = screen::gfx::number_dialog{plt, "Select Start Level:", 0, MAX_LEVELS}.ask(); /* the starting level */
 
     while (true)
     {
@@ -448,8 +459,8 @@ void run()
             sleep_until_next_game_loop_iteration(start);
         }
 
-        /* TODO add logic for an "end of game", maybe go back to a menu?
-            also logic for why the game isn't active:
+        /* 
+           process logic for why the game isn't active:
                 if chip died, the level should restart
                 if portal was reached, the level number should increment
                 if a quit was requested, break out of the outer loop

@@ -39,20 +39,15 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{250'000}; /* time is in us */
         {
             register_event(event::event_type::ROLLED_BY_BALL);
         }
-        else
-        {
-            return collision_action::MOVE_BACKWARD;
-        }
+        /* FIXME this move backwards doesn't check for clearance... */
+        return collision_action::MOVE_BACKWARD;
     }
 
-    if (!check_terrain_is_opaque(ent, collided_terrain))
-    {
-        return collision_action::MOVE_FORWARD;
-    }
-    else
+    if (check_terrain_is_opaque(ent, collided_terrain))
     {
         return collision_action::MOVE_BACKWARD;
     }
+    return collision_action::MOVE_FORWARD;
 }
 
 } // namespace
@@ -65,7 +60,8 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,

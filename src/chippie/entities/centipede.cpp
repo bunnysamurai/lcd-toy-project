@@ -35,9 +35,12 @@ constexpr std::array directions{
 
 constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 
-[[nodiscard]] bool check_terrain_is_opaque_for_centipede(const entity &ent, terrain_type candidate_terrain) noexcept
+[[nodiscard]] bool check_tile_is_already_occupied(const entity &ent, const Grid::Location loc) noexcept
 {
-    return check_terrain_is_opaque(ent, candidate_terrain) || candidate_terrain == terrain_type::FIRE;
+    const auto &the_list{ent.game_state->entity_list};
+    const auto itr{find_entity_collision(ent, loc, std::begin(the_list), std::end(the_list))};
+
+    return itr != std::end(the_list) && itr->identity != entity_type::CHIPPIE;
 }
 
 [[nodiscard]] std::pair<Grid::Location, direction> compute_next_location(const entity &ent) noexcept
@@ -50,17 +53,14 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
             right
             backward
     */
-#ifdef DEBUG_PRINT
-    printf("centipede moving start\n");
-#endif
     for (const auto dir : directions)
     {
         const auto [candidate_loc, candidate_facing]{move(ent.loc, ent.facing, dir)};
 
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
-        /* check if */
-        if (check_terrain_is_opaque_for_centipede(ent, candidate_terrain))
+        if (check_terrain_is_opaque(ent, candidate_terrain) ||
+            check_tile_is_already_occupied(ent, candidate_loc))
         {
             continue;
         }
@@ -68,25 +68,36 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
         return std::make_pair(candidate_loc, candidate_facing);
     }
 
-#ifdef DEBUG_PRINT
-    printf("centipede not moving result.. end\n");
-#endif
     return std::make_pair(ent.loc, ent.facing);
 }
 
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-#ifdef DEBUG_PRINT
-    printf("centipede collision handling start\n");
-#endif
+#if 1 /* new way */
+
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
-#ifdef DEBUG_PRINT
-            printf("collided with chip\n");
-#endif
+            register_event(event::event_type::EATEN_BY_BUG);
+        }
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
+
+    return collision_action::APPLY_NEXT_LOCATION;
+
+#else /* old way */
+
+    if (collided_entity != nullptr)
+    {
+        if (collided_entity->identity == entity_type::CHIPPIE)
+        {
             register_event(event::event_type::EATEN_BY_BUG);
         }
         else
@@ -98,7 +109,6 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 
                 const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
-                /* check if */
                 if (check_terrain_is_opaque_for_centipede(ent, candidate_terrain))
                 {
                     continue;
@@ -119,11 +129,13 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
         }
     }
 
-#ifdef DEBUG_PRINT
-    printf("centipede collision handling end\n");
-#endif
+    if (check_terrain_is_opaque(ent, collided_terrain))
+    {
+        return collision_action::NO_ACTION_NEEDED;
+    }
 
     return collision_action::APPLY_NEXT_LOCATION;
+#endif
 }
 
 } // namespace
@@ -136,7 +148,8 @@ constexpr uint64_t CENTIPEDE_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,

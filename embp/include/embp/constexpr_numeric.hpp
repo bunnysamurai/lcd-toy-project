@@ -2,6 +2,8 @@
 #include "utility.hpp"
 #ifdef STD_LIB_AVAILABLE
 #include <cstddef>
+#include <algorithm>
+#include <functional>
 #else
 #include <stddef.h>
 #endif
@@ -28,6 +30,54 @@ constexpr inline InitType accumulate(InputIterator first, InputIterator last,
   }
   return init;
 }
+
+/* TODO check template type arg is actual an integral type */
+template <class Integer>
+constexpr void adjust_with_clamp(Integer& val, Integer amount, Integer lo, Integer hi) noexcept
+{
+#ifdef STD_LIB_AVAILABLE
+  val = std::clamp(std::plus<Integer>{}(val , amount), lo, hi);
+#else
+  /* TODO not a real impl, as overflow isn't being handled */
+  const auto v {val + amount};
+  if(v < lo)
+  {
+    val = lo;
+    return;
+  }
+  if(v > hi)
+  {
+    val = hi;
+    return;    
+  }
+  val = v;
+#endif
+}
+
+namespace constexpr_testing{
+[[nodiscard]] constexpr bool test_adjust_with_clamp() noexcept
+{
+  bool result{true};
+  int input{42};
+
+  adjust_with_clamp(input, 1, 41, 43); /* input is 42 before call */
+  result &= input == 43;
+  adjust_with_clamp(input, 1, 41, 43); /* input is 43 before call */
+  result &= input == 43;
+  adjust_with_clamp(input, -1, 41, 43); /* input is 43 before call */
+  result &= input == 42;
+  adjust_with_clamp(input, -1, 41, 43); /* input is 42 before call */
+  result &= input == 41;
+  adjust_with_clamp(input, -1, 41, 43); /* input is 41 before call */
+  result &= input == 41;
+
+  return result;
+}
+
+static_assert(test_adjust_with_clamp());
+}
+
+
 
 /** @brief Raise to a positive integer
  */

@@ -26,10 +26,12 @@ namespace screen
  */
 template <size_t N> [[nodiscard]] constexpr std::array<uint8_t, N> bcd(uint32_t value) noexcept
 {
+    constexpr auto compare_value_init{embp::power_intexp(10, N - 1)};
+
     std::array<uint8_t, N> digits{};
     uint32_t start{digits.size()};
     uint32_t score{value};
-    uint32_t compare_value{embp::power_intexp(10, N - 1)};
+    uint32_t compare_value{compare_value_init};
     while (start > 1)
     {
         const auto idx{(start - 1)};

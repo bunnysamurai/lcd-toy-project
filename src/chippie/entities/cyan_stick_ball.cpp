@@ -54,31 +54,22 @@ constexpr uint64_t CYAN_STICK_BALL_VELOCITY_US{250'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-    /* in the case of the cyan_stick ball:
-            if it's clear, allow the move,
-            if it's the player, game over,
-            otherwise, reverse facing and move again
-    */
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
         {
             register_event(event::event_type::ROLLED_BY_BALL);
         }
-        else
-        {
-            return collision_action::MOVE_BACKWARD;
-        }
+        /* FIXME this move backwards doesn't check for clearance... */
+        return collision_action::MOVE_BACKWARD;
     }
 
-    if (!check_terrain_is_opaque(ent, collided_terrain))
-    {
-        return collision_action::MOVE_FORWARD;
-    }
-    else
+    if (check_terrain_is_opaque(ent, collided_terrain))
     {
         return collision_action::MOVE_BACKWARD;
     }
+
+    return collision_action::MOVE_FORWARD;
 }
 
 } // namespace
@@ -91,7 +82,8 @@ constexpr uint64_t CYAN_STICK_BALL_VELOCITY_US{250'000}; /* time is in us */
 |_|    \__,_|_.__/|_|_|\___|
 
 */
-[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid, uint64_t next_time) noexcept
+[[nodiscard]] entity create(state &game_state, Grid::Location xy, direction dir, uint8_t uuid,
+                            uint64_t next_time) noexcept
 {
     return {
         .loc = xy,

@@ -33,6 +33,7 @@ enum struct event_type
     ROLLED_BY_BALL,  /* touched a purple ball */
     CHOMPED_BY_FROG, /* touched a frog monster */
     SMUSHED,         /* block crushed us */
+    BLOBIFIED,       /* a blob got us */
     MAX_EVENT_TYPE
 };
 

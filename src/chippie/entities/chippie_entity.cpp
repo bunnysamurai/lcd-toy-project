@@ -143,9 +143,6 @@ steady_clock_source::time_base_t hold_time_point;
         otherwise, we say no action is needed.
      */
 
-#ifdef DEBUG_PRINT
-    printf("chippie: handling moveable block\n");
-#endif
     const auto current_location_of_movable_block{block_ent.loc};
 
     const auto candidate_location_for_moveable_block{move(current_location_of_movable_block, chip_ent.facing)};
@@ -157,25 +154,11 @@ steady_clock_source::time_base_t hold_time_point;
             If it's clear, allow the move
     */
     const bool is_opaque{check_terrain_is_opaque_for_moveable(chip_ent.facing, candidate_terrain)};
-#ifdef DEBUG_PRINT
-    if (is_opaque)
-        printf("chippie: candidate is opaque.\n");
-#endif
     const bool entity_present{check_entity_present(*chip_ent.game_state, candidate_location_for_moveable_block)};
-#ifdef DEBUG_PRINT
-    if (entity_present)
-        printf("chippie: entity is present.\n");
-#endif
     if (is_opaque || entity_present)
     {
-#ifdef DEBUG_PRINT
-        printf("chippie: moveable block is not clear to move.\n");
-#endif
         return collision_action::NO_ACTION_NEEDED;
     }
-#ifdef DEBUG_PRINT
-    printf("chippie: moveable block is clear to move.\n");
-#endif
 
     return collision_action::APPLY_NEXT_LOCATION;
 }
