@@ -346,30 +346,6 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         map_tile = terrain_type::CLEAR;
         break;
     /* directional terrain features */
-    case terrain_type::ICE_TOPLEFT:
-        if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
-        {
-            ent.facing = ent.facing == direction::LEFT ? direction::DOWN : direction::RIGHT;
-        }
-        break;
-    case terrain_type::ICE_TOPRIGHT:
-        if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
-        {
-            ent.facing = ent.facing == direction::RIGHT ? direction::DOWN : direction::LEFT;
-        }
-        break;
-    case terrain_type::ICE_BOTLEFT:
-        if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
-        {
-            ent.facing = ent.facing == direction::LEFT ? direction::UP : direction::RIGHT;
-        }
-        break;
-    case terrain_type::ICE_BOTRIGHT:
-        if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
-        {
-            ent.facing = ent.facing == direction::RIGHT ? direction::UP : direction::LEFT;
-        }
-        break;
     case terrain_type::PUSH_FLOOR_UP:
         if (!check_for_chip_and_item(ent, inventory_item::SUCTION_BOOTS))
         {
@@ -434,7 +410,14 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
         handle_teleporter(ent);
         break;
 
+    /* these are handled in the override code */
     case terrain_type::ICE:
+    case terrain_type::ICE_TOPLEFT:
+    case terrain_type::ICE_TOPRIGHT:
+    case terrain_type::ICE_BOTLEFT:
+    case terrain_type::ICE_BOTRIGHT:
+
+    /* and the rest */
     case terrain_type::CLEAR:
     case terrain_type::WALL:
     case terrain_type::GRAVEL:
@@ -529,6 +512,30 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
         return ent.facing;
     }};
 
+    auto &&adjust_facing_on_ice{[&](const direction input_facing, const terrain_type ice_terrain) {
+        if (ice_terrain == terrain_type::ICE_TOPLEFT)
+        {
+            return input_facing == direction::UP ? direction::RIGHT : direction::DOWN;
+        }
+
+        if (ice_terrain == terrain_type::ICE_TOPRIGHT)
+        {
+            return input_facing == direction::UP ? direction::LEFT : direction::DOWN;
+        }
+
+        if (ice_terrain == terrain_type::ICE_BOTLEFT)
+        {
+            return input_facing == direction::DOWN ? direction::RIGHT : direction::UP;
+        }
+
+        if (ice_terrain == terrain_type::ICE_BOTRIGHT)
+        {
+            return input_facing == direction::DOWN ? direction::LEFT : direction::UP;
+        }
+
+        return input_facing;
+    }};
+
     /* just the force floors, ice, and thin walls do this */
     switch (terrain)
     {
@@ -539,11 +546,13 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     case terrain_type::ICE_BOTRIGHT:
         if (!check_for_chip_and_item(ent, inventory_item::ICE_SKATES))
         {
+            ent.facing = adjust_facing_on_ice(ent.facing, terrain);
             nextloc = move(ent.loc, ent.facing);
             /* if the nextloc is opaque for this entity, reverse facing */
             if (check_if_opaque_on_ice(ent, nextloc))
             {
-                nextfacing = reverse(ent.facing);
+                // nextfacing = reverse(ent.facing);
+                nextfacing = adjust_facing_on_ice(reverse(ent.facing), terrain);
                 nextloc = move(ent.loc, nextfacing);
             }
             else
