@@ -42,15 +42,7 @@ struct MenuConfig
 static const auto GRID_WIDTH{glyphs::tile::width()};
 static const auto GRID_HEIGHT{glyphs::tile::height()};
 
-MenuConfig g_cfg;
-
-void init_menu_cfg() noexcept
-{
-    g_cfg.startcol = 1;
-    g_cfg.startline = 2;
-    g_cfg.row_spacing = 1;
-    g_cfg.titlestartline = 1;
-}
+static constexpr MenuConfig g_cfg{.startcol = 1, .startline = 2, .row_spacing = 1, .titlestartline = 1};
 
 [[nodiscard]] UserInstruction process_user_input() noexcept
 {
@@ -114,7 +106,6 @@ cursor_menu_dialog::cursor_menu_dialog(cursor_menu_dialog_palette palette, const
                                        std::span<const char *const> items) noexcept
     : m_palette{palette}, m_items{items}, m_title{title}, m_cursor{std::size(items)}
 {
-    init_menu_cfg();
 }
 
 int cursor_menu_dialog::ask() noexcept

@@ -293,10 +293,6 @@ void paint_entity(const state &game_state, const entity &ent) noexcept
 
 void paint(state &game_state) noexcept
 {
-
-#ifdef DEBUG_PRINT
-    printf("painting game state\n");
-#endif
     screen::pause_screen();
 
     paint_the_background(game_state);

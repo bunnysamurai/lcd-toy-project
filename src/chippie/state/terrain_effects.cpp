@@ -101,7 +101,6 @@ namespace
     case terrain_type::ICE_SKATES:
     case terrain_type::SUCTION_BOOTS:
         return false;
-        break;
     }
 
     return false;
@@ -662,6 +661,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::INVISIBLE_WALL:
     case terrain_type::APPEARING_WALL:
     case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::MAGIC_TILE_CLEAR:
     case terrain_type::CLONER_BLUE_TANK_THAT_MOVES_LEFT:
     case terrain_type::CLONER_CENTIPEDE:
     case terrain_type::CLONER_PURPLE_BALL:
@@ -670,6 +670,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::FLIPPERS:
     case terrain_type::ICE_SKATES:
     case terrain_type::SUCTION_BOOTS:
+    case terrain_type::WALL_TRAP:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -712,12 +713,9 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
     case terrain_type::THIEF:
-    case terrain_type::MAGIC_TILE_CLEAR:
-    case terrain_type::WALL_TRAP:
     case terrain_type::PUSH_FLOOR_MULTI:
     case terrain_type::TELEPORTER:
         return false;
-        break;
     }
 
     return false;
@@ -740,6 +738,13 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CLONER_FIRE_DANCER:
     case terrain_type::CLONER_MOVEABLE_BLOCK:
     case terrain_type::CLONER_FROG_MONSTER:
+    case terrain_type::INVISIBLE_WALL:
+    case terrain_type::APPEARING_WALL:
+    case terrain_type::MAGIC_TILE_WALL:
+    case terrain_type::CLONER_BLUE_TANK_THAT_MOVES_LEFT:
+    case terrain_type::CLONER_CENTIPEDE:
+    case terrain_type::CLONER_PURPLE_BALL:
+    case terrain_type::CLONER_CYAN_STICK_BALL:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
@@ -784,6 +789,14 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::PUSH_FLOOR_LEFT:
     case terrain_type::PUSH_FLOOR_RIGHT:
     case terrain_type::PUSH_FLOOR_MULTI:
+    case terrain_type::MAGIC_TILE_CLEAR:
+    case terrain_type::THIEF:
+    case terrain_type::WALL_TRAP:
+    case terrain_type::TELEPORTER:
+    case terrain_type::FIRE_BOOTS:
+    case terrain_type::FLIPPERS:
+    case terrain_type::ICE_SKATES:
+    case terrain_type::SUCTION_BOOTS:
         return false;
     }
 

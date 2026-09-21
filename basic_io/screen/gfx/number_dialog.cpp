@@ -46,6 +46,8 @@ enum struct UserInstruction
     NOACTION,
     INCREMENT_NUMBER,
     DECREMENT_NUMBER,
+    INCREMENT_NUMBER_LARGLY,
+    DECREMENT_NUMBER_LARGLY,
     EXIT
 };
 
@@ -53,22 +55,12 @@ struct MenuConfig
 {
     uint32_t startcol;
     uint32_t startline;
-    uint32_t row_spacing;
-    uint32_t titlestartline;
 };
 
 static const auto GRID_WIDTH{glyphs::tile::width()};
 static const auto GRID_HEIGHT{glyphs::tile::height()};
 
-MenuConfig g_cfg;
-
-void init_menu_cfg() noexcept
-{
-    g_cfg.startcol = 1;
-    g_cfg.startline = 2;
-    g_cfg.row_spacing = 1;
-    g_cfg.titlestartline = 1;
-}
+static constexpr MenuConfig g_cfg{.startcol = 1, .startline = 1};
 
 [[nodiscard]] UserInstruction read_user_input() noexcept
 {
@@ -82,6 +74,14 @@ void init_menu_cfg() noexcept
     if (state.down)
     {
         result = UserInstruction::DECREMENT_NUMBER;
+    }
+    if (state.left)
+    {
+        result = UserInstruction::DECREMENT_NUMBER_LARGLY;
+    }
+    if (state.right)
+    {
+        result = UserInstruction::INCREMENT_NUMBER_LARGLY;
     }
     if (state.etc)
     {
@@ -126,7 +126,6 @@ void init_menu_cfg() noexcept
 number_dialog::number_dialog(number_dialog_palette cfg, const char *prompt, int minval, int maxval) noexcept
     : m_palette{cfg}, m_prompt{prompt}, m_min{minval}, m_max{maxval}, m_menu_rect{compute_background_shape()}
 {
-    init_menu_cfg();
 }
 
 void number_dialog::draw_dialog_background() const noexcept
@@ -149,7 +148,7 @@ void number_dialog::draw_dialog_promt() const noexcept
     printf("m_prompt: %s\n", m_prompt);
     for (uint32_t idx = 0; idx < std::strlen(m_prompt); ++idx)
     {
-        draw_letter(xpos + idx, ypos, *(m_prompt+idx));
+        draw_letter(xpos + idx, ypos, *(m_prompt + idx));
     }
 }
 
@@ -196,6 +195,12 @@ int number_dialog::process_dialog() noexcept
         case UserInstruction::DECREMENT_NUMBER:
             embp::adjust_with_clamp(number, -1, m_min, m_max);
             break;
+        case UserInstruction::INCREMENT_NUMBER_LARGLY:
+            embp::adjust_with_clamp(number, 10, m_min, m_max);
+            break;
+        case UserInstruction::DECREMENT_NUMBER_LARGLY:
+            embp::adjust_with_clamp(number, -10, m_min, m_max);
+            break;
         case UserInstruction::EXIT:
             return number;
         }
@@ -205,6 +210,7 @@ int number_dialog::process_dialog() noexcept
 
 Rect number_dialog::compute_background_shape() const noexcept
 {
+    printf("strlen(prompt) = %d\n", std::strlen(m_prompt));
     const auto width_in_chars{std::strlen(m_prompt) + 2 * g_cfg.startcol};
     const auto height_in_chars{4};
 

@@ -109,6 +109,41 @@ enum struct relative_direction
     return std::make_pair(move(loc, new_facing), new_facing);
 }
 
+[[nodiscard]] constexpr direction to_abs_direction(direction facing, relative_direction input) noexcept
+{
+    switch (input)
+    {
+    case relative_direction::FORWARD:
+        return facing;
+    case relative_direction::BACKWARD:
+        return reverse(facing);
+    case relative_direction::RIGHT:
+        return rotate_clockwise(facing);
+    case relative_direction::LEFT:
+        return rotate_anticlockwise(facing);
+    }
+}
+
+static_assert(direction::UP == to_abs_direction(direction::UP, relative_direction::FORWARD));
+static_assert(direction::DOWN == to_abs_direction(direction::UP, relative_direction::BACKWARD));
+static_assert(direction::RIGHT == to_abs_direction(direction::UP, relative_direction::RIGHT));
+static_assert(direction::LEFT == to_abs_direction(direction::UP, relative_direction::LEFT));
+
+static_assert(direction::DOWN == to_abs_direction(direction::DOWN, relative_direction::FORWARD));
+static_assert(direction::UP == to_abs_direction(direction::DOWN, relative_direction::BACKWARD));
+static_assert(direction::LEFT == to_abs_direction(direction::DOWN, relative_direction::RIGHT));
+static_assert(direction::RIGHT == to_abs_direction(direction::DOWN, relative_direction::LEFT));
+
+static_assert(direction::RIGHT == to_abs_direction(direction::RIGHT, relative_direction::FORWARD));
+static_assert(direction::LEFT == to_abs_direction(direction::RIGHT, relative_direction::BACKWARD));
+static_assert(direction::DOWN == to_abs_direction(direction::RIGHT, relative_direction::RIGHT));
+static_assert(direction::UP == to_abs_direction(direction::RIGHT, relative_direction::LEFT));
+
+static_assert(direction::LEFT == to_abs_direction(direction::LEFT, relative_direction::FORWARD));
+static_assert(direction::RIGHT == to_abs_direction(direction::LEFT, relative_direction::BACKWARD));
+static_assert(direction::UP == to_abs_direction(direction::LEFT, relative_direction::RIGHT));
+static_assert(direction::DOWN == to_abs_direction(direction::LEFT, relative_direction::LEFT));
+
 } // namespace chippie
 
 #endif

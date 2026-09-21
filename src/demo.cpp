@@ -20,6 +20,7 @@
 #include "common/pico_sdk_clock_details.hpp"
 #include "common/time_utils.hpp"
 #include "common/utilities.hpp"
+#include "common/rng.hpp"
 
 namespace demo
 {
@@ -50,10 +51,10 @@ static constexpr std::array Demo_Palette{
 static constexpr uint32_t BLACK{0};
 static constexpr uint32_t MAGENTA{1};
 static constexpr uint32_t YELLOW{2};
-static constexpr uint32_t BLUE{3};
+static constexpr uint32_t CYAN{3};
 static constexpr uint32_t RED{4};
 static constexpr uint32_t GREEN{5};
-static constexpr uint32_t CYAN{6};
+static constexpr uint32_t BLUE{6};
 
 /* I think 8x8 tiles are okay? */
 static constexpr auto magenta_data{embp::pfold(
@@ -193,21 +194,42 @@ void run_linebounce_screensaver() noexcept
 {
     const auto dim{screen::get_virtual_screen_size()};
 
+    rng::set_seed(0xBEDEBEDE);
+
     /* we'll use S18.14 format for the position and velocity */
-    std::array<Position, 4> position{
+    static constexpr int sf{10};
+    std::array position{
+        /* centered */
         Position{.x = 10 << 14, .y = 11 << 14},
         Position{.x = 20 << 14, .y = 300 << 14},
         Position{.x = 200 << 14, .y = 300 << 14},
         Position{.x = 200 << 14, .y = 30 << 14},
+
+        /* outer */
+        Position{.x = (10 << 14) + sf * 10000, .y = (11 << 14) + sf * 11000},
+        Position{.x = (20 << 14) - sf * 10000, .y = (300 << 14) - sf * 11000},
+        Position{.x = (200 << 14) + sf * 10000, .y = (300 << 14) + sf * 11000},
+        Position{.x = (200 << 14) - sf * 10000, .y = (30 << 14) - sf * 11000},
+
+        /* inner */
+        Position{.x = (10 << 14) - sf * 10000, .y = (11 << 14) - sf * 11000},
+        Position{.x = (20 << 14) + sf * 10000, .y = (300 << 14) + sf * 11000},
+        Position{.x = (200 << 14) - sf * 10000, .y = (300 << 14) - sf * 11000},
+        Position{.x = (200 << 14) + sf * 10000, .y = (30 << 14) + sf * 11000},
     };
 
     /* in pixels per update tick, in S18.14 format */
-    std::array<Velocity, 4> velocity{
-        Velocity{.dx = 10000, .dy = 11000},
-        Velocity{.dx = -10000, .dy = -11000},
-        Velocity{.dx = 10000, .dy = 11000},
-        Velocity{.dx = -10000, .dy = -11000},
+    std::array velocity{
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
+
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
+
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
+        Velocity{.dx = 10000, .dy = 11000}, Velocity{.dx = -10000, .dy = -11000},
     };
+
     static_assert(std::size(position) == std::size(velocity));
 
     screen::clear_screen();
@@ -220,15 +242,15 @@ void run_linebounce_screensaver() noexcept
     /* timer kicks every 1/60 seconds-ish. */
     embp::timer<clock_details::pico_sdk_steady_clock> update_timer{1 << 14};
     embp::timer<clock_details::pico_sdk_steady_clock> draw_timer{33'333};
-    std::array<screen::gfx::Point, 4> prvpoints{};
-    std::array<screen::gfx::Point, 4> points{};
-    static_assert(std::size(prvpoints) == std::size(position));
-    static_assert(std::size(points) == std::size(position));
-    auto color{RED};
+    std::array<screen::gfx::Point, std::size(position)> prvpoints{};
+    std::array<screen::gfx::Point, std::size(position)> points{};
+
+    std::array< uint32_t, 3 > color{RED, RED, RED}; /* one for each parallelogram */
     for (;;)
     {
         if (update_timer.elapsed())
         {
+            /* increment all points we are tracking */
             update_timer.increment();
 
             for (int ii = 0; ii < std::size(position); ++ii)
@@ -238,16 +260,16 @@ void run_linebounce_screensaver() noexcept
                 {
                     position[ii].x = velocity[ii].dx < 0 ? 0 : (dim.width - 1) << 14;
                     velocity[ii].dx = -velocity[ii].dx;
-                    const auto r{get_rand_32() & 0b11};
-                    color = r + 1;
+                    const auto r{rng::prng() & 0b11};
+                    color[ii/4] = r + 1;
                 }
                 position[ii].y += velocity[ii].dy;
                 if ((position[ii].y >> 14) >= dim.height)
                 {
                     position[ii].y = velocity[ii].dy < 0 ? 0 : (dim.height - 1) << 14;
                     velocity[ii].dy = -velocity[ii].dy;
-                    const auto r{get_rand_32() & 0b11};
-                    color = r + 1;
+                    const auto r{rng::prng() & 0b11};
+                    color[ii/4] = r + 1;
                 }
                 points[ii].x = position[ii].x >> 14;
                 points[ii].y = position[ii].y >> 14;
@@ -256,61 +278,56 @@ void run_linebounce_screensaver() noexcept
 
         if (draw_timer.elapsed())
         {
+            /* draw the points... each group of 4 are connected to each other
+                there are smarter data-structures + algorithms that should make
+                this better... need to thing about that some more.
+
+                My hint is: each point belongs in a connected group
+
+            */
             draw_timer.increment();
 
-            std::array<bool, 4> point_changed{false};
+            std::array<bool, std::size(position)> point_changed{false};
 
             screen::pause_screen();
-            /* draw the parallelogram */
-            if (points[0] != prvpoints[0] || points[1] != prvpoints[1])
-            {
-                screen::gfx::draw_line(prvpoints[0], prvpoints[1], BLACK, 1);
-                screen::gfx::draw_line(points[0], points[1], color, 1);
-                point_changed[0] = true;
-                point_changed[1] = true;
-            }
 
-            if (points[1] != prvpoints[1] || points[2] != prvpoints[2])
+            for (uint32_t outidx = 0; outidx < std::size(position) / 4; ++outidx)
             {
-                screen::gfx::draw_line(prvpoints[1], prvpoints[2], BLACK, 1);
-                screen::gfx::draw_line(points[1], points[2], color, 1);
-                point_changed[1] = true;
-                point_changed[2] = true;
-            }
+                const uint32_t sqidx{ outidx * 4 };
 
-            if (points[2] != prvpoints[2] || points[3] != prvpoints[3])
-            {
-                screen::gfx::draw_line(prvpoints[2], prvpoints[3], BLACK, 1);
-                screen::gfx::draw_line(points[2], points[3], color, 1);
-                point_changed[2] = true;
-                point_changed[3] = true;
-            }
+                /* draw the parallelogram */
+                if (points[sqidx + 0] != prvpoints[sqidx + 0] || points[sqidx + 1] != prvpoints[sqidx + 1])
+                {
+                    screen::gfx::draw_line(prvpoints[sqidx + 0], prvpoints[sqidx + 1], BLACK, 1);
+                    screen::gfx::draw_line(points[sqidx + 0], points[sqidx + 1], color[outidx], 1);
+                    point_changed[sqidx + 0] = true;
+                    point_changed[sqidx + 1] = true;
+                }
 
-            if (points[3] != prvpoints[3] || points[0] != prvpoints[0])
-            {
-                screen::gfx::draw_line(prvpoints[3], prvpoints[0], BLACK, 1);
-                screen::gfx::draw_line(points[3], points[0], color, 1);
-                point_changed[3] = true;
-                point_changed[0] = true;
-            }
+                if (points[sqidx + 1] != prvpoints[sqidx + 1] || points[sqidx + 2] != prvpoints[sqidx + 2])
+                {
+                    screen::gfx::draw_line(prvpoints[sqidx + 1], prvpoints[sqidx + 2], BLACK, 1);
+                    screen::gfx::draw_line(points[sqidx + 1], points[sqidx + 2], color[outidx], 1);
+                    point_changed[sqidx + 1] = true;
+                    point_changed[sqidx + 2] = true;
+                }
 
-            // /* and some circles */
-            // if (points[0] != prvpoints[0]) {
-            //   screen::gfx::draw_circle(prvpoints[0], CONSTANT_RADIUS, BLACK, 1);
-            //   screen::gfx::draw_circle(points[0], CONSTANT_RADIUS, color, 1);
-            // }
-            // if (points[1] != prvpoints[1]) {
-            //   screen::gfx::draw_circle(prvpoints[1], CONSTANT_RADIUS, BLACK, 5);
-            //   screen::gfx::draw_circle(points[1], CONSTANT_RADIUS, color, 5);
-            // }
-            // if (points[2] != prvpoints[2]) {
-            //   screen::gfx::draw_circle(prvpoints[2], CONSTANT_RADIUS, BLACK, 7);
-            //   screen::gfx::draw_circle(points[2], CONSTANT_RADIUS, color, 7);
-            // }
-            // if (points[3] != prvpoints[3]) {
-            //   screen::gfx::draw_circle(prvpoints[3], CONSTANT_RADIUS, BLACK, 0);
-            //   screen::gfx::draw_circle(points[3], CONSTANT_RADIUS, color, 0);
-            // }
+                if (points[sqidx + 2] != prvpoints[sqidx + 2] || points[sqidx + 3] != prvpoints[sqidx + 3])
+                {
+                    screen::gfx::draw_line(prvpoints[sqidx + 2], prvpoints[sqidx + 3], BLACK, 1);
+                    screen::gfx::draw_line(points[sqidx + 2], points[sqidx + 3], color[outidx], 1);
+                    point_changed[sqidx + 2] = true;
+                    point_changed[sqidx + 3] = true;
+                }
+
+                if (points[sqidx + 3] != prvpoints[sqidx + 3] || points[sqidx + 0] != prvpoints[sqidx + 0])
+                {
+                    screen::gfx::draw_line(prvpoints[sqidx + 3], prvpoints[sqidx + 0], BLACK, 1);
+                    screen::gfx::draw_line(points[sqidx + 3], points[sqidx + 0], color[outidx], 1);
+                    point_changed[sqidx + 3] = true;
+                    point_changed[sqidx + 0] = true;
+                }
+            }
 
             screen::resume_screen();
 

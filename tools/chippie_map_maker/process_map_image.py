@@ -410,7 +410,7 @@ class ResultReport():
                 [xloc, yloc] = item
                 result += f"    game_state.teleport_list.locations.push_back({{.x = {xloc}, .y = {yloc} }});\n"
                 result += f"\n"
-            result += f"    static_assert(decltype(game_state..teleport_list.locations){{}}.capacity() >= {len(list_of_teleporters)});\n"
+            result += f"    static_assert(decltype(game_state.teleport_list.locations){{}}.capacity() >= {len(list_of_teleporters)});\n"
             result += f"#error \"Just a friendly reminder to order the teleport locations correctly :)\"\n"
 
         return result

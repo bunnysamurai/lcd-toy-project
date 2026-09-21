@@ -61,6 +61,8 @@ constexpr uint64_t CYAN_STICK_BALL_VELOCITY_US{250'000}; /* time is in us */
             register_event(event::event_type::ROLLED_BY_BALL);
         }
         /* FIXME this move backwards doesn't check for clearance... */
+        /* we hit something, handle a facing change */
+        // const auto new_facing = handle_facing_change(ent.facing);
         return collision_action::MOVE_BACKWARD;
     }
 

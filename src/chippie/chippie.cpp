@@ -425,7 +425,7 @@ void run()
     const int MAX_LEVELS = level::get_max_level();
     static constexpr screen::gfx::number_dialog_palette plt{
         .bright_highlight = WHITE, .shadow_highlight = DRKGRY, .background = LGREY, .font_color = WHITE};
-    int level = screen::gfx::number_dialog{plt, "Select Start Level:", 0, MAX_LEVELS}.ask(); /* the starting level */
+    int level = screen::gfx::number_dialog{plt, "Select Start Level:", 1, MAX_LEVELS}.ask(); /* the starting level */
 
     while (true)
     {
