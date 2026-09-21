@@ -382,15 +382,13 @@ void process_screen_painting(state &game_state) noexcept
     const auto now_time_for_painting{steady_clock_source::now()};
     if (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) > PAINT_TIME_INTERVAL_US)
     {
-        /* calls to the_game.process() may take arbitrary long amount of time...
-           guarentee the next time we paint will be in the future */
-        while (steady_clock_source::time_diff(game_state.last_paint_time, now_time_for_painting) >
-               PAINT_TIME_INTERVAL_US)
-        {
-            game_state.last_paint_time =
-                steady_clock_source::increment_time_point(game_state.last_paint_time, PAINT_TIME_INTERVAL_US);
-        }
+        /* TODO we let paint take as long as it needs, then set the timer after the paint finishes...
+           this helps with weird artifacts where the screen update was paused before the latest frame buffer
+           could be pushed to the display... the below is a workaround until I get proper VBLANK frame buffer updating
+           working. */
         paint(game_state);
+        game_state.last_paint_time =
+            steady_clock_source::increment_time_point(steady_clock_source::now(), PAINT_TIME_INTERVAL_US);
     }
 }
 
@@ -459,7 +457,7 @@ void run()
             sleep_until_next_game_loop_iteration(start);
         }
 
-        /* 
+        /*
            process logic for why the game isn't active:
                 if chip died, the level should restart
                 if portal was reached, the level number should increment
