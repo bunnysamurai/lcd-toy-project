@@ -43,7 +43,7 @@ constexpr uint64_t CYAN_STICK_BALL_VELOCITY_US{250'000}; /* time is in us */
 {
     const auto candidate_location{move(ent.loc, ent.facing)};
     const auto next_terrain{ent.game_state->the_map[candidate_location]};
-    if (check_terrain_is_opaque(ent, next_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, next_terrain))
     {
         const auto new_facing = handle_facing_change(ent.facing);
         return std::make_pair(move(ent.loc, new_facing), new_facing);
@@ -66,7 +66,7 @@ constexpr uint64_t CYAN_STICK_BALL_VELOCITY_US{250'000}; /* time is in us */
         return collision_action::MOVE_BACKWARD;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::MOVE_BACKWARD;
     }

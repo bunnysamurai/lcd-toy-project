@@ -7,11 +7,10 @@ namespace chippie::level_63
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 500 };
+    constexpr int CHIPS_REMAINING{ 7 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "BLOCK FACTORY\nPassword: GOHX" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -79,48 +78,47 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     static_assert(decltype(game_state.entity_list){}.capacity() >= 1);
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 3, .y = 1},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 2},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 5, .y = 3},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 4},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 7, .y = 5},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 6},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 9, .y = 7},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 8},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 11, .y = 9},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 10},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 13, .y = 11},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 3, .y = 12},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 3, .y = 23},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 1, .y = 25},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::MOVEABLE_BLOCK,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 7);
-#error "Just a friendly reminder to fill in red_button_list :)"
 
 }
 

@@ -53,7 +53,7 @@ constexpr uint64_t WATER_GLIDER_VELOCITY_US{250'000}; /* time is in us */
 
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
-        if (check_terrain_is_opaque(ent, candidate_terrain) || check_tile_is_already_occupied(ent, candidate_loc))
+        if (check_terrain_is_opaque(ent.identity, candidate_facing, candidate_terrain) || check_tile_is_already_occupied(ent, candidate_loc))
         {
             continue;
         }
@@ -76,7 +76,7 @@ constexpr uint64_t WATER_GLIDER_VELOCITY_US{250'000}; /* time is in us */
         return collision_action::NO_ACTION_NEEDED;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::NO_ACTION_NEEDED;
     }

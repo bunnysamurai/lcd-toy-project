@@ -96,7 +96,7 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
         const direction cand_dir{is_x_direction ? to_direction_x(amount) : to_direction_y(amount)};
         const auto candidate_location{move(ent.loc, cand_dir)};
         const auto candidate_terrain{ent.game_state->the_map[candidate_location]};
-        if (!check_terrain_is_opaque(ent, candidate_terrain))
+        if (!check_terrain_is_opaque(ent.identity, cand_dir, candidate_terrain))
         {
             return std::make_tuple(true, candidate_location, cand_dir);
         }
@@ -140,7 +140,7 @@ constexpr uint64_t FROG_MONSTER_VELOCITY_US{750'000}; /* time is in us */
         return collision_action::NO_ACTION_NEEDED;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::NO_ACTION_NEEDED;
     }

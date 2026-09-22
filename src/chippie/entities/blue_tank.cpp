@@ -67,7 +67,7 @@ constexpr uint64_t BLUE_TANK_VELOCITY_US{250'000}; /* time is in us */
         return collision_action::NO_ACTION_NEEDED;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::NO_ACTION_NEEDED;
     }

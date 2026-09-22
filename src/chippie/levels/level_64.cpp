@@ -7,11 +7,10 @@ namespace chippie::level_64
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 600 };
+    constexpr int CHIPS_REMAINING{ 41 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "SPOOKS\nPassword: IJPQ" };
 
     /* clang-format off */
     constexpr std::array DATA

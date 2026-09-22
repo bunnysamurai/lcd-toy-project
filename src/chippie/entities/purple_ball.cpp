@@ -43,7 +43,7 @@ constexpr uint64_t PURPLE_BALL_VELOCITY_US{250'000}; /* time is in us */
         return collision_action::MOVE_BACKWARD;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::MOVE_BACKWARD;
     }

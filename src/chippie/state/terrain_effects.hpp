@@ -17,7 +17,7 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
 /**
     @brief Check for "opacity" for general entities.  Chippie will do it's own thing.
  */
-[[nodiscard]] bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept;
+[[nodiscard]] bool check_terrain_is_opaque(entity_type ent_id, direction ent_facing, terrain_type terrain) noexcept;
 
 /**
     @brief dir is the direction the moveable block is moving

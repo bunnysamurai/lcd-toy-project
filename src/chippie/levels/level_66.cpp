@@ -7,11 +7,10 @@ namespace chippie::level_66
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 300 };
+    constexpr int CHIPS_REMAINING{ 12 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "VICTIM\nPassword: ZIKZ" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -99,18 +98,12 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 17, .y = 21}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 18, .y = 21}, direction::UP, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 23);
-    game_state.teleport_list.locations.push_back({.x = 15, .y = 13 });
-
-    game_state.teleport_list.locations.push_back({.x = 10, .y = 17 });
-
-    game_state.teleport_list.locations.push_back({.x = 15, .y = 17 });
-
-    game_state.teleport_list.locations.push_back({.x = 20, .y = 17 });
-
-    game_state.teleport_list.locations.push_back({.x = 15, .y = 22 });
-
-    static_assert(decltype(game_state..teleport_list.locations){}.capacity() >= 5);
-#error "Just a friendly reminder to order the teleport locations correctly :)"
+    game_state.teleport_list.locations.push_back({.x = 15, .y = 17 }); /*middle*/
+    game_state.teleport_list.locations.push_back({.x = 10, .y = 17 }); /*left*/
+    game_state.teleport_list.locations.push_back({.x = 15, .y = 13 }); /*top*/
+    game_state.teleport_list.locations.push_back({.x = 15, .y = 22 }); /*bot*/
+    game_state.teleport_list.locations.push_back({.x = 20, .y = 17 }); /*right*/
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 5);
 
 }
 

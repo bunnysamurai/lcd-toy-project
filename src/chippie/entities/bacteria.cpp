@@ -59,7 +59,7 @@ constexpr uint64_t BACTERIA_VELOCITY_US{250'000}; /* time is in us */
 
         const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
 
-        if (check_terrain_is_opaque(ent, candidate_terrain) || check_tile_is_already_occupied(ent, candidate_loc))
+        if (check_terrain_is_opaque(ent.identity, candidate_facing, candidate_terrain) || check_tile_is_already_occupied(ent, candidate_loc))
         {
             continue;
         }
@@ -73,8 +73,6 @@ constexpr uint64_t BACTERIA_VELOCITY_US{250'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-#if 1 /* new way */
-
     if (collided_entity != nullptr)
     {
         if (collided_entity->identity == entity_type::CHIPPIE)
@@ -84,52 +82,12 @@ constexpr uint64_t BACTERIA_VELOCITY_US{250'000}; /* time is in us */
         return collision_action::NO_ACTION_NEEDED;
     }
 
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::NO_ACTION_NEEDED;
     }
 
     return collision_action::APPLY_NEXT_LOCATION;
-
-#else /* old way */
-    if (collided_entity != nullptr)
-    {
-        if (collided_entity->identity == entity_type::CHIPPIE)
-        {
-            register_event(event::event_type::EATEN_BY_BUG);
-        }
-        else
-        {
-            /* rerun the same logic */
-            for (const auto dir : directions)
-            {
-                const auto [candidate_loc, candidate_facing]{move(ent.loc, ent.facing, dir)};
-
-                const auto candidate_terrain{ent.game_state->the_map[candidate_loc]};
-
-                /* check if */
-                if (check_terrain_is_opaque_for_bacteria(ent, candidate_terrain))
-                {
-                    continue;
-                }
-
-                /* search for other entities */
-                auto entitr = std::find_if(
-                    std::begin(ent.game_state->entity_list), std::end(ent.game_state->entity_list),
-                    [&](const auto &other) { return (other.loc == candidate_loc) && (ent.uuid != other.uuid); });
-
-                if (entitr == std::end(ent.game_state->entity_list))
-                {
-                    return to_collision_action(dir);
-                }
-            }
-
-            return collision_action::NO_ACTION_NEEDED;
-        }
-    }
-
-    return collision_action::APPLY_NEXT_LOCATION;
-#endif
 }
 
 } // namespace

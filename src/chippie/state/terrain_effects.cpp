@@ -24,7 +24,7 @@ namespace
     @brief Check for terrain that is ALWAYS opaque for chippie and requires no side-effects.  Can be facing dependent
    (aka thin walls).
  */
-[[nodiscard]] bool check_terrain_is_opaque_for_chippie(const entity &ent, terrain_type terrain) noexcept
+[[nodiscard]] bool check_terrain_is_opaque_for_chippie(direction ent_facing, terrain_type terrain) noexcept
 {
     switch (terrain)
     {
@@ -38,27 +38,28 @@ namespace
     case terrain_type::CLONER_CENTIPEDE:
     case terrain_type::CLONER_PURPLE_BALL:
     case terrain_type::CLONER_CYAN_STICK_BALL:
+    case terrain_type::CLONER_BACTERIA:
         return true;
 
     case terrain_type::THIN_WALL_TOP:
-        return ent.facing == direction::DOWN;
+        return ent_facing == direction::DOWN;
     case terrain_type::THIN_WALL_BOT:
-        return ent.facing == direction::UP;
+        return ent_facing == direction::UP;
     case terrain_type::THIN_WALL_LEFT:
-        return ent.facing == direction::RIGHT;
+        return ent_facing == direction::RIGHT;
     case terrain_type::THIN_WALL_RIGHT:
-        return ent.facing == direction::LEFT;
+        return ent_facing == direction::LEFT;
     case terrain_type::THIN_WALL_BOTRIGHT:
-        return ent.facing == direction::LEFT || ent.facing == direction::UP;
+        return ent_facing == direction::LEFT || ent_facing == direction::UP;
 
     case terrain_type::ICE_TOPLEFT:
-        return ent.facing == direction::DOWN || ent.facing == direction::RIGHT;
+        return ent_facing == direction::DOWN || ent_facing == direction::RIGHT;
     case terrain_type::ICE_TOPRIGHT:
-        return ent.facing == direction::DOWN || ent.facing == direction::LEFT;
+        return ent_facing == direction::DOWN || ent_facing == direction::LEFT;
     case terrain_type::ICE_BOTLEFT:
-        return ent.facing == direction::UP || ent.facing == direction::RIGHT;
+        return ent_facing == direction::UP || ent_facing == direction::RIGHT;
     case terrain_type::ICE_BOTRIGHT:
-        return ent.facing == direction::UP || ent.facing == direction::LEFT;
+        return ent_facing == direction::UP || ent_facing == direction::LEFT;
 
     case terrain_type::CLEAR:
     case terrain_type::PORTAL:
@@ -123,7 +124,7 @@ namespace
 
 [[nodiscard]] inline bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
 {
-    /* helper lambda used twice in the logic below */
+/* helper lambda used twice in the logic below */
     const auto check_loc_has_moveable{[&](const Grid::Location testloc) -> bool {
         const auto entitr{find_entity_collision(ent, testloc, std::begin(ent.game_state->entity_list),
                                                 std::end(ent.game_state->entity_list))};
@@ -157,10 +158,10 @@ namespace
             return check_terrain_is_opaque_for_moveable(ent.facing, nextnexterrain) || already_has_moveable_block;
         }()};
 
-        return moveable_present_and_space_behind_is_opaque || check_terrain_is_opaque_for_chippie(ent, terrain);
+        return moveable_present_and_space_behind_is_opaque || check_terrain_is_opaque_for_chippie(ent.facing, terrain);
     }
 
-    return next_loc_has_moveable || check_terrain_is_opaque(ent, terrain);
+    return next_loc_has_moveable || check_terrain_is_opaque(ent.identity, ent.facing, terrain);
 }
 
 inline void apply_fire_effect(entity &ent) noexcept
@@ -640,11 +641,11 @@ void apply_terrain_override_effect(entity &ent, Grid::Location &nextloc, directi
     }
 }
 
-bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
+bool check_terrain_is_opaque(entity_type ent_id, direction ent_facing, terrain_type terrain) noexcept
 {
-    if (ent.identity == entity_type::CHIPPIE)
+    if (ent_id == entity_type::CHIPPIE)
     {
-        return check_terrain_is_opaque_for_chippie(ent, terrain);
+        return check_terrain_is_opaque_for_chippie(ent_facing, terrain);
     }
 
     switch (terrain)
@@ -675,6 +676,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CLONER_CENTIPEDE:
     case terrain_type::CLONER_PURPLE_BALL:
     case terrain_type::CLONER_CYAN_STICK_BALL:
+    case terrain_type::CLONER_BACTERIA:
     case terrain_type::FIRE_BOOTS:
     case terrain_type::FLIPPERS:
     case terrain_type::ICE_SKATES:
@@ -683,28 +685,28 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
         return true;
 
     case terrain_type::THIN_WALL_TOP:
-        return ent.facing == direction::DOWN;
+        return ent_facing == direction::DOWN;
     case terrain_type::THIN_WALL_BOT:
-        return ent.facing == direction::UP;
+        return ent_facing == direction::UP;
     case terrain_type::THIN_WALL_LEFT:
-        return ent.facing == direction::RIGHT;
+        return ent_facing == direction::RIGHT;
     case terrain_type::THIN_WALL_RIGHT:
-        return ent.facing == direction::LEFT;
+        return ent_facing == direction::LEFT;
     case terrain_type::THIN_WALL_BOTRIGHT:
-        return ent.facing == direction::LEFT || ent.facing == direction::UP;
+        return ent_facing == direction::LEFT || ent_facing == direction::UP;
 
     case terrain_type::ICE_TOPLEFT:
-        return ent.facing == direction::DOWN || ent.facing == direction::RIGHT;
+        return ent_facing == direction::DOWN || ent_facing == direction::RIGHT;
     case terrain_type::ICE_TOPRIGHT:
-        return ent.facing == direction::DOWN || ent.facing == direction::LEFT;
+        return ent_facing == direction::DOWN || ent_facing == direction::LEFT;
     case terrain_type::ICE_BOTLEFT:
-        return ent.facing == direction::UP || ent.facing == direction::RIGHT;
+        return ent_facing == direction::UP || ent_facing == direction::RIGHT;
     case terrain_type::ICE_BOTRIGHT:
-        return ent.facing == direction::UP || ent.facing == direction::LEFT;
+        return ent_facing == direction::UP || ent_facing == direction::LEFT;
 
     case terrain_type::FIRE:
-        return ent.identity != entity_type::WATER_GLIDER && ent.identity != entity_type::FIRE_DANCER &&
-               ent.identity != entity_type::MOVEABLE_BLOCK;
+        return ent_id != entity_type::WATER_GLIDER && ent_id != entity_type::FIRE_DANCER &&
+               ent_id != entity_type::MOVEABLE_BLOCK;
 
     case terrain_type::CLEAR:
     case terrain_type::HINT:
@@ -754,6 +756,7 @@ bool check_terrain_is_opaque(const entity &ent, terrain_type terrain) noexcept
     case terrain_type::CLONER_CENTIPEDE:
     case terrain_type::CLONER_PURPLE_BALL:
     case terrain_type::CLONER_CYAN_STICK_BALL:
+    case terrain_type::CLONER_BACTERIA:
         return true;
 
     case terrain_type::THIN_WALL_TOP:

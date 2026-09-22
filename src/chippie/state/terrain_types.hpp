@@ -62,6 +62,7 @@ enum struct terrain_type : uint8_t
     CLONER_CENTIPEDE,
     CLONER_PURPLE_BALL,
     CLONER_CYAN_STICK_BALL,
+    CLONER_BACTERIA,
 
     /* directional terrain features */
     ICE_TOPLEFT,

@@ -32,7 +32,7 @@ constexpr uint64_t BLOB_VELOCITY_US{400'000}; /* time is in us */
 [[nodiscard]] collision_action handle_collision(entity &ent, entity *collided_entity,
                                                 terrain_type collided_terrain) noexcept
 {
-    if (check_terrain_is_opaque(ent, collided_terrain))
+    if (check_terrain_is_opaque(ent.identity, ent.facing, collided_terrain))
     {
         return collision_action::NO_ACTION_NEEDED;
     }

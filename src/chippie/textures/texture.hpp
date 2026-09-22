@@ -99,6 +99,7 @@ enum struct texture_type
     CLONER_CENTIPEDE_UP,
     CLONER_PURPLE_BALL,
     CLONER_CYAN_STICK_BALL,
+    CLONER_BACTERIA_DOWN,
 };
 
 [[nodiscard]] texture_type get_terrain_texture_type(::chippie::terrain_type) noexcept;

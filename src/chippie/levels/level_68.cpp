@@ -7,11 +7,10 @@ namespace chippie::level_68
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 650 };
+    constexpr int CHIPS_REMAINING{ 52 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "EENY MINY MOE\nPassword: RTDI" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -145,12 +144,11 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     static_assert(decltype(game_state.entity_list){}.capacity() >= 67);
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 30, .y = 28},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 22, .y = 20},
+        .clone_facing = direction::DOWN,
+        .clone_type = entity_type::BACTERIA,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
-#error "Just a friendly reminder to fill in red_button_list :)"
 
 }
 

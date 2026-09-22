@@ -7,11 +7,10 @@ namespace chippie::level_70
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 199 };
     constexpr int CHIPS_REMAINING{ 0 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "NIGHTMARE\nPassword: GCCG" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -79,10 +78,13 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 1, .y = 1}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 21, .y = 1}, direction::RIGHT, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 13, .y = 2}, direction::RIGHT, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 13, .y = 6}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::FIRE_DANCER, {.x = 15, .y = 8}, direction::LEFT, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::WATER_GLIDER, {.x = 5, .y = 9}, direction::DOWN, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::PURPLE_BALL, {.x = 30, .y = 9}, direction::UP, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 11, .y = 10}, direction::DOWN, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 12, .y = 10}, direction::LEFT, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 7, .y = 11}, direction::DOWN, uuid++, game_state));
@@ -97,6 +99,7 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 7, .y = 16}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 27, .y = 16}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::BACTERIA, {.x = 4, .y = 18}, direction::LEFT, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 27, .y = 18}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 26, .y = 20}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 28, .y = 20}, direction::UP, uuid++, game_state));
@@ -105,53 +108,56 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::BLOB, {.x = 15, .y = 22}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 3, .y = 24}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CYAN_STICK_BALL, {.x = 19, .y = 25}, direction::LEFT, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::BACTERIA, {.x = 6, .y = 27}, direction::RIGHT, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     game_state.entity_list.push_back(create_entity(entity_type::CYAN_STICK_BALL, {.x = 14, .y = 28}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::PURPLE_BALL, {.x = 25, .y = 29}, direction::LEFT, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 29, .y = 30}, direction::UP, uuid++, game_state));
+    game_state.entity_list.back().trapped = true;
     static_assert(decltype(game_state.entity_list){}.capacity() >= 34);
+
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 30, .y = 7},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 28, .y = 9},
+        .clone_facing = direction::LEFT,
+        .clone_type = entity_type::FIRE_DANCER,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
-#error "Just a friendly reminder to fill in red_button_list :)"
+
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 16, .y = 1},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 13, .y = 2},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 10, .y = 8},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 15, .y = 8},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 25, .y = 9},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 30, .y = 9},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 15, .y = 12},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 8, .y = 13},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 1, .y = 18},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 4, .y = 18},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 16, .y = 25},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 19, .y = 25},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 4, .y = 27},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 6, .y = 27},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 30, .y = 27},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 29, .y = 30},
     });
     static_assert(decltype(game_state.brown_button_list){}.capacity() >= 8);
-#error "Just a friendly reminder to fill in brown_button_list :)"
 
 }
 

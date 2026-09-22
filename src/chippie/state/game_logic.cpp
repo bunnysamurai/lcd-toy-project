@@ -46,7 +46,6 @@ void game_logic::process() noexcept
 
     move_entities();
 
-    /* TODO event processing, which may change the size of entity_list as well as make changes to the_map */
     event::process_events(game_state);
 
     /* entity cleanup */
@@ -76,16 +75,6 @@ void game_logic::move_entities() noexcept
         {
             continue;
         }
-#ifdef DEBUG_PRINT
-        if (ent.identity == entity_type::MOVEABLE_BLOCK)
-        {
-            const auto terrain{ game_state.the_map[ent.loc]};
-            if( terrain == terrain_type::ICE )
-            {
-                printf("processing movable block time %llu (cur time %llu)\n", ent.next_time, current_time);
-            }
-        }
-#endif
 
         /* begin processing with the entry handler */
         if (entity_handles.entry_handler != nullptr)
@@ -121,6 +110,12 @@ void game_logic::move_entities() noexcept
            note that the collision handler may further edit the facing. */
         ent.facing = nextfacing;
 
+        /* here we'll check if the entity is trapped.  Trapped entities can change facing but not move. */
+        if (ent.trapped)
+        {
+            continue;
+        }
+
         /* then, determine and resolve collisions */
         const collision_result collision{find_collisions(ent, nextloc)};
 
@@ -143,12 +138,6 @@ void game_logic::move_entities() noexcept
 
         /* if the next location is the same as the current, then there's nothing more to do */
         if (nextloc == ent.loc)
-        {
-            continue;
-        }
-
-        /* here we'll check if the entity is trapped.  Trapped entities can change facing but not move. */
-        if (ent.trapped)
         {
             continue;
         }

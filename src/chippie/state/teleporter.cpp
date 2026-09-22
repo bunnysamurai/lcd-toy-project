@@ -80,7 +80,7 @@ std::pair<direction, Grid::Location> teleporter_chain::compute_exit(const entity
     {
         const auto possible_exit_location{move(*candidate_itr, entry_facing)};
 
-        if (!check_terrain_is_opaque(this_ent, game_state.the_map[possible_exit_location]))
+        if (!check_terrain_is_opaque(this_ent.identity, this_ent.facing, game_state.the_map[possible_exit_location]))
         {
             /* do one more check, which is if a moveable block is present */
             /* we make the check within this branch as the collision finder can be expensive */

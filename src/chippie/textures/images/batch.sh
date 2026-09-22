@@ -47,6 +47,7 @@ opaque_list+=(thin_wall_botright.png)
 
 opaque_list+=(cloner_moveable_block.png cloner_frog_monster.png)
 opaque_list+=(cloner_purple_ball.png cloner_cyan_stick_ball.png cloner_blue_tank_left.png cloner_centipede_up.png)
+opaque_list+=(cloner_bacteria_down.png)
 
 opaque_list+=(background.png)
 
