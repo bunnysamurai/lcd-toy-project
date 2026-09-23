@@ -1,5 +1,6 @@
 #include "demo.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -42,9 +43,9 @@ static constexpr std::array Demo_Palette{
   screen::Clut{.r = 0, .g = 0, .b = 0}, /* Black */
   screen::Clut{.r = 255, .g = 0, .b = 255}, /* Magenta */
   screen::Clut{.r = 255, .g = 255, .b = 0 }, /* Yellow */
-  screen::Clut{.r = 0, .g = 255, .b = 255}, /* Cyan */
-  screen::Clut{.r = 255, .g = 0, .b = 0}, /* Red */
   screen::Clut{.r = 0, .g = 255, .b = 0}, /* Green */
+  screen::Clut{.r = 255, .g = 0, .b = 0}, /* Red */
+  screen::Clut{.r = 0, .g = 255, .b = 255}, /* Cyan */
   screen::Clut{.r = 0, .g = 0, .b = 255}, /* Blue */
   screen::Clut{.r = 255, .g = 128, .b = 0 }, /* Orange? */
   screen::Clut{.r = 0, .g = 128, .b = 255}, /* Aquamarine? */
@@ -53,9 +54,9 @@ static constexpr std::array Demo_Palette{
 static constexpr uint32_t BLACK{0};
 static constexpr uint32_t MAGENTA{1};
 static constexpr uint32_t YELLOW{2};
-static constexpr uint32_t CYAN{3};
+static constexpr uint32_t GREEN{3};
 static constexpr uint32_t RED{4};
-static constexpr uint32_t GREEN{5};
+static constexpr uint32_t CYAN{5};
 static constexpr uint32_t BLUE{6};
 static constexpr uint32_t ORANGE{7};
 static constexpr uint32_t AQUA{8};
@@ -244,6 +245,8 @@ void run_linebounce_screensaver() noexcept
     embp::timer<clock_details::pico_sdk_steady_clock> button_timer{1000};
     embp::timer<clock_details::pico_sdk_steady_clock> update_timer{1 << 14}; /* timer kicks every 1/60 seconds-ish. */
     embp::timer<clock_details::pico_sdk_steady_clock> draw_timer{33'333};
+    embp::perf_timer<clock_details::pico_sdk_steady_clock> compute_perf;
+    embp::perf_timer<clock_details::pico_sdk_steady_clock> draw_perf;
     std::array<screen::gfx::Point, std::size(position)> prvpoints{};
     std::array<screen::gfx::Point, std::size(position)> points{};
     std::array<uint32_t, 3> colorarray{RED, GREEN, BLUE}; /* one for each parallelogram */
@@ -252,6 +255,8 @@ void run_linebounce_screensaver() noexcept
     {
         if (update_timer.elapsed())
         {
+            compute_perf.tic();
+
             /* increment all points we are tracking */
             update_timer.increment();
 
@@ -262,7 +267,7 @@ void run_linebounce_screensaver() noexcept
                 {
                     position[ii].x = velocity[ii].dx < 0 ? 0 : (dim.width - 1) << 14;
                     velocity[ii].dx = -velocity[ii].dx;
-                    const auto r{rng::prng() & 0b111};
+                    const auto r{rng::prng() & 0b11};
                     colorarray[ii / 4] = r + 1;
                 }
                 position[ii].y += velocity[ii].dy;
@@ -270,19 +275,21 @@ void run_linebounce_screensaver() noexcept
                 {
                     position[ii].y = velocity[ii].dy < 0 ? 0 : (dim.height - 1) << 14;
                     velocity[ii].dy = -velocity[ii].dy;
-                    const auto r{rng::prng() & 0b111};
+                    const auto r{rng::prng() & 0b11};
                     colorarray[ii / 4] = r + 1;
                 }
                 points[ii].x = position[ii].x >> 14;
                 points[ii].y = position[ii].y >> 14;
             }
+            compute_perf.toc();
         }
 
         if (draw_timer.elapsed())
         {
+            draw_perf.tic();
             /* draw the points... each group of 4 are connected to each other
                 there are smarter data-structures + algorithms that should make
-                this better... need to thing about that some more.
+                this better... need to think about that some more.
 
                 My hint is: each point belongs in a connected group
 
@@ -335,6 +342,7 @@ void run_linebounce_screensaver() noexcept
             }
 
             draw_timer.reset();
+            draw_perf.toc();
         }
 
         if (button_timer.elapsed())
@@ -346,6 +354,29 @@ void run_linebounce_screensaver() noexcept
                 break;
             }
         }
+    }
+
+    /* print the perf results to the console */
+    {
+        const auto [mean_time_us, max_time_us, sample_count]{compute_perf.get_results()};
+        const int rough_fps{1'000'000 / mean_time_us};
+        printf("|      linebounce screensaver perfs     |\n");
+        printf("|---------------------------------------|\n");
+        printf("|       ** computing new points  **     |\n");
+        printf("|-----------|-----------|-----|---------|\n");
+        printf("| mu t (us) | maxt (us) | fps |    N    |\n");
+        printf("|   %06llu  |   %06llu  | %03d | %07u |\n", mean_time_us, max_time_us, std::clamp(rough_fps, 0, 999),
+               sample_count);
+    }
+    {
+        const auto [mean_time_us, max_time_us, sample_count]{draw_perf.get_results()};
+        const int rough_fps{1'000'000 / mean_time_us};
+        printf("|---------------------------------------|\n");
+        printf("|        ** drawing the lines **        |\n");
+        printf("|-----------|-----------|-----|---------|\n");
+        printf("| mu t (us) | maxt (us) | fps |    N    |\n");
+        printf("|   %06llu  |   %06llu  | %03d | %07u |\n", mean_time_us, max_time_us, std::clamp(rough_fps, 0, 999),
+               sample_count);
     }
 }
 
