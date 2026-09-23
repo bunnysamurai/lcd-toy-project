@@ -7,12 +7,12 @@
 #include "TileDef.h"
 #include "screen_def.h"
 
-namespace screen {
+namespace screen
+{
 
 /* =====================================================================================
  */
-[[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size,
-                        Format format) noexcept;
+[[nodiscard]] bool init(Position virtual_topleft, Dimensions virtual_size, Format format) noexcept;
 
 void init_clut(const Clut *entries, uint32_t length) noexcept;
 
@@ -25,10 +25,11 @@ void set_video_buffer(const uint8_t *buffer) noexcept;
 void set_format(Format) noexcept;
 
 [[nodiscard]] Dimensions get_virtual_screen_size() noexcept;
-void set_virtual_screen_size(Position new_topleft,
-                             Dimensions new_size) noexcept;
+void set_virtual_screen_size(Position new_topleft, Dimensions new_size) noexcept;
 
 [[nodiscard]] Dimensions get_physical_screen_size() noexcept;
+
+[[nodiscard]] uint32_t get_screen_width_in_bytes() noexcept;
 
 /**
     @brief Disable updates to the screen.  Useful when there's no double-buffering.
@@ -76,6 +77,16 @@ void draw_tile(uint32_t xpos, uint32_t ypos, Tile tile);
 /** @brief Change a pixel in memory, format-aware */
 void poke(uint32_t xpos, uint32_t ypos, uint32_t value) noexcept;
 
+/** @brief Change a pixel in memory, format-specific
+    Difference here is this takes the start of the row in terms of byte offset within the frame buffer.
+    Mostly provided to help speed up the line-drawing function.
+ */
+void poke16bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept;
+void poke8bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept;
+void poke4bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept;
+void poke2bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept;
+void poke1bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept;
+
 /** @brief Read a pixel in memory, format-aware */
 [[nodiscard]] uint32_t peek(uint32_t xpos, uint32_t ypos) noexcept;
 
@@ -101,8 +112,7 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish,
  * Note the following: column offsets into the row must be byte-aligned relative
  * to the screen format.
  */
-void copyrow(const uint32_t dst, const uint32_t src,
-             uint32_t column_start = std::numeric_limits<uint32_t>::min(),
+void copyrow(const uint32_t dst, const uint32_t src, uint32_t column_start = std::numeric_limits<uint32_t>::min(),
              uint32_t column_finish = std::numeric_limits<uint32_t>::max());
 
 /** @brief Melt the screen, DOOM style

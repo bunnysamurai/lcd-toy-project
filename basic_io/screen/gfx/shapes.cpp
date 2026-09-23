@@ -137,6 +137,33 @@ void draw_line(Point p1, Point p2, uint32_t value, uint16_t thickness) noexcept
         most examples have the minor axis increasing
         *
      */
+#define SCREEN_GFX_USE_FASTER_METHODS
+
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+    const int16_t width_in_bytes{static_cast<int16_t>(screen::get_screen_width_in_bytes())};
+
+    decltype(screen::poke1bpp) *pfun;
+    switch (screen::get_format())
+    {
+    case Format::GREY1:
+        pfun = screen::poke1bpp;
+        break;
+    case Format::GREY2:
+        pfun = screen::poke2bpp;
+        break;
+    case Format::GREY4:
+    case Format::RGB565_LUT4:
+        pfun = screen::poke4bpp;
+        break;
+    case Format::RGB565_LUT8:
+        pfun = screen::poke8bpp;
+        break;
+    case Format::RGB565:
+        pfun = screen::poke16bpp;
+        break;
+    }
+#endif
+
     const bool y_is_minor{std::abs(static_cast<int>(p1.y - p2.y)) < std::abs(static_cast<int>(p1.x - p2.x))};
 
     if (y_is_minor)
@@ -149,18 +176,35 @@ void draw_line(Point p1, Point p2, uint32_t value, uint16_t thickness) noexcept
         int16_t deltax{stopx - startx};
         int16_t deltay{stopy - starty};
 
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+        int32_t yi = width_in_bytes;
+        if (deltay < 0)
+        {
+            yi = -width_in_bytes;
+            deltay = -deltay;
+        }
+#else
         int16_t yi = 1;
         if (deltay < 0)
         {
             yi = -1;
             deltay = -deltay;
         }
+#endif
 
         int16_t error{static_cast<int16_t>((deltay << 1) - deltax)};
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+        int32_t yy{starty * width_in_bytes};
+#else
         int16_t yy{starty};
+#endif
         for (uint16_t xx = startx; xx < stopx; ++xx)
         {
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+            pfun(xx, yy, value);
+#else
             screen::poke(xx, yy, value);
+#endif
             if (error > 0)
             {
                 yy += yi;
@@ -192,9 +236,17 @@ void draw_line(Point p1, Point p2, uint32_t value, uint16_t thickness) noexcept
 
         int16_t error{static_cast<int16_t>((deltax << 1) - deltay)};
         int16_t xx{startx};
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+        for (uint32_t yy = starty * width_in_bytes; yy < stopy * width_in_bytes; yy += width_in_bytes)
+#else
         for (uint16_t yy = starty; yy < stopy; ++yy)
+#endif
         {
+#ifdef SCREEN_GFX_USE_FASTER_METHODS
+            pfun(xx, yy, value);
+#else
             screen::poke(xx, yy, value);
+#endif
             if (error > 0)
             {
                 xx += xi;

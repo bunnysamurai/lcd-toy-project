@@ -72,16 +72,16 @@ enum struct Format { GREY1, GREY2, GREY4, RGB565_LUT4, RGB565_LUT8, RGB565 };
                                           Format fmt) noexcept {
   switch (fmt) {
   case Format::GREY1:
-    return position >> 3;
+    return position / 8;
   case Format::GREY2:
-    return position >> 2;
+    return position / 4;
   case Format::GREY4:
   case Format::RGB565_LUT4:
-    return position >> 1;
+    return position / 2;
   case Format::RGB565_LUT8:
     return position;
   case Format::RGB565:
-    return position << 1;
+    return position / 2;
   }
   return 0;
 }

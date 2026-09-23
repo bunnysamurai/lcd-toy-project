@@ -101,6 +101,12 @@ void set_virtual_screen_size([[maybe_unused]] Position new_topleft, Dimensions n
     return {.width = screen_impl::PHYSICAL_WIDTH_PIXELS, .height = screen_impl::PHYSICAL_HEIGHT_PIXELS};
 }
 
+[[nodiscard]] uint32_t get_screen_width_in_bytes() noexcept
+{
+    const auto [width, _]{get_virtual_screen_size()};
+    return bitsizeof(get_format()) * width / 8;
+}
+
 uint8_t *get_video_buffer() noexcept
 {
     return std::data(frame_buffer);
@@ -443,6 +449,82 @@ void poke(uint32_t xpos, uint32_t ypos, uint32_t value) noexcept
     /* op is to clear the relevant bits, then set the relevant bits */
     pbuf[byteidx] &= clearmask;
     pbuf[byteidx] |= setval;
+}
+
+void poke16bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+{
+    auto *pbuf{get_video_buffer()};
+    pbuf[row_start_byte + xpos * 2] = static_cast<uint8_t>(value);
+    pbuf[row_start_byte + xpos * 2 + 1] = static_cast<uint8_t>(value >> 8);
+}
+
+void poke8bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+{
+    auto *pbuf{get_video_buffer()};
+    pbuf[row_start_byte + xpos] = value;
+}
+
+void poke4bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+{
+    static constexpr uint32_t mask{(1 << bitsizeof(Format::GREY4)) - 1};
+    static constexpr std::array<uint32_t, 2> clearmask{
+        ~mask,
+        ~(mask << screen::bitsizeof(Format::GREY4)),
+    };
+
+    const auto byteidx{row_start_byte + xpos / (8 / bitsizeof(Format::GREY4))};
+
+    auto *pbuf{get_video_buffer()};
+
+    const auto subbyte_id{screen::subbyte_index(xpos, Format::GREY4)};
+
+    /* op is to clear the relevant bits, then set the relevant bits */
+    pbuf[byteidx] =
+        (pbuf[byteidx] & clearmask[subbyte_id]) + (value << (subbyte_id * screen::bitsizeof(Format::GREY4)));
+}
+
+void poke2bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+{
+    static constexpr uint32_t mask{(1 << bitsizeof(Format::GREY2)) - 1};
+    static constexpr std::array<uint32_t, 4> clearmask{
+        ~mask,
+        ~(mask << screen::bitsizeof(Format::GREY2)),
+        ~(mask << 2 * screen::bitsizeof(Format::GREY2)),
+        ~(mask << 3 * screen::bitsizeof(Format::GREY2)),
+    };
+
+    const auto byteidx{row_start_byte + xpos / (8 / bitsizeof(Format::GREY2))};
+
+    auto *pbuf{get_video_buffer()};
+
+    const auto subbyte_id{screen::subbyte_index(xpos, Format::GREY2)};
+
+    /* op is to clear the relevant bits, then set the relevant bits */
+    pbuf[byteidx] &= clearmask[subbyte_id];
+    pbuf[byteidx] |= value << (subbyte_id * screen::bitsizeof(Format::GREY2));
+}
+
+void poke1bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+{
+    static constexpr uint32_t mask{(1 << bitsizeof(Format::GREY1)) - 1};
+
+    const auto byteidx{row_start_byte + xpos / (8 / bitsizeof(Format::GREY1))};
+
+    auto *pbuf{get_video_buffer()};
+
+    const auto subbyte_id{screen::subbyte_index(xpos, Format::GREY1)};
+
+    /* op is to either clear or set the relevant bit */
+    if (value)
+    {
+        /* set the bit*/
+        pbuf[byteidx] |= 1 << subbyte_id;
+    }
+    else
+    {
+        /* clear the bit */
+        pbuf[byteidx] &= ~(1 << subbyte_id);
+    }
 }
 
 /** @brief Read a pixel in memory, format-aware */

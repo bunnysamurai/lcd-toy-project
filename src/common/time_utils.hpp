@@ -2,11 +2,61 @@
 #define TIME_UTILS_HPP
 
 #include <utility>
+#include <algorithm>
 
 #include <pico/printf.h>
 
 namespace embp
 {
+
+/**
+    @brief Collect stats about runtime performance
+ */
+template <class clock_details> class perf_timer final
+{
+  public:
+    using time_base_t = typename std::decay_t<clock_details>::time_base_t;
+    using time_diff_t = typename std::decay_t<clock_details>::time_diff_t;
+
+    struct stats
+    {
+        time_diff_t avg_time_us; /* in microseconds */
+        time_diff_t max_time_us; /* in microseconds */
+        uint32_t number_of_samples;
+    };
+
+    constexpr void tic() noexcept
+    {
+        m_tic = clock_details::now();
+    }
+
+    constexpr void toc() noexcept
+    {
+        /* add to a rolling average */
+        const auto new_sample{clock_details::time_diff(m_tic, clock_details::now())};
+        m_cumulative_mean = (new_sample + m_sample_count * m_cumulative_mean) / (m_sample_count + 1);
+        /* keep track of number of samples */
+        ++m_sample_count;
+        /* keep tabs on the maximum elapsed time */
+        m_max_amount = std::max(new_sample, m_max_amount);
+        /* TODO add to rolling std dev?? See Welford's online algorithm */
+    }
+
+    [[nodiscard]] constexpr stats get_results() const noexcept
+    {
+        return {
+            .avg_time_us = m_cumulative_mean,
+            .max_time_us = m_max_amount,
+            .number_of_samples = m_sample_count,
+        };
+    }
+
+  private:
+    time_base_t m_tic{clock_details::now()};
+    time_diff_t m_cumulative_mean{0};
+    time_diff_t m_max_amount{0};
+    uint32_t m_sample_count{0};
+};
 
 template <class clock_details> class timer final
 {
