@@ -7,11 +7,10 @@ namespace chippie::level_74
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 400 };
+    constexpr int CHIPS_REMAINING{ 4 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "PLAYTIME\nPassword: MKNH" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -97,20 +96,20 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::BACTERIA, {.x = 6, .y = 25}, direction::RIGHT, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::PURPLE_BALL, {.x = 8, .y = 28}, direction::RIGHT, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 21);
+
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 26, .y = 2},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 29, .y = 22},
+        .clone_facing = direction::RIGHT,
+        .clone_type = entity_type::PURPLE_BALL,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
-#error "Just a friendly reminder to fill in red_button_list :)"
+
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 27, .y = 30},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 28, .y = 30},
     });
     static_assert(decltype(game_state.brown_button_list){}.capacity() >= 1);
-#error "Just a friendly reminder to fill in brown_button_list :)"
 
 }
 

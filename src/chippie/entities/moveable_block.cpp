@@ -24,7 +24,7 @@ namespace chippie::moveable_block_entity
 namespace
 {
 
-constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{100}; /* time is in us */
+constexpr uint64_t MOVEABLE_BLOCK_VELOCITY_US{1'000}; /* time is in us */
 
 [[nodiscard]] std::pair<Grid::Location, direction> move_if_chippie_is_on_us(const entity &ent) noexcept
 {

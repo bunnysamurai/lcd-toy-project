@@ -124,7 +124,7 @@ namespace
 
 [[nodiscard]] inline bool check_if_opaque_on_ice(const entity &ent, Grid::Location nextloc) noexcept
 {
-/* helper lambda used twice in the logic below */
+    /* helper lambda used twice in the logic below */
     const auto check_loc_has_moveable{[&](const Grid::Location testloc) -> bool {
         const auto entitr{find_entity_collision(ent, testloc, std::begin(ent.game_state->entity_list),
                                                 std::end(ent.game_state->entity_list))};
@@ -220,7 +220,11 @@ inline void handle_red_button(entity &ent) noexcept
         printf("calling generate on a red button\n");
 #endif
         /* activate the clone machine */
-        redbutton->generate(game_state);
+        // redbutton->generate(game_state, (ent.next_time - get_entity_velocity(ent.identity)));
+        const auto corrected_time{(game_state.the_clock.now() / game_state.entity_epoch_start) *
+                                  game_state.entity_epoch_start};
+        redbutton->generate(game_state, corrected_time);
+        // redbutton->generate(game_state, game_state.entity_epoch_start);
     }
 }
 
@@ -286,6 +290,13 @@ inline void handle_teleporter(entity &ent) noexcept
 
 void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
 {
+    auto &&handle_ice_entry{[&]() {
+        auto &game_state{*ent.game_state};
+        const auto corrected_time{(game_state.the_clock.now() / game_state.entity_epoch_start) *
+                                  game_state.entity_epoch_start};
+        ent.next_time = corrected_time;
+    }};
+
     auto &map_tile{ent.game_state->the_map[ent.loc]};
 
     switch (terrain)
@@ -417,6 +428,8 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::ICE_TOPRIGHT:
     case terrain_type::ICE_BOTLEFT:
     case terrain_type::ICE_BOTRIGHT:
+        handle_ice_entry();
+        break;
 
     /* and the rest */
     case terrain_type::CLEAR:
@@ -434,6 +447,12 @@ void apply_terrain_entry_effect(entity &ent, terrain_type terrain) noexcept
 
 void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
 {
+    auto &&handle_ice_exit{[&]() {
+        auto &game_state{*ent.game_state};
+        const auto corrected_time{(game_state.the_clock.now() / game_state.entity_epoch_start) *
+                                  game_state.entity_epoch_start};
+        ent.next_time = game_state.the_clock.increment_time_point(corrected_time, get_entity_velocity(ent.identity));
+    }};
     switch (terrain)
     {
     case terrain_type::HINT:
@@ -442,7 +461,6 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::PORTAL:
     case terrain_type::FIRE:
     case terrain_type::WATER:
-    case terrain_type::ICE:
     case terrain_type::TRAP:
     case terrain_type::CHIP:
     case terrain_type::SOCKET:
@@ -467,12 +485,16 @@ void apply_terrain_exit_effect(entity &ent, terrain_type terrain) noexcept
     case terrain_type::GREEN_BUTTON:
     case terrain_type::BLUE_BUTTON:
     case terrain_type::RED_BUTTON:
+        break;
 
     /* directional terrain features */
+    case terrain_type::ICE:
     case terrain_type::ICE_TOPLEFT:
     case terrain_type::ICE_TOPRIGHT:
     case terrain_type::ICE_BOTLEFT:
     case terrain_type::ICE_BOTRIGHT:
+        handle_ice_exit();
+        break;
     case terrain_type::PUSH_FLOOR_UP:
     case terrain_type::PUSH_FLOOR_DOWN:
     case terrain_type::PUSH_FLOOR_LEFT:

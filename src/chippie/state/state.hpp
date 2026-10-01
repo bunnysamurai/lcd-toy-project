@@ -47,6 +47,7 @@ struct state
 
     static constexpr int COUNTDOWN_US{1'000'000};
     /* used by the "Time Remaining" element on the game's GUI */
+    game_clock_t::time_base_t entity_epoch_start;
     game_clock_t the_clock;
     embp::timer<game_clock_t&> countdown_timer{COUNTDOWN_US, the_clock};
     steady_clock_source::time_base_t last_paint_time{};
@@ -61,7 +62,7 @@ struct state
     const char *level_name_text;
     int16_t time_remaining{};
     static_map the_map;
-    embp::variable_array<entity, 128> entity_list;
+    embp::variable_array<entity, 256> entity_list; /* FIXME 22-SEP-2026 once level 84's issue is resolved(ball speed on ice and clock drift), you can turn this back down to 136 */
     embp::variable_array<red_button, 14> red_button_list;
     embp::variable_array<brown_button, 18> brown_button_list;
     teleporter_chain teleport_list;

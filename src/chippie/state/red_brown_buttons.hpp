@@ -17,7 +17,7 @@ struct red_button
     direction clone_facing;
     entity_type clone_type;
 
-    void generate(state &) noexcept;
+    void generate(state &, const uint64_t next_move_time) noexcept;
 };
 
 struct brown_button

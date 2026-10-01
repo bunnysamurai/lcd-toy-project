@@ -28,13 +28,13 @@ namespace
 
 } // namespace
 
-void red_button::generate(state &game_state) noexcept
+void red_button::generate(state &game_state, const uint64_t next_move_time) noexcept
 {
     const auto next_uuid{find_next_uuid(game_state)};
 
     /* should guarentee the new entity will move within the game_logic processing loop it was added */
-    auto &chippie{game_state.entity_list.front()};
-    const uint64_t next_move_time{chippie.next_time - get_entity_velocity(chippie.identity)};
+    // auto &chippie{game_state.entity_list.front()};
+    // const uint64_t next_move_time{chippie.next_time - get_entity_velocity(chippie.identity)};
 
     game_state.entity_list.push_back(
         create_entity(clone_type, clone_spawn, clone_facing, next_uuid, game_state, next_move_time));

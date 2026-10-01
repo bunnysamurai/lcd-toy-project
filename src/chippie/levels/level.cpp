@@ -232,7 +232,6 @@ constexpr std::array jump_table {
     level_68::load_level,
     level_69::load_level,
     level_70::load_level,
-    #if 0
     level_71::load_level,
     level_72::load_level,
     level_73::load_level,
@@ -247,6 +246,7 @@ constexpr std::array jump_table {
     level_82::load_level,
     level_83::load_level,
     level_84::load_level,
+    #if 0
     level_85::load_level,
     level_86::load_level,
     level_87::load_level,

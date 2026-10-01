@@ -2,17 +2,18 @@
 #include "level_57.hpp"
 #include "chippie/entities/entities.hpp"
 #include <cstring>
+#include <algorithm>
 
 namespace chippie::level_57
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 400 };
-    constexpr int CHIPS_REMAINING{ 35 };
-    constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ "STRANGE MAZE\nPassword: UBXU" };
+constexpr int TIME_REMAINING{400};
+constexpr int CHIPS_REMAINING{35};
+constexpr const char *HINT_TEXT{nullptr};
+constexpr const char *LEVEL_NAME_TEXT{"STRANGE MAZE\nPassword: UBXU"};
 
-    /* clang-format off */
+/* clang-format off */
     constexpr std::array DATA
     {
         terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, 
@@ -48,7 +49,7 @@ namespace
         terrain_type::MAGIC_TILE_WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, 
         terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, terrain_type::MAGIC_TILE_WALL, 
     };
-    /* clang-format on */
+/* clang-format on */
 
 void load_level_from_rom_stub(state &game_state) noexcept
 {
@@ -118,14 +119,16 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::FROG_MONSTER, {.x = 4, .y = 22}, direction::UP, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 42);
 
+    /* set all non-chippie entities to trapped */
+    std::for_each(std::next(std::begin(game_state.entity_list), 1), std::end(game_state.entity_list),
+                  [](auto &ent) { ent.trapped = true; });
 }
 
-}
+} // namespace
 void load_level(state &game_state) noexcept
 {
     load_level_from_rom_stub(game_state);
     load_entity_list_from_rom_stub(game_state);
 }
 
-}
-
+} // namespace chippie::level_57

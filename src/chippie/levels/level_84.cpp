@@ -7,11 +7,10 @@ namespace chippie::level_84
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 600 };
+    constexpr int CHIPS_REMAINING{ 5 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "WARS\nPassword: UVEO" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -113,14 +112,14 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::PURPLE_BALL, {.x = 16, .y = 26}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::PURPLE_BALL, {.x = 18, .y = 26}, direction::UP, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 37);
+
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 27, .y = 21},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 26, .y = 20},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::FIRE_DANCER,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 1);
-#error "Just a friendly reminder to fill in red_button_list :)"
 
 }
 

@@ -32,7 +32,7 @@ namespace chippie::chippie
 namespace
 {
 constexpr uint64_t CHIPPIE_BUTTON_POLL_US{100'000};                /* every 100 ms? */
-constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{1'000}; /* every 10 ms? */
+constexpr uint64_t CHIPPIE_HOLD_TIME_AFTER_BUTTON_PRESS_US{1'000}; /* every 1 ms? */
 bool wait_for_release;
 steady_clock_source::time_base_t hold_time_point;
 

@@ -9,6 +9,7 @@
 #include "screen_def.h"
 
 #include "pico/time.h"
+#include "pico.h"
 
 // #define PRINT_DEBUG
 #ifdef PRINT_DEBUG
@@ -107,7 +108,7 @@ void set_virtual_screen_size([[maybe_unused]] Position new_topleft, Dimensions n
     return bitsizeof(get_format()) * width / 8;
 }
 
-uint8_t *get_video_buffer() noexcept
+uint8_t *__time_critical_func(get_video_buffer)() noexcept
 {
     return std::data(frame_buffer);
 }
@@ -254,9 +255,6 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish, uint32_t 
 
     if (column_start == dims.width || row_start > dims.height)
     {
-#ifdef PRINT_DEBUG
-        printf("exit 1\n");
-#endif
         return;
     }
     /* we might be relying on overflow behaviours here a bit too much... maybe
@@ -265,18 +263,12 @@ void fillrows(uint32_t value, uint32_t row_start, uint32_t row_finish, uint32_t 
     column_finish = {column_finish < dims.width ? column_finish : dims.width};
     if (column_start >= column_finish)
     {
-#ifdef PRINT_DEBUG
-        printf("exit 2\n");
-#endif
         return;
     }
 
     row_finish = {row_finish < dims.height ? row_finish : dims.height};
     if (row_start >= row_finish)
     {
-#ifdef PRINT_DEBUG
-        printf("exit 3\n");
-#endif
         return;
     }
 
@@ -464,7 +456,7 @@ void poke8bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
     pbuf[row_start_byte + xpos] = value;
 }
 
-void poke4bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
+void __time_critical_func(poke4bpp)(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
 {
     static constexpr uint32_t mask{(1 << bitsizeof(Format::GREY4)) - 1};
     static constexpr std::array<uint32_t, 2> clearmask{
@@ -476,11 +468,11 @@ void poke4bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept
 
     auto *pbuf{get_video_buffer()};
 
-    const auto subbyte_id{screen::subbyte_index(xpos, Format::GREY4)};
+    const auto nibble_pos{screen::subbyte_index(xpos, Format::GREY4)};
 
     /* op is to clear the relevant bits, then set the relevant bits */
     pbuf[byteidx] =
-        (pbuf[byteidx] & clearmask[subbyte_id]) + (value << (subbyte_id * screen::bitsizeof(Format::GREY4)));
+        (pbuf[byteidx] & clearmask[nibble_pos]) + (value << (nibble_pos * screen::bitsizeof(Format::GREY4)));
 }
 
 void poke2bpp(uint32_t xpos, uint32_t row_start_byte, uint32_t value) noexcept

@@ -92,6 +92,7 @@
 #include "tiles/cloner_purple_ball.hpp"
 #include "tiles/cloner_cyan_stick_ball.hpp"
 #include "tiles/cloner_bacteria_down.hpp"
+#include "tiles/cloner_water_glider_up.hpp"
 
 #include "tiles/water_glider_down.hpp"
 #include "tiles/water_glider_left.hpp"
@@ -250,6 +251,8 @@ texture_type get_terrain_texture_type(chippie::terrain_type terrain) noexcept
         return texture_type::CLONER_CYAN_STICK_BALL;
     case terrain_type::CLONER_BACTERIA:
         return texture_type::CLONER_BACTERIA_DOWN;
+    case terrain_type::CLONER_WATER_GLIDER:
+        return texture_type::CLONER_WATER_GLIDER_UP;
     }
 
     return texture_type::CLEAR;
@@ -495,6 +498,8 @@ screen::Tile get_texture(texture_type texture) noexcept
     case texture_type::CLONER_CYAN_STICK_BALL:
         return cloner_cyan_stick_ball::get_texture();
     case texture_type::CLONER_BACTERIA_DOWN:
+        return cloner_bacteria_down::get_texture();
+    case texture_type::CLONER_WATER_GLIDER_UP:
         return cloner_bacteria_down::get_texture();
     }
 

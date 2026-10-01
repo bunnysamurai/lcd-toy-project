@@ -105,13 +105,27 @@ add_executable(${PROJECT_NAME}
     chippie/levels/level_68.cpp
     chippie/levels/level_69.cpp
     chippie/levels/level_70.cpp
+    chippie/levels/level_71.cpp
+    chippie/levels/level_72.cpp
+    chippie/levels/level_73.cpp
+    chippie/levels/level_74.cpp
+    chippie/levels/level_75.cpp
+    chippie/levels/level_76.cpp
+    chippie/levels/level_77.cpp
+    chippie/levels/level_78.cpp
+    chippie/levels/level_79.cpp
+    chippie/levels/level_80.cpp
+    chippie/levels/level_81.cpp
+    chippie/levels/level_82.cpp
+    chippie/levels/level_83.cpp
+    chippie/levels/level_84.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 target_link_options(${PROJECT_NAME} PRIVATE -flto)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DCHIPPIE_IS_GIRL)
+#target_compile_definitions(${PROJECT_NAME} PRIVATE -DCHIPPIE_IS_GIRL)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     pico_stdlib 

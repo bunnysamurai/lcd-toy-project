@@ -7,11 +7,10 @@ namespace chippie::level_78
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 500 };
+    constexpr int CHIPS_REMAINING{ 13 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "FORCE SQUARE\nPassword: GRMO" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -80,18 +79,13 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::FIRE_DANCER, {.x = 30, .y = 17}, direction::DOWN, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::WATER_GLIDER, {.x = 25, .y = 28}, direction::UP, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 4);
-    game_state.teleport_list.locations.push_back({.x = 5, .y = 2 });
-
-    game_state.teleport_list.locations.push_back({.x = 29, .y = 2 });
-
-    game_state.teleport_list.locations.push_back({.x = 15, .y = 14 });
-
-    game_state.teleport_list.locations.push_back({.x = 21, .y = 29 });
 
     game_state.teleport_list.locations.push_back({.x = 1, .y = 30 });
-
-    static_assert(decltype(game_state..teleport_list.locations){}.capacity() >= 5);
-#error "Just a friendly reminder to order the teleport locations correctly :)"
+    game_state.teleport_list.locations.push_back({.x = 21, .y = 29 });
+    game_state.teleport_list.locations.push_back({.x = 15, .y = 14 });
+    game_state.teleport_list.locations.push_back({.x = 29, .y = 2 });
+    game_state.teleport_list.locations.push_back({.x = 5, .y = 2 });
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 5);
 
 }
 

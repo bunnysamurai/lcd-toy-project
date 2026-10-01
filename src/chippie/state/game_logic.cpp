@@ -21,17 +21,16 @@ namespace chippie
 
 game_logic::game_logic(state &injected_state) noexcept : game_state{injected_state}
 {
-    const auto game_start_time{game_state.the_clock.now()};
-
+    game_state.entity_epoch_start = game_state.the_clock.now();
 #ifdef DEBUG_PRINT
-    printf("All entities synced to time %llu\n", game_start_time);
+    printf("All entities synced to time %llu\n", game_state.entity_epoch_start);
 #endif
 
     /* synchronize all entities in time */
     for (auto &ent : game_state.entity_list)
     {
         ent.next_time =
-            game_state.the_clock.increment_time_point(game_start_time, get_entity_velocity(ent.identity));
+            game_state.the_clock.increment_time_point(game_state.entity_epoch_start, get_entity_velocity(ent.identity));
     }
 }
 
@@ -56,6 +55,19 @@ void game_logic::process() noexcept
 
 void game_logic::move_entities() noexcept
 {
+
+    auto &&update_next_time{[&](entity &ent, const auto current_time) {
+        /* Update next move time w/o drift, allow frame drops */
+        for (;;)
+        {
+            ent.next_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
+            if (ent.next_time > current_time)
+            {
+                break;
+            }
+        }
+    }};
+
     for (uint32_t ii = 0;; ++ii)
     {
         if (ii >= std::size(game_state.entity_list))
@@ -89,11 +101,10 @@ void game_logic::move_entities() noexcept
             continue;
         }
 
-        /* If we make it here, we are good to process a move.  Update next move time w/o drift if possible, otherwise resync if other processing took too long */
-        const auto proposed_time = game_state.the_clock.increment_time_point(ent.next_time, get_entity_velocity(ent.identity));
-        ent.next_time = proposed_time < current_time ? game_state.the_clock.increment_time_point(current_time, get_entity_velocity(ent.identity)) : proposed_time;
+        /* If we make it here, we are good to process a move.  Update next move time w/o drift */
+        update_next_time(ent, current_time);
 
-        /* next, compute where this entity wants to move 
+        /* next, compute where this entity wants to move
            we consider creation-by-red-button to count as a move, which is signalled
            by the "has_summoning_sickenss" field.
          */

@@ -7,11 +7,10 @@ namespace chippie::level_76
 {
 namespace
 {
-    constexpr int TIME_REMAINING{ 0 };
-    constexpr int CHIPS_REMAINING{ 0 };
+    constexpr int TIME_REMAINING{ 550 };
+    constexpr int CHIPS_REMAINING{ 20 };
     constexpr const char* HINT_TEXT{ nullptr };
-    constexpr const char* LEVEL_NAME_TEXT{ nullptr };
-#error "Just a friendly reminder to fill in time remaining, chips remaining, etc :)"
+    constexpr const char* LEVEL_NAME_TEXT{ "FOUR PLEX\nPassword: NMRH" };
 
     /* clang-format off */
     constexpr std::array DATA
@@ -93,52 +92,48 @@ void load_entity_list_from_rom_stub(state &game_state) noexcept
     game_state.entity_list.push_back(create_entity(entity_type::MOVEABLE_BLOCK, {.x = 26, .y = 25}, direction::UP, uuid++, game_state));
     game_state.entity_list.push_back(create_entity(entity_type::CENTIPEDE, {.x = 24, .y = 27}, direction::RIGHT, uuid++, game_state));
     static_assert(decltype(game_state.entity_list){}.capacity() >= 17);
+
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 28, .y = 14},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 29, .y = 13},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::WATER_GLIDER,
     });
     game_state.red_button_list.push_back(red_button{
         .button = {.x = 19, .y = 17},
-        .clone_spawn = {.x = <INT>, .y = <INT>},
-        .clone_facing = <direction::>,
-        .clone_type = <entity_type::>,
+        .clone_spawn = {.x = 19, .y = 27},
+        .clone_facing = direction::UP,
+        .clone_type = entity_type::PURPLE_BALL,
     });
     static_assert(decltype(game_state.red_button_list){}.capacity() >= 2);
-#error "Just a friendly reminder to fill in red_button_list :)"
+
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 28, .y = 4},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 29, .y = 4},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 27, .y = 6},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 27, .y = 7},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 28, .y = 8},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 29, .y = 8},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 27, .y = 10},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 27, .y = 9},
     });
     game_state.brown_button_list.push_back(brown_button{
         .button = {.x = 28, .y = 12},
-        .trap = {.x = <INT>, .y = <INT>},
+        .trap = {.x = 29, .y = 12},
     });
     static_assert(decltype(game_state.brown_button_list){}.capacity() >= 5);
-#error "Just a friendly reminder to fill in brown_button_list :)"
-    game_state.teleport_list.locations.push_back({.x = 2, .y = 22 });
-
-    game_state.teleport_list.locations.push_back({.x = 8, .y = 22 });
-
-    game_state.teleport_list.locations.push_back({.x = 2, .y = 28 });
 
     game_state.teleport_list.locations.push_back({.x = 9, .y = 28 });
-
-    static_assert(decltype(game_state..teleport_list.locations){}.capacity() >= 4);
-#error "Just a friendly reminder to order the teleport locations correctly :)"
+    game_state.teleport_list.locations.push_back({.x = 2, .y = 28 });
+    game_state.teleport_list.locations.push_back({.x = 8, .y = 22 });
+    game_state.teleport_list.locations.push_back({.x = 2, .y = 22 });
+    static_assert(decltype(game_state.teleport_list.locations){}.capacity() >= 4);
 
 }
 
