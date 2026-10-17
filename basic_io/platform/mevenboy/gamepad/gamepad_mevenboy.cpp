@@ -1,4 +1,4 @@
-#include "gamepad.hpp"
+#include "gamepad/gamepad.hpp"
 
 #include <array>
 

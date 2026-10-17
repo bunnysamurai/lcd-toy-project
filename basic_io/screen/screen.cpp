@@ -16,13 +16,8 @@
 #include <pico/printf.h>
 #endif
 
-#if defined(WAVESHARE_240P)
-#include "waveshare_driver/screen_impl.hpp"
-#include "waveshare_driver/screensize.h"
-#elif defined(DUMMY_SCREEN)
-#include "dummy_driver/screen_impl.hpp"
-#include "dummy_driver/screensize.h"
-#endif
+#include "screen/screen_impl.hpp"
+#include "screen/screensize.h"
 
 #include "TileBuffer.hpp"
 #include "glyphs/letters.hpp"

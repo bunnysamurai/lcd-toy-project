@@ -25,7 +25,7 @@ int mywrap_getchar(FILE *) { return stdio_getchar(); }
 
 static void shellcmd_screen_usage(const auto &cmd) {
   /* clang-format off */
-      // printf("  %s [format | size | buflen | clear | fill | calibrate | touch]\n\n", cmd);
+      // printf("  %s [format | size | buflen | clear | fill | calibrate]\n\n", cmd);
       static constexpr const char* usage_str{ R"(
 screen format [ FORMAT ]
   Prints the screen's current BPP format specifier.
@@ -48,6 +48,8 @@ screen clear
 screen fill VALUE
   Fills the video buffer with the raw value VALUE
 
+)"};
+#if 0
 screen calibrate
   Runs a touch-screen calibration routine.
   Objective is to map touch samples values to pixel
@@ -69,7 +71,7 @@ screen touch [ ZTHRESH FIRST_TOSS LAST_TOSS ]
               samples are only taken after 
               FIRST_TOUCH number of samples have 
               been taken.
-)"};
+#endif
   /* clang-format on */
   printf("%s\n", usage_str);
 }
@@ -134,6 +136,7 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
       const auto dims{screen::get_virtual_screen_size()};
       printf("%dx%d\n", dims.width, dims.height);
     }
+#if 0
     if (!strcmp("calibrate", argv[1])) {
       printf("STUB: run touch screen calibration routine\n");
     }
@@ -155,6 +158,7 @@ int ShellCmd_Screen(int argc, const char *argv[]) {
             .touch_zthresh = zthresh, .first_toss = ftoss, .last_toss = ltoss});
       }
     }
+#endif
   }
   if (argc > 2) {
     if (!strcmp("fill", argv[1])) {
@@ -175,18 +179,21 @@ int ShellCmd_Snake(int argc, const char *argv[]) {
   return 0;
 }
 
+#if 0
 static demo::TouchConfig s_cfg;
 static void run_touch_demo_impl() { demo::run_touch_demo(s_cfg); }
+#endif
 
 int ShellCmd_Demo(int argc, const char *argv[]) {
   if (argc == 2 && !strcmp("help", argv[1])) {
-    printf("%s [text | rando | touch | snake]\n", argv[0]);
+    printf("%s [text | rando | snake]\n", argv[0]);
     return 0;
   }
   if (argc > 1 && !strcmp("text", argv[1])) {
     multicore_launch_core1([] { demo::run_text_animation(); });
   } else if (argc > 1 && !strcmp("rando", argv[1])) {
     multicore_launch_core1([] { demo::run_color_rando_art(); });
+#if 0
   } else if (argc > 1 && !strcmp("touch", argv[1])) {
     screen::clear_screen();
     if (argc != 5) {
@@ -198,8 +205,9 @@ int ShellCmd_Demo(int argc, const char *argv[]) {
                             .last_toss = atoi(argv[4])}};
       multicore_launch_core1(run_touch_demo_impl);
     }
+#endif 
   } else {
-    printf("%s [text | rando | touch]\n", argv[0]);
+    printf("%s [text | rando]\n", argv[0]);
     return 0;
   }
   while (EOF == stdio_getchar()) {

@@ -515,6 +515,7 @@ void take_cool_touch_action(screen::TouchReport touch_loc) noexcept
 
 } // namespace
 
+#if 0
 static constexpr int64_t DOUBLE_TAP_PERIOD_THRESHOLD_US{550 * 1000}; /* 100 ms? */
 void run_touch_demo(TouchConfig cfg) noexcept
 {
@@ -579,5 +580,6 @@ void run_touch_demo(TouchConfig cfg) noexcept
         sleep_ms(TOUCH_POLL_INTERVAL_MS);
     }
 }
+#endif
 
 } // namespace demo
