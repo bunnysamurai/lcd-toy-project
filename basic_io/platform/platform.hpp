@@ -3,7 +3,7 @@
 
 namespace basic_io::platform
 {
-    void init();
+    [[nodiscard]] bool init() noexcept;
 }
 
 #endif

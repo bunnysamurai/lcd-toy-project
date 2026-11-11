@@ -3,7 +3,7 @@
 
 namespace bsio {
 
-bool init();
+[[nodiscard]] bool init() noexcept;
 
 } // namespace bsio
 

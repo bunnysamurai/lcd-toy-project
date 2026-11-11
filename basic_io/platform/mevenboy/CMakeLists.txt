@@ -3,7 +3,7 @@
 
 add_library(bsio_platform STATIC platform.cpp)
 
-target_link_libraries(bsio_platform PUBLIC pico_stdio pico_stdlib bsio_includes)
+target_link_libraries(bsio_platform PUBLIC pico_stdio pico_stdlib bsio_includes bsio_utils)
 target_include_directories(bsio_platform PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 if( STDIO_TO_SCREEN )
