@@ -131,7 +131,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pico_stdlib 
     pico_multicore
     pico_rand
-    basic_io
+    bsio
     ben_shell
 )
 

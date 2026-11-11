@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.00)
 
-project(basic_io)
+project(bsio)
 
 if( NOT BUILD_TESTS )
 
@@ -10,7 +10,7 @@ if( NOT BUILD_TESTS )
     add_library(bsio_includes INTERFACE)
     target_include_directories(bsio_includes INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
-    add_library(basic_io 
+    add_library(bsio 
         bsio.cpp
     )
 
@@ -32,7 +32,7 @@ if( NOT BUILD_TESTS )
 
     target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
     target_compile_options(${PROJECT_NAME} PRIVATE -O3)
-    target_link_libraries(basic_io PUBLIC 
+    target_link_libraries(bsio PUBLIC 
         bsio_includes 
         bsio_screen 
         bsio_gamepad 

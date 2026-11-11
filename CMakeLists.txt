@@ -29,7 +29,7 @@ include(CTest)
 include(cmake/add_unit_test.cmake)
 include(Catch)
 
-add_subdirectory(basic_io)
+add_subdirectory(bsio)
 add_subdirectory(embp) # required for some tests to build
 add_subdirectory(test_helpers)
 
@@ -40,7 +40,7 @@ else()
 # boilerplate, always after project()
 pico_sdk_init()
 
-add_subdirectory(basic_io)
+add_subdirectory(bsio)
 add_subdirectory(ben_shell)
 add_subdirectory(src)
 add_subdirectory(embp)

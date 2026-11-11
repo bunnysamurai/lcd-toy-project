@@ -7,7 +7,7 @@ namespace bsio
 
 bool init() noexcept
 {
-    return basic_io::platform::init();
+    return bsio::platform::init();
 }
 
 } // namespace bsio

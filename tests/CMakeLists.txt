@@ -6,7 +6,7 @@ include(../cmake/add_unit_test.cmake)
 
 add_gtest_executable(tile_blitting)
 target_compile_features(tile_blitting PUBLIC cxx_std_20)
-target_include_directories(tile_blitting PUBLIC ../basic_io)
+target_include_directories(tile_blitting PUBLIC ../bsio)
 target_link_libraries(tile_blitting PUBLIC bsio_screen)
 add_unit_test(tile_blitting tile_blitting)
 

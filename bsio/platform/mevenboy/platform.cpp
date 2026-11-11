@@ -65,7 +65,7 @@ void stdio_init_mine()
 
 } // namespace
 
-namespace basic_io::platform
+namespace bsio::platform
 {
 bool init()
 {

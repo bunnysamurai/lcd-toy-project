@@ -1,7 +1,7 @@
 #ifndef PLATFORM_HPP
 #define PLATFORM_HPP
 
-namespace basic_io::platform
+namespace bsio::platform
 {
     [[nodiscard]] bool init() noexcept;
 }
