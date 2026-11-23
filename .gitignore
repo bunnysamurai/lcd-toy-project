@@ -37,3 +37,4 @@ Testing
 # other
 build*
 .vscode
+imgui.ini
